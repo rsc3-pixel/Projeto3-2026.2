@@ -26,6 +26,7 @@ public class Bolsa {
     private GrupoSanguineo grupoSanguineo;
 
     private int volumeMl;
+    private int testando;
     private LocalDate dataColeta;
     private LocalDate dataValidade;
 
