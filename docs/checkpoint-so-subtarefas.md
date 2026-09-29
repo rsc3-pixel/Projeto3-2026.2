@@ -39,16 +39,52 @@ Texto pronto para cadastro, campo a campo:
 As seis primeiras (01 a 06) estão **concluídas** e a verificação abaixo foi
 executada em 29/09/2026. As duas últimas (07 e 08) dependem de ação manual.
 
-| # | Subtarefa | Estado |
-|---|---|---|
-| 01 | Pipeline de integração contínua | Concluída |
-| 02 | Provisionamento da VM | Concluída |
-| 03 | Deploy automático por SSH | Concluída |
-| 04 | Publicação com domínio e HTTPS | Concluída |
-| 05 | Perfil de produção e endurecimento | Concluída |
-| 06 | Documentação das evidências | Concluída |
-| 07 | Captura dos prints de evidência | **Pendente** |
-| 08 | Registro no ticket | **Pendente** (depende da 07) |
+| # | Subtarefa | Pontos | Estado |
+|---|---|---|---|
+| 01 | Pipeline de integração contínua | 5 | Concluída |
+| 02 | Provisionamento da VM | 8 | Concluída |
+| 03 | Deploy automático por SSH | 8 | Concluída |
+| 04 | Publicação com domínio e HTTPS | 5 | Concluída |
+| 05 | Perfil de produção e endurecimento | 3 | Concluída |
+| 06 | Documentação das evidências | 2 | Concluída |
+| 07 | Captura dos prints de evidência | 1 | **Pendente** |
+| 08 | Registro no ticket | 1 | **Pendente** (depende da 07) |
+| | **Total** | **33** | |
+
+### Como estes pontos foram atribuídos
+
+Escala Fibonacci (1, 2, 3, 5, 8, 13), a padrão do Jira. Story point mede
+**esforço e incerteza**, não horas: duas tarefas de mesma duração recebem
+notas diferentes se uma tinha caminho conhecido e a outra exigiu tentativa e
+erro.
+
+A referência de tamanho aqui é o volume real entregue, já medido:
+
+| Subtarefa | Artefato | Linhas | Pontos | Por quê |
+|---|---|---|---|---|
+| 01 | `ci.yml` | 283 | 5 | estrutura conhecida, mas encadeamento de jobs e artefatos exigiram ajuste |
+| 02 | `provisionar.sh` | 363 | 8 | maior artefato, VM compartilhada, idempotência, limites por medição |
+| 03 | job `deploy` | (em `ci.yml`) | 8 | SSH, segredos, envio atômico e verificação de saúde; maior incerteza |
+| 04 | `nginx-rota-vital.conf` | 91 | 5 | proxy e HTTPS são receita conhecida, mas conviver com outros sites deu trabalho |
+| 05 | `application-prod.properties` | 125 | 3 | decisões pontuais de configuração, cada uma simples |
+| 06 | `evidencias-unidade-1-so.md` | 220 | 2 | redação sobre coisa já pronta, sem incerteza técnica |
+| 07 | dois prints | — | 1 | trabalho manual, curto |
+| 08 | comentário no ticket | — | 1 | trabalho manual, curto |
+
+**Por que 02 e 03 valem mais que 01.** O pipeline seguiu um modelo
+conhecido. O provisionamento e o deploy tiveram retrabalho real: a busca pelo
+binário do Java falhava com `-maxdepth 2` porque ele fica três níveis abaixo,
+e o limite de heap teve de ser corrigido depois de medir o consumo em vez de
+estimá-lo. Incerteza que vira retrabalho é exatamente o que o ponto captura.
+
+**Por que 06 vale pouco apesar de 220 linhas.** Escrever sobre algo que já
+funciona não tem risco de dar errado. Tamanho de texto não é esforço de
+engenharia.
+
+> Se a equipe já usa outra escala ou outro referencial de tamanho, ajuste os
+> valores mantendo a proporção entre eles. O que não vale é deixar o campo
+> vazio: sem pontuação não há velocidade de sprint, e sem velocidade o
+> planejamento da próxima vira adivinhação.
 
 ---
 
