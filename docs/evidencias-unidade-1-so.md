@@ -19,6 +19,8 @@ Evidências de pipeline CI/CD, deploy automático e aplicação em produção.
 | [`/api/v1/hospitais`](https://rsc3-rotavital.duckdns.org/api/v1/hospitais) | `200` |
 | `/h2-console` | `404` (bloqueado em produção, como esperado) |
 
+![Aplicação no ar](img/aplicacao-no-ar.png)
+
 Verificação reproduzível:
 
 ```bash
@@ -37,6 +39,12 @@ automática pelo timer do Certbot.
 
 Execuções do pipeline:
 [github.com/rsc3-pixel/Projeto3-2026.2/actions](https://github.com/rsc3-pixel/Projeto3-2026.2/actions/workflows/ci.yml)
+
+![Pipeline verde](img/pipeline-verde.png)
+
+Execução [#65](https://github.com/rsc3-pixel/Projeto3-2026.2/actions/runs/36601640679),
+do commit `ffb06f6` na `main`: os quatro jobs em verde, 2m 39s no total, com o
+deploy publicando na VM ao final.
 
 ### Gatilhos
 
