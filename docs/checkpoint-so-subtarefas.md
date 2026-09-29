@@ -16,6 +16,26 @@ sozinho, rodando um comando ou abrindo uma URL. Subtarefa sem forma de
 verificar vira "achismo de conclusão", e é justamente isso que um checkpoint
 existe para evitar.
 
+### O que o professor exige em cada ticket
+
+Da avaliação da sprint anterior, aplicável a todo ticket do projeto:
+
+| Campo | Observação |
+|---|---|
+| Responsável | sem ele o professor não consegue avaliar o aluno |
+| Disciplina | vários tickets estavam sem, inclusive na sprint ativa |
+| Unidade | campo **Versões corrigidas** |
+| Descrição | **o resultado da atividade, no passado**, não o que será feito |
+| Evidência | anexo, link ou comentário; afirmar que foi feito não basta |
+
+A cobrança sobre a descrição apareceu nas duas avaliações seguidas: *"A
+Descrição não representa o resultado da execução da atividade e sim uma
+informação do que será realizado"*. As descrições das subtarefas concluídas
+abaixo já estão escritas no passado, descrevendo resultado.
+
+Texto pronto para cadastro, campo a campo:
+`C:\tmp\rotavital-jira\subtarefas-para-cadastrar.md`
+
 As seis primeiras (01 a 06) estão **concluídas** e a verificação abaixo foi
 executada em 29/09/2026. As duas últimas (07 e 08) dependem de ação manual.
 
@@ -233,6 +253,26 @@ Publicar as evidências no ticket, fechando o checkpoint.
 
 **Texto pronto para colar**
 `C:\tmp\rotavital-jira\comentario-checkpoint-so.md`
+
+---
+
+## O que estas subtarefas não resolvem
+
+O professor levantou dois pontos que ficam **fora** do alcance deste
+checkpoint e precisam de trabalho próprio:
+
+**Distribuição entre a equipe.** Ele apontou que apenas quatro ou cinco dos
+oito integrantes têm tickets atribuídos. As oito subtarefas acima são todas de
+um único responsável, o que piora essa proporção em vez de melhorá-la. Onde
+houve participação de outros integrantes, a autoria deve ser dividida. Vale
+também conferir se o trabalho dos demais está cadastrado: a atividade de
+paralelismo, por exemplo, foi implementada por outro integrante e precisa de
+ticket no nome de quem a fez.
+
+**Tickets antigos incompletos.** A orientação foi revisar, na visão de Lista
+com a coluna Sprint visível, os tickets já concluídos que estão sem
+Descrição, Responsável, Disciplina, Unidade ou Evidência. É um mutirão
+separado, provavelmente maior que esta quebra.
 
 ---
 
