@@ -36,8 +36,8 @@ abaixo já estão escritas no passado, descrevendo resultado.
 Texto pronto para cadastro, campo a campo:
 `C:\tmp\rotavital-jira\subtarefas-para-cadastrar.md`
 
-As seis primeiras (01 a 06) estão **concluídas** e a verificação abaixo foi
-executada em 29/09/2026. As duas últimas (07 e 08) dependem de ação manual.
+As sete primeiras (01 a 07) estão **concluídas** e a verificação abaixo foi
+executada em 29/09/2026. Resta a 08, o registro no ticket.
 
 | # | Subtarefa | Estado |
 |---|---|---|
@@ -47,8 +47,8 @@ executada em 29/09/2026. As duas últimas (07 e 08) dependem de ação manual.
 | 04 | Publicação com domínio e HTTPS | Concluída |
 | 05 | Perfil de produção e endurecimento | Concluída |
 | 06 | Documentação das evidências | Concluída |
-| 07 | Captura dos prints de evidência | **Pendente** |
-| 08 | Registro no ticket | **Pendente** (depende da 07) |
+| 07 | Captura dos prints de evidência | Concluída |
+| 08 | Registro no ticket | **Pendente** |
 
 
 ---
@@ -213,29 +213,24 @@ demonstração ao vivo. Convém aquecer os endpoints antes de apresentar.
 
 ## Subtarefa 07 · Captura dos prints de evidência
 
-**Estado:** pendente · **Responsável:** Renato
+**Estado:** concluída · **Responsável:** Renato
 
 **Descrição**
-Capturar as duas telas que o checkpoint exige como comprovação visual.
+Capturadas as duas telas de comprovação visual do checkpoint. A primeira mostra
+a execução #65 do pipeline, disparada pelo merge do commit `ffb06f6` na `main`,
+com os quatro jobs em verde e 2m 39s de duração total. A segunda mostra a
+aplicação respondendo em domínio próprio, com a URL visível na barra de endereço
+junto do `{"status":"UP"}`. Ambas foram versionadas em `docs/img/` e
+referenciadas no documento de evidências.
 
 **Entregável**
-`docs/img/pipeline-verde.png` · `docs/img/aplicacao-no-ar.png`
+[docs/img/pipeline-verde.png](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/docs/img/pipeline-verde.png) ·
+[docs/img/aplicacao-no-ar.png](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/docs/img/aplicacao-no-ar.png)
 
 **Critério de aceite**
-- [ ] Print do pipeline com os quatro jobs em verde, mostrando o commit
-- [ ] Print do navegador em `/actuator/health`, com o cadeado do HTTPS visível
-      junto do `{"status":"UP"}`
-- [ ] Imagens commitadas em `docs/img/` e referenciadas no documento de evidências
-
-**Passo a passo**
-1. Abrir a aba Actions do repositório
-2. Entrar na execução mais recente da `main`
-3. Enquadrar o nome do commit e os quatro jobs
-4. Abrir https://rsc3-rotavital.duckdns.org/actuator/health no navegador
-5. Enquadrar a barra de endereço junto da resposta
-
-**Opcional, reforça a parte de SO:** terminal com `systemctl status rota-vital`,
-que evidencia o serviço gerenciado pelo sistema operacional.
+- [x] Print do pipeline com os quatro jobs em verde, mostrando o commit
+- [x] Print do navegador em `/actuator/health` com a URL e a resposta na mesma tela
+- [x] Imagens commitadas em `docs/img/` e referenciadas no documento de evidências
 
 ---
 
