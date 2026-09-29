@@ -33,7 +33,10 @@ automática pelo timer do Certbot.
 
 ## 2. Pipeline CI/CD
 
-**GitHub Actions** · [.github/workflows/ci.yml](../.github/workflows/ci.yml)
+**GitHub Actions** · [.github/workflows/ci.yml](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/.github/workflows/ci.yml)
+
+Execuções do pipeline:
+[github.com/rsc3-pixel/Projeto3-2026.2/actions](https://github.com/rsc3-pixel/Projeto3-2026.2/actions/workflows/ci.yml)
 
 ### Gatilhos
 
@@ -159,7 +162,7 @@ do G1, que não se pagam em uma VM pequena compartilhada.
 
 ## 5. Perfil de produção
 
-[`application-prod.properties`](../src/main/resources/application-prod.properties)
+[`application-prod.properties`](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/src/main/resources/application-prod.properties)
 
 | Configuração | Valor | Por quê |
 |---|---|---|
@@ -214,7 +217,8 @@ sudo certbot delete --cert-name rsc3-boolean.duckdns.org
 
 | Documento | O que cobre |
 |---|---|
-| [docs/deploy.md](deploy.md) | processo de deploy passo a passo |
-| [.github/workflows/ci.yml](../.github/workflows/ci.yml) | o pipeline |
-| [infra/provisionar.sh](../infra/provisionar.sh) | provisionamento da VM |
-| [infra/nginx-rota-vital.conf](../infra/nginx-rota-vital.conf) | proxy reverso |
+| [docs/deploy.md](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/docs/deploy.md) | processo de deploy passo a passo |
+| [.github/workflows/ci.yml](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/.github/workflows/ci.yml) | o pipeline |
+| [infra/provisionar.sh](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/infra/provisionar.sh) | provisionamento da VM |
+| [infra/nginx-rota-vital.conf](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/infra/nginx-rota-vital.conf) | proxy reverso |
+| [docs/checkpoint-so-subtarefas.md](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/docs/checkpoint-so-subtarefas.md) | quebra em subtarefas |

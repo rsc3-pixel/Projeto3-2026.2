@@ -4,7 +4,7 @@ Decomposição do checkpoint em subtarefas verificáveis, para cadastro no Jira.
 
 **Tarefa pai:** Checkpoint de entrega da Unidade 1 de Sistemas Operacionais
 **Verificado em:** 29/09/2026
-**Evidências consolidadas:** [docs/evidencias-unidade-1-so.md](evidencias-unidade-1-so.md)
+**Evidências consolidadas:** [docs/evidencias-unidade-1-so.md](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/docs/evidencias-unidade-1-so.md)
 
 ---
 
@@ -60,7 +60,7 @@ Configurar GitHub Actions para compilar e testar a cada push na `main` e a
 cada pull request, impedindo que código quebrado entre na branch principal.
 
 **Entregável**
-[.github/workflows/ci.yml](../.github/workflows/ci.yml)
+[.github/workflows/ci.yml](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/.github/workflows/ci.yml)
 
 **Critério de aceite**
 - [x] Jobs `build`, `teste` e `empacotar` encadeados por `needs`
@@ -84,7 +84,7 @@ Preparar a VM para hospedar a aplicação como serviço de sistema, convivendo
 com as outras aplicações já instaladas nela.
 
 **Entregável**
-[infra/provisionar.sh](../infra/provisionar.sh) · unidade systemd `rota-vital`
+[infra/provisionar.sh](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/infra/provisionar.sh) · unidade systemd `rota-vital`
 
 **Critério de aceite**
 - [x] Script idempotente: rodar duas vezes não quebra nada
@@ -111,7 +111,7 @@ Publicar automaticamente na VM a cada push aprovado na `main`, sem intervenção
 manual, e sem derrubar a aplicação se a transferência falhar.
 
 **Entregável**
-Job `deploy` em [.github/workflows/ci.yml](../.github/workflows/ci.yml)
+Job `deploy` em [.github/workflows/ci.yml](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/.github/workflows/ci.yml)
 
 **Critério de aceite**
 - [x] Roda só na `main`, nunca em pull request
@@ -138,7 +138,7 @@ Tornar a aplicação acessível publicamente por domínio próprio, com conexão
 cifrada e renovação automática de certificado.
 
 **Entregável**
-[infra/nginx-rota-vital.conf](../infra/nginx-rota-vital.conf) · certificado Let's Encrypt
+[infra/nginx-rota-vital.conf](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/infra/nginx-rota-vital.conf) · certificado Let's Encrypt
 
 **Critério de aceite**
 - [x] Responde em https://rsc3-rotavital.duckdns.org
@@ -164,7 +164,7 @@ Separar a configuração de produção da de desenvolvimento, fechando o que nã
 deve ficar exposto na internet.
 
 **Entregável**
-[application-prod.properties](../src/main/resources/application-prod.properties)
+[application-prod.properties](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/src/main/resources/application-prod.properties)
 
 **Critério de aceite**
 - [x] Console do H2 desligado
@@ -194,7 +194,7 @@ Reunir num documento o que o checkpoint pede, com valores verificados e
 comandos que qualquer pessoa consegue repetir.
 
 **Entregável**
-[docs/evidencias-unidade-1-so.md](evidencias-unidade-1-so.md)
+[docs/evidencias-unidade-1-so.md](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/docs/evidencias-unidade-1-so.md)
 
 **Critério de aceite**
 - [x] URL da aplicação e resposta de cada endpoint
