@@ -79,7 +79,7 @@ nuvem; arquitetura de redes e telemetria; trabalho em equipe.
 |---|---|
 | **Aplicação no ar** | [rsc3-rotavital.duckdns.org](https://rsc3-rotavital.duckdns.org/api/v1/hemocentros) |
 | Pipeline e deploy | [docs/deploy.md](docs/deploy.md) |
-| Evidências do checkpoint de SO | [docs/evidencias-unidade-1-so.md](docs/evidencias-unidade-1-so.md) |
+| Evidências do checkpoint de SO | [docs/evidencias-unidade-1-so.md](docs/evidencias-unidade-1-so.md) · [subtarefas](docs/checkpoint-so-subtarefas.md) |
 | Histórias de usuário | [docs/historias-de-usuario.md](docs/historias-de-usuario.md) |
 | Issue / Bug tracker | [github.com/…/issues](https://github.com/rsc3-pixel/Projeto3-2026.2/issues) |
 | Screencast do sistema | [assistir no YouTube](https://youtu.be/2tbx00ujZmo) |
