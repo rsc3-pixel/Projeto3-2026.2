@@ -261,13 +261,13 @@ Publicar as evidências no ticket, fechando o checkpoint.
 O professor levantou dois pontos que ficam **fora** do alcance deste
 checkpoint e precisam de trabalho próprio:
 
-**Distribuição entre a equipe.** Ele apontou que apenas quatro ou cinco dos
-oito integrantes têm tickets atribuídos. As oito subtarefas acima são todas de
-um único responsável, o que piora essa proporção em vez de melhorá-la. Onde
-houve participação de outros integrantes, a autoria deve ser dividida. Vale
-também conferir se o trabalho dos demais está cadastrado: a atividade de
-paralelismo, por exemplo, foi implementada por outro integrante e precisa de
-ticket no nome de quem a fez.
+**Cobertura dos demais integrantes.** As oito subtarefas acima são de um único
+responsável porque foi ele quem as executou, e o professor aceita isso
+explicitamente: *"Caso essa distribuição represente a verdade, sem problema."*
+O ponto que continua aberto é outro: o trabalho dos demais integrantes
+precisa de tickets próprios. A atividade de paralelismo, por exemplo, foi
+implementada por outro integrante, está mergeada na `main` com 26 testes, e
+sem ticket não aparece na avaliação de quem a fez.
 
 **Tickets antigos incompletos.** A orientação foi revisar, na visão de Lista
 com a coluna Sprint visível, os tickets já concluídos que estão sem
