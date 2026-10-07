@@ -67,6 +67,7 @@ nuvem; arquitetura de redes e telemetria; trabalho em equipe.
 | Estruturas de dados (grafo, FEFO, índice) | [docs/W04-estruturas-base.md](docs/W04-estruturas-base.md) |
 | Complexidade das estruturas | [docs/complexidade-estruturas.md](docs/complexidade-estruturas.md) |
 | Análise estatística (CRISP-DM) | [dados/crisp-dm-briefing.md](dados/crisp-dm-briefing.md) |
+| Sumário executivo e evidências EST U1 | [docs/evidencias-unidade-1-est.md](docs/evidencias-unidade-1-est.md) |
 | Apresentação do pitch | [apresentacao/pitch-crisp-dm.html](apresentacao/pitch-crisp-dm.html) |
 
 ### Entrega 02

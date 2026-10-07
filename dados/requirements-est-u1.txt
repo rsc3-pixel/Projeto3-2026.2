@@ -1,0 +1,2 @@
+# Dependência apenas para reproduzir os gráficos da entrega EST U1.
+matplotlib==3.11.2

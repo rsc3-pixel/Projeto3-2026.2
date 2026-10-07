@@ -1,0 +1,143 @@
+{
+  "data_referencia": "2026-10-07",
+  "inicio_janela": "2026-08-08",
+  "resultados": {
+    "cobertura": {
+      "AB_NEG": {
+        "cobertura": 50.0,
+        "deficit": 5,
+        "demandado": 10,
+        "disponivel": 5
+      },
+      "AB_POS": {
+        "cobertura": 68.18181818181819,
+        "deficit": 14,
+        "demandado": 44,
+        "disponivel": 30
+      },
+      "A_NEG": {
+        "cobertura": 90.1639344262295,
+        "deficit": 12,
+        "demandado": 122,
+        "disponivel": 110
+      },
+      "A_POS": {
+        "cobertura": 82.69581056466302,
+        "deficit": 95,
+        "demandado": 549,
+        "disponivel": 454
+      },
+      "B_NEG": {
+        "cobertura": 103.44827586206897,
+        "deficit": 0,
+        "demandado": 29,
+        "disponivel": 30
+      },
+      "B_POS": {
+        "cobertura": 88.98305084745763,
+        "deficit": 13,
+        "demandado": 118,
+        "disponivel": 105
+      },
+      "O_NEG": {
+        "cobertura": 122.68041237113403,
+        "deficit": 0,
+        "demandado": 97,
+        "disponivel": 119
+      },
+      "O_POS": {
+        "cobertura": 94.98069498069498,
+        "deficit": 26,
+        "demandado": 518,
+        "disponivel": 492
+      }
+    },
+    "criticas7": 187,
+    "descarte": {
+      "CONCENTRADO_HEMACIAS": {
+        "taxa": 25.53191489361702,
+        "total": 1128,
+        "vencidas": 288
+      },
+      "CONCENTRADO_PLAQUETAS": {
+        "taxa": 90.17199017199017,
+        "total": 407,
+        "vencidas": 367
+      },
+      "CRIOPRECIPITADO": {
+        "taxa": 0.0,
+        "total": 96,
+        "vencidas": 0
+      },
+      "PLASMA_FRESCO_CONGELADO": {
+        "taxa": 0.0,
+        "total": 369,
+        "vencidas": 0
+      }
+    },
+    "disp_comp": {
+      "CONCENTRADO_HEMACIAS": {
+        "desvio": 12.28569277911628,
+        "media": 21.04642857142857,
+        "mediana": 21.0,
+        "n": 840
+      },
+      "CONCENTRADO_PLAQUETAS": {
+        "desvio": 1.6517279219669105,
+        "media": 2.3,
+        "mediana": 3.0,
+        "n": 40
+      },
+      "CRIOPRECIPITADO": {
+        "desvio": 18.13569708535985,
+        "media": 336.4583333333333,
+        "mediana": 337.5,
+        "n": 96
+      },
+      "PLASMA_FRESCO_CONGELADO": {
+        "desvio": 17.418071023665625,
+        "media": 335.08672086720867,
+        "mediana": 335,
+        "n": 369
+      }
+    },
+    "dispersao": {
+      "desvio": 150.65548068496472,
+      "maximo": 365,
+      "media": 129.15836431226765,
+      "mediana": 32,
+      "minimo": 0,
+      "n": 1345
+    },
+    "geo_demanda": {
+      "Jaboatão dos Guararapes": 794,
+      "Olinda": 166,
+      "Recife": 527
+    },
+    "geo_estoque": {
+      "Jaboatão dos Guararapes": 444,
+      "Olinda": 217,
+      "Recife": 684
+    },
+    "por_tipo": {
+      "AB_NEG": 7,
+      "AB_POS": 50,
+      "A_NEG": 160,
+      "A_POS": 652,
+      "B_NEG": 47,
+      "B_POS": 153,
+      "O_NEG": 184,
+      "O_POS": 747
+    },
+    "total_bolsas": 2000,
+    "total_demandado": 1487,
+    "total_req": 300,
+    "validas": 1345,
+    "vencidas": 655
+  },
+  "sementes": {
+    "bolsas": 2026,
+    "requisicoes": 2027
+  },
+  "validacao": "Todas as métricas coincidem com resultados.json a uma casa decimal."
+}
