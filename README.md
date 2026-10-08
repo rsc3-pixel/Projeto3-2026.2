@@ -39,7 +39,7 @@ nuvem; arquitetura de redes e telemetria; trabalho em equipe.
 | Build | Maven, via wrapper (`mvnw`) |
 | Persistência | Spring Data JPA / Hibernate |
 | Banco de dados | H2 em memória (desenvolvimento) · PostgreSQL previsto para a Entrega 02 |
-| Front-end | React (a implementar) |
+| Front-end | HTML/CSS/JS estático (`src/main/resources/static/painel.html`) |
 | Testes | JUnit 5 |
 | Integração contínua | GitHub Actions |
 | Análise de dados | Python 3 (biblioteca padrão) |
@@ -63,7 +63,7 @@ nuvem; arquitetura de redes e telemetria; trabalho em equipe.
 | Modelo de domínio (diagrama de classes) | [dominio.png](dominio.png) · [dominio.drawio](dominio.drawio) |
 | Contrato da API REST | [contrato_api.md](contrato_api.md) |
 | Arquitetura de rede | [diagrama_arquitetura_redes.png](diagrama_arquitetura_redes.png) |
-| Escopo do grafo de distribuição | [docs/escopo-grafo-rede-distribuicao.md](docs/escopo-grafo-rede-distribuicao.md) · [diagrama](docs/grafo-rede-distribuicao.png) |
+| Escopo do grafo de distribuição | [docs/W02-escopo-grafo-rede-distribuicao.md](docs/W02-escopo-grafo-rede-distribuicao.md) · [diagrama](docs/img/W02-grafo-rede-distribuicao.png) |
 | Estruturas de dados (grafo, FEFO, índice) | [docs/W04-estruturas-base.md](docs/W04-estruturas-base.md) |
 | Complexidade das estruturas | [docs/complexidade-estruturas.md](docs/complexidade-estruturas.md) |
 | Análise estatística (CRISP-DM) | [dados/crisp-dm-briefing.md](dados/crisp-dm-briefing.md) |
@@ -79,8 +79,14 @@ nuvem; arquitetura de redes e telemetria; trabalho em equipe.
 | Artefato | Link |
 |---|---|
 | **Aplicação no ar** | [rsc3-rotavital.duckdns.org](https://rsc3-rotavital.duckdns.org/api/v1/hemocentros) |
+| **Painel de indicadores** | [/painel.html](https://rsc3-rotavital.duckdns.org/painel.html) |
+| **API Reference (Scalar)** | [/docs](https://rsc3-rotavital.duckdns.org/docs) |
 | Pipeline e deploy | [docs/deploy.md](docs/deploy.md) |
-| Evidências do checkpoint de SO | [docs/evidencias-unidade-1-so.md](docs/evidencias-unidade-1-so.md) · [subtarefas](docs/checkpoint-so-subtarefas.md) |
+| Evidências SO (U1) | [docs/evidencias-unidade-1-so.md](docs/evidencias-unidade-1-so.md) · [subtarefas](docs/checkpoint-so-subtarefas.md) |
+| Evidências EST (U1) | [docs/evidencias-unidade-1-est.md](docs/evidencias-unidade-1-est.md) |
+| Evidências AED (U1) | [docs/evidencias-unidade-1-aed.md](docs/evidencias-unidade-1-aed.md) · [tradução C→Java](docs/U1-traducao-c-java.md) |
+| Evidências RSD (U1) | [docs/evidencias-unidade-1-rsd.md](docs/evidencias-unidade-1-rsd.md) |
+| Padrões de projeto (POO U1) | [docs/padroes-poo.md](docs/padroes-poo.md) |
 | Histórias de usuário | [docs/historias-de-usuario.md](docs/historias-de-usuario.md) |
 | Issue / Bug tracker | [github.com/…/issues](https://github.com/rsc3-pixel/Projeto3-2026.2/issues) |
 | Screencast do sistema | [assistir no YouTube](https://youtu.be/2tbx00ujZmo) |
@@ -178,6 +184,8 @@ A API está no ar, publicada automaticamente a cada push na `main`:
 | URL | O que é |
 |---|---|
 | [`/actuator/health`](https://rsc3-rotavital.duckdns.org/actuator/health) | estado da aplicação |
+| [`/painel.html`](https://rsc3-rotavital.duckdns.org/painel.html) | painel de indicadores de estoque e demanda |
+| [`/docs`](https://rsc3-rotavital.duckdns.org/docs) | API Reference interativa (Scalar) |
 | [`/api/v1/hemocentros`](https://rsc3-rotavital.duckdns.org/api/v1/hemocentros) | os hemocentros da carga inicial |
 | [`/api/v1/bolsas`](https://rsc3-rotavital.duckdns.org/api/v1/bolsas) | o estoque |
 
@@ -191,6 +199,8 @@ processo em [docs/deploy.md](docs/deploy.md).
 | URL | O que é |
 |---|---|
 | `http://localhost:8080/actuator/health` | Estado da aplicação (`{"status":"UP"}`) |
+| `http://localhost:8080/painel.html` | Painel de indicadores (EST) |
+| `http://localhost:8080/docs` | API Reference interativa (Scalar) |
 | `http://localhost:8080/h2-console` | Console do banco H2 |
 
 Os endpoints de negócio seguem o [contrato_api.md](contrato_api.md):
