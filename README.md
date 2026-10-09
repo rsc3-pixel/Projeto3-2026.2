@@ -270,6 +270,7 @@ Material de apoio, não exigido pelas entregas:
 | Documento | O que cobre |
 |---|---|
 | [docs/entendendo-o-rota-vital.md](docs/entendendo-o-rota-vital.md) | guia comentado do código, do modelo de domínio ao deploy |
+| [docs/plano-frontends.md](docs/plano-frontends.md) | plano dos dois front-ends: Thymeleaf e Angular |
 
 ## Equipe
 
