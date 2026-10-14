@@ -6,6 +6,7 @@ import com.rotavital.api.dto.ItemRequisicaoRequest;
 import com.rotavital.api.dto.ItemRequisicaoResponse;
 import com.rotavital.api.dto.RequisicaoRequest;
 import com.rotavital.api.dto.RequisicaoResponse;
+import com.rotavital.compatibilidade.MatrizCompatibilidade;
 import com.rotavital.dominio.Alocacao;
 import com.rotavital.dominio.Bolsa;
 import com.rotavital.dominio.Hospital;
@@ -199,8 +200,14 @@ public class RequisicaoServico {
 
     /**
      * Vincula uma bolsa a um item. E o ponto onde estoque e demanda se
-     * encontram, entao concentra as regras de compatibilidade: mesmo tipo,
-     * mesmo grupo, bolsa disponivel e dentro da validade.
+     * encontram, entao concentra as regras de compatibilidade: bolsa
+     * disponivel, dentro da validade, mesmo hemocomponente e grupo sanguineo
+     * compativel.
+     *
+     * <p>Compativel, nao identico: a verificacao usa
+     * {@link MatrizCompatibilidade}, entao um item que pede A+ aceita bolsa
+     * O-, O+, A- ou A+. A regra varia por hemocomponente, porque plasma e
+     * crioprecipitado seguem tabela invertida em relacao as hemacias.</p>
      */
     @Transactional
     public AlocacaoResponse alocar(String requisicaoId, String itemId, AlocacaoRequest dados) {
@@ -228,10 +235,21 @@ public class RequisicaoServico {
                     "Hemocomponente incompativel: item pede " + item.getTipo()
                     + " e a bolsa e " + bolsa.getTipo());
         }
-        if (bolsa.getGrupoSanguineo() != item.getGrupoSanguineo()) {
+        // A comparacao aqui e de compatibilidade transfusional, nao de
+        // igualdade. Comparar os grupos com != recusaria doacao valida: um
+        // paciente A+ pode receber de O-, O+, A- e A+, mas so A+ passaria,
+        // deixando estoque utilizavel parado.
+        //
+        // A ordem dos argumentos importa, porque a relacao nao e simetrica: a
+        // bolsa e a doadora, o item da requisicao e o receptor.
+        if (!MatrizCompatibilidade.compativel(
+                bolsa.getGrupoSanguineo(), item.getGrupoSanguineo(), item.getTipo())) {
             throw new OperacaoInvalidaException(
                     "Grupo sanguineo incompativel: item pede " + item.getGrupoSanguineo()
-                    + " e a bolsa e " + bolsa.getGrupoSanguineo());
+                    + " e a bolsa e " + bolsa.getGrupoSanguineo()
+                    + ". Grupos aceitos para " + item.getTipo() + ": "
+                    + MatrizCompatibilidade.doadoresPara(
+                            item.getGrupoSanguineo(), item.getTipo()));
         }
 
         Alocacao alocacao = new Alocacao(

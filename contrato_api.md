@@ -305,4 +305,31 @@ Content-Type: application/json
 Efeito colateral que vale documentar para os testes: a bolsa referenciada passa de `status: "DISPONIVEL"` para
 `"ALOCADA"`, e o item de requisição passa a refletir `quantidadeAlocada: 1`, `status: "PARCIALMENTE_ALOCADO"`.
 
+**Compatibilidade ABO/Rh.** A bolsa não precisa ser do mesmo grupo sanguíneo do
+item: precisa ser **compatível**. Um item que pede `A_POS` aceita bolsa `O_NEG`,
+`O_POS`, `A_NEG` ou `A_POS`.
+
+A regra varia por hemocomponente, porque plasma e crioprecipitado carregam
+anticorpos em vez de antígenos e seguem tabela invertida:
+
+| | Doador universal | Receptor universal |
+|---|---|---|
+| Hemácias e plaquetas | `O_NEG` | `AB_POS` |
+| Plasma e crioprecipitado | `AB_POS` | `O_NEG` |
+
+A relação não é simétrica: `O_NEG` doa hemácias para `A_POS`, mas `A_POS` não
+doa para `O_NEG`.
+
+Bolsa incompatível devolve `409`, com a mensagem listando os grupos aceitos:
+
+```json
+{
+  "status": 409,
+  "title": "Operacao nao permitida",
+  "detail": "Grupo sanguineo incompativel: item pede O- e a bolsa e A+. Grupos aceitos para Concentrado de Hemacias: [O-]"
+}
+```
+
+A compatibilidade implementada é didática e não substitui protocolo clínico.
+
 *(Todos os dados dos exemplos acima são sintéticos, para fins didáticos.)*
