@@ -136,11 +136,71 @@ nuvem; arquitetura de redes e telemetria; trabalho em equipe.
 
 ### Entrega 03
 
-**Status:** não iniciada
+**Status:** em andamento · prazo 19/10/2026
 
-**Artefatos:** _(a preencher)_
+**Artefatos**
 
-**Screenshots:** _(a preencher)_
+| Artefato | Link |
+|---|---|
+| **Aplicação no ar** | [rsc3-rotavital.duckdns.org](https://rsc3-rotavital.duckdns.org/api/v1/hemocentros) |
+| **API Reference (Scalar)** | [/docs](https://rsc3-rotavital.duckdns.org/docs) |
+| Contrato da API | [contrato_api.md](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/contrato_api.md) |
+| Histórias de usuário | [docs/historias-de-usuario.md](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/docs/historias-de-usuario.md) |
+| Issue / Bug tracker | [github.com/…/issues](https://github.com/rsc3-pixel/Projeto3-2026.2/issues) |
+| Screencast do sistema | _(a adicionar)_ |
+| Screencast do código | _(a adicionar)_ |
+
+#### Histórias implementadas
+
+**HU-07 — Monitorar temperatura durante o transporte**
+
+| | |
+|---|---|
+| **Como** | técnico do hemocentro |
+| **Quero** | ser avisado quando a temperatura de uma remessa sair da faixa exigida |
+| **Para que** | eu possa agir antes que as bolsas se tornem inviáveis |
+
+**Critérios de aceite:**
+- A faixa aceita é a do componente transportado, não um valor único
+- Remessa com componentes de faixas diferentes avalia cada um
+- Leitura fora da faixa gera alerta imediato
+- Histórico de leituras fica registrado por remessa
+- A telemetria é simulada nesta fase do projeto
+
+A faixa depende do componente: hemácias de 1 a 6 °C, plaquetas de 20 a 24 °C,
+plasma e crioprecipitado de −25 a −18 °C. Uma remessa pode levar tipos
+diferentes no mesmo compartimento, e nesse caso a mesma leitura pode estar
+correta para um e ser excursão para outro. Por isso a resposta traz uma lista
+de alertas, não um valor único.
+
+**Implementação:** `TemperaturaServico.java` · `LeituraTemperatura.java` · endpoints `POST` e `GET /api/v1/rotas/{id}/temperaturas`
+
+---
+
+**HU-08 — Alocar respeitando compatibilidade ABO/Rh**
+
+| | |
+|---|---|
+| **Como** | técnico do hemocentro |
+| **Quero** | que o sistema só me ofereça bolsas compatíveis com o grupo do paciente |
+| **Para que** | eu não dependa de consultar a tabela de compatibilidade de cabeça |
+
+**Critérios de aceite:**
+- Bolsa compatível de grupo diferente é oferecida, não apenas a de grupo idêntico
+- Bolsa incompatível nunca entra na seleção, mesmo sendo a única disponível
+- A compatibilidade é aplicada antes da ordenação por validade
+- Entre bolsas compatíveis, a regra FEFO continua valendo
+- A relação não é tratada como simétrica
+
+Antes desta história a alocação comparava o grupo por igualdade, o que recusava
+doação válida: um paciente A+ só recebia bolsa A+, embora possa receber de O−,
+O+ e A− também. A regra varia por hemocomponente, porque plasma e
+crioprecipitado carregam anticorpos e seguem tabela invertida em relação às
+hemácias.
+
+**Implementação:** `MatrizCompatibilidade.java` · `RequisicaoServico.java` · endpoint `POST /api/v1/requisicoes/{id}/itens/{itemId}/alocacoes`
+
+A compatibilidade implementada é didática e não substitui protocolo clínico.
 
 ### Entrega 04
 
