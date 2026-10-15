@@ -158,6 +158,8 @@
 | GET | `/api/v1/rotas/{id}/bolsas` | path: `id` | — | `List<BolsaResumo>` | 200, 404 |
 | POST | `/api/v1/rotas/{id}/bolsas` | path: `id` | `{ "bolsaId": "..." }` | `BolsaResumo` | 201, 400, 404, 409 |
 | DELETE | `/api/v1/rotas/{id}/bolsas/{bolsaId}` | path: `id`, `bolsaId` | — | — | 204, 404, 409 |
+| POST | `/api/v1/rotas/{id}/temperaturas` | path: `id` | `{ "temperaturaCelsius": 4.0 }` | `LeituraTemperatura` | 201, 400, 404, 409 |
+| GET | `/api/v1/rotas/{id}/temperaturas` | path: `id` | — | `List<LeituraTemperatura>` | 200, 404 |
 
 ### 2.6 Indicadores — `/api/v1/indicadores`
 
@@ -331,5 +333,70 @@ Bolsa incompatível devolve `409`, com a mensagem listando os grupos aceitos:
 ```
 
 A compatibilidade implementada é didática e não substitui protocolo clínico.
+
+*(Todos os dados dos exemplos acima são sintéticos, para fins didáticos.)*
+
+---
+
+### 3.4 `POST /api/v1/rotas/{id}/temperaturas` — sensor reporta leitura da remessa
+
+**A telemetria é simulada nesta fase do projeto.** O endpoint recebe o que um
+sensor reportaria; não há integração com hardware.
+
+**Request**
+
+```http
+POST /api/v1/rotas/5a6b7c8d-9e0f-1a2b-3c4d-5e6f7a8b9c0d/temperaturas HTTP/1.1
+Content-Type: application/json
+
+{
+  "temperaturaCelsius": 5.0
+}
+```
+
+**Response — `201 Created`**
+
+```json
+{
+  "id": "e1f2a3b4-c5d6-7890-1234-56789abcdef0",
+  "rotaId": "5a6b7c8d-9e0f-1a2b-3c4d-5e6f7a8b9c0d",
+  "temperaturaCelsius": 5.0,
+  "dataHora": "2026-10-14T16:42:11",
+  "dentroDaFaixa": false,
+  "alertas": [
+    {
+      "componente": "CONCENTRADO_PLAQUETAS",
+      "faixaMinima": 20.0,
+      "faixaMaxima": 24.0,
+      "bolsasAfetadas": 2
+    }
+  ]
+}
+```
+
+**A faixa aceitável é a do componente transportado, não um valor único:**
+
+| Componente | Faixa |
+|---|---|
+| Concentrado de hemácias | 1 a 6 °C |
+| Concentrado de plaquetas | 20 a 24 °C |
+| Plasma fresco congelado | −25 a −18 °C |
+| Crioprecipitado | −25 a −18 °C |
+
+Uma remessa pode levar componentes de faixas diferentes no mesmo
+compartimento. O exemplo acima mostra isso: 5 °C está correto para hemácias e
+é excursão para plaquetas, então o alerta sai apenas para as plaquetas. Por
+isso `alertas` é uma lista, e `dentroDaFaixa` só é `true` quando nenhum
+componente foi violado.
+
+Os limites são inclusivos: 1,0 °C e 6,0 °C são aceitos para hemácias.
+
+**Códigos de erro**
+
+| Código | Quando |
+|---|---|
+| `400` | temperatura fora do intervalo plausível para um sensor (−80 a 60 °C), o que indica defeito do equipamento e não excursão |
+| `404` | rota inexistente |
+| `409` | rota não está `EM_TRANSITO` |
 
 *(Todos os dados dos exemplos acima são sintéticos, para fins didáticos.)*
