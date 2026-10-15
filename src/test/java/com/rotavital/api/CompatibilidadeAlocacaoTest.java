@@ -12,6 +12,7 @@ import com.rotavital.dominio.enums.PrioridadeRequisicao;
 import com.rotavital.dominio.enums.TipoHemocomponente;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -211,6 +212,88 @@ class CompatibilidadeAlocacaoTest {
         JsonNode requisicao = criarRequisicao(TipoHemocomponente.CONCENTRADO_HEMACIAS,
                 GrupoSanguineo.A_POS, 1);
         alocarEsperando(requisicao, bolsa, 409);
+    }
+
+    // -----------------------------------------------------------------------
+    // PI3-130 - casos de borda: estoque incompativel e atendimento parcial
+    // -----------------------------------------------------------------------
+
+    /**
+     * Caso 5 da PI3-130: estoque sem bolsa compativel e ausencia de opcao, nao
+     * falha do sistema.
+     *
+     * <p>A distincao importa para a operacao: a requisicao precisa sobreviver a
+     * recusa e continuar aberta para ser atendida depois, em vez de ser
+     * cancelada ou derrubar a transacao. Aqui se verifica o efeito no estado -
+     * status da requisicao, status do item e status das bolsas - que os testes
+     * de unidade da selecao nao alcancam.</p>
+     */
+    @Nested
+    @DisplayName("PI3-130: estoque incompativel gera atendimento parcial, nao erro")
+    class AtendimentoParcial {
+
+        @Test
+        @DisplayName("Com uma compativel e uma incompativel, a requisicao fica PARCIALMENTE_ATENDIDA")
+        void compativelEhAlocadaEIncompativelRecusadaSemDesfazerAAlocacao() throws Exception {
+            String compativel = criarBolsa(TipoHemocomponente.CONCENTRADO_HEMACIAS,
+                    GrupoSanguineo.O_NEG);
+            String incompativel = criarBolsa(TipoHemocomponente.CONCENTRADO_HEMACIAS,
+                    GrupoSanguineo.B_POS);
+
+            JsonNode requisicao = criarRequisicao(TipoHemocomponente.CONCENTRADO_HEMACIAS,
+                    GrupoSanguineo.A_POS, 2);
+            String requisicaoId = requisicao.get("id").asString();
+
+            // O- doa para A+: a primeira alocacao passa.
+            alocarEsperando(requisicao, compativel, 201);
+            // B+ nao doa para A+: a segunda e recusada com 409.
+            alocarEsperando(requisicao, incompativel, 409);
+
+            // A recusa nao desfez a alocacao anterior nem travou a requisicao.
+            mvc.perform(get("/api/v1/requisicoes/" + requisicaoId))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value("PARCIALMENTE_ATENDIDA"))
+                    .andExpect(jsonPath("$.itens[0].quantidadeSolicitada").value(2))
+                    .andExpect(jsonPath("$.itens[0].quantidadeAlocada").value(1))
+                    .andExpect(jsonPath("$.itens[0].status").value("PARCIALMENTE_ALOCADO"));
+
+            mvc.perform(get("/api/v1/bolsas/" + compativel))
+                    .andExpect(jsonPath("$.status").value("RESERVADA"));
+            mvc.perform(get("/api/v1/bolsas/" + incompativel))
+                    .andExpect(jsonPath("$.status").value("DISPONIVEL"));
+        }
+
+        @Test
+        @DisplayName("Estoque so com incompativel: 409, requisicao segue PENDENTE e ainda aceita bolsa compativel")
+        void requisicaoSobreviveARecusaEAceitaAlocacaoPosterior() throws Exception {
+            String incompativel = criarBolsa(TipoHemocomponente.CONCENTRADO_HEMACIAS,
+                    GrupoSanguineo.A_POS);
+
+            JsonNode requisicao = criarRequisicao(TipoHemocomponente.CONCENTRADO_HEMACIAS,
+                    GrupoSanguineo.O_NEG, 1);
+            String requisicaoId = requisicao.get("id").asString();
+
+            alocarEsperando(requisicao, incompativel, 409);
+
+            // Nem CANCELADA nem erro de servidor: continua aberta.
+            mvc.perform(get("/api/v1/requisicoes/" + requisicaoId))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value("PENDENTE"))
+                    .andExpect(jsonPath("$.itens[0].quantidadeAlocada").value(0))
+                    .andExpect(jsonPath("$.itens[0].status").value("PENDENTE"));
+
+            // Chegando estoque compativel, a mesma requisicao e atendida.
+            String compativel = criarBolsa(TipoHemocomponente.CONCENTRADO_HEMACIAS,
+                    GrupoSanguineo.O_NEG);
+            alocarEsperando(requisicao, compativel, 201);
+
+            mvc.perform(get("/api/v1/requisicoes/" + requisicaoId))
+                    .andExpect(jsonPath("$.status").value("ATENDIDA"))
+                    .andExpect(jsonPath("$.itens[0].status").value("ALOCADO"));
+
+            mvc.perform(get("/api/v1/bolsas/" + incompativel))
+                    .andExpect(jsonPath("$.status").value("DISPONIVEL"));
+        }
     }
 
     // -----------------------------------------------------------------------
