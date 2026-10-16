@@ -75,11 +75,42 @@ public class VizinhoMaisProximo<T> {
      * contam uma vez e a origem, se aparecer entre os pontos de entrega, e
      * descartada, porque o veiculo ja esta nela.</p>
      *
+     * <p>Ponto que nao pode ser atendido vai para
+     * {@link ResultadoRoteiro#pontosInalcancaveis()} e o roteiro parcial ja
+     * calculado e devolvido assim mesmo. Nenhuma dessas situacoes lanca
+     * excecao, porque nenhuma delas e erro de programa: sao o que a malha
+     * permitiu entregar.</p>
+     *
+     * <p>Comportamento nas bordas:</p>
+     * <ul>
+     *   <li><b>lista de pontos vazia:</b> ordem de visita vazia, caminho
+     *       contendo somente a origem, custo zero e
+     *       {@link ResultadoRoteiro#alcancouTodos()} verdadeiro - nao havia
+     *       nada a atender, entao nada ficou por atender;</li>
+     *   <li><b>origem fora do grafo:</b> nenhum ponto e visitado e todos vao
+     *       para inalcancaveis, com caminho contendo so a origem e custo zero.
+     *       Nao e excecao: o {@code calcularDistancias} devolve mapa vazio
+     *       para origem inexistente, e o {@code ServicoAlocacaoRota} ja trata
+     *       solicitante fora da malha como falta de caminho, nao como erro;</li>
+     *   <li><b>ponto de entrega fora do grafo:</b> nunca aparece no mapa de
+     *       distancias, entao vai para inalcancaveis enquanto os demais sao
+     *       roteirizados normalmente;</li>
+     *   <li><b>ponto repetido na lista:</b> visitado uma unica vez e, se for
+     *       inalcancavel, listado uma unica vez;</li>
+     *   <li><b>origem dentro da lista de pontos:</b> ignorada, porque o
+     *       veiculo ja esta nela;</li>
+     *   <li><b>elemento nulo dentro da lista:</b> descartado em silencio, como
+     *       o {@code ServicoAlocacaoRota} faz com bolsa nula no estoque. Lista
+     *       com buraco e defeito do dado de entrada, nao do algoritmo;</li>
+     *   <li><b>origem nula ou lista nula:</b> ai sim
+     *       {@link IllegalArgumentException}, porque e erro de programa de
+     *       quem chamou, nao situacao da operacao.</li>
+     * </ul>
+     *
      * @param origem          vertice de partida
      * @param pontosDeEntrega pontos a visitar, na ordem que define o desempate
-     * @return o roteiro calculado; se nenhum ponto for alcancavel, devolve
-     *         ordem de visita vazia, caminho contendo somente a origem e custo
-     *         zero
+     *                        e a ordem da lista de inalcancaveis
+     * @return o roteiro calculado, sempre com ao menos a origem no caminho
      * @throws IllegalArgumentException se a origem ou a lista forem nulas
      */
     public ResultadoRoteiro<T> calcularRoteiro(T origem, List<T> pontosDeEntrega) {
@@ -91,8 +122,19 @@ public class VizinhoMaisProximo<T> {
         }
 
         // LinkedHashSet para preservar a ordem de entrada (que decide o
-        // desempate) e, de graca, ignorar pontos repetidos.
-        Set<T> pendentes = new LinkedHashSet<>(pontosDeEntrega);
+        // desempate e a ordem dos inalcancaveis) e, de graca, ignorar pontos
+        // repetidos.
+        //
+        // Os nulos sao descartados aqui, um a um, em vez de copiar a colecao
+        // inteira de uma vez: o LinkedHashSet aceitaria null sem reclamar, e o
+        // List.copyOf do resultado so estouraria no fim, com um
+        // NullPointerException longe da causa.
+        Set<T> pendentes = new LinkedHashSet<>();
+        for (T ponto : pontosDeEntrega) {
+            if (ponto != null) {
+                pendentes.add(ponto);
+            }
+        }
         // O veiculo ja esta na origem: visitar nao faria sentido.
         pendentes.remove(origem);
 
@@ -112,14 +154,16 @@ public class VizinhoMaisProximo<T> {
             T escolhido = maisProximoEntre(pendentes, distancias);
 
             if (escolhido == null) {
-                // Nenhum pendente e alcancavel a partir de 'atual': insistir
-                // reexecutaria o mesmo Dijkstra para sempre. Interromper aqui
-                // e o que garante o termino do laco.
+                // Nenhum pendente e alcancavel a partir de 'atual'. Insistir
+                // reexecutaria o mesmo Dijkstra indefinidamente, porque nada
+                // mudaria entre as voltas: interromper aqui e o que garante o
+                // termino do laco.
                 //
-                // PI3-subtarefa-2: e exatamente neste ponto que entra o
-                // registro formal dos nao atendidos - os 'pendentes' que
-                // sobraram sao a lista de inalcancaveis, e o ResultadoRoteiro
-                // ganhara esse campo e o alcancouTodos().
+                // O que sobrou em 'pendentes' e, por definicao, o conjunto dos
+                // nao atendidos - e ja esta na ordem de entrada, porque o
+                // LinkedHashSet a preserva. O roteiro parcial calculado ate
+                // aqui e preservado e devolvido junto: descartar o que ja foi
+                // possivel entregar seria jogar fora a informacao util.
                 break;
             }
 
@@ -136,7 +180,11 @@ public class VizinhoMaisProximo<T> {
             atual = escolhido;
         }
 
-        return ResultadoRoteiro.de(ordemDeVisita, caminhoCompleto, custoTotal);
+        // Os pendentes restantes sao os inalcancaveis. Quando o laco terminou
+        // por esgotamento, o conjunto esta vazio e alcancouTodos() e true.
+        List<T> inalcancaveis = new ArrayList<>(pendentes);
+
+        return ResultadoRoteiro.de(ordemDeVisita, caminhoCompleto, inalcancaveis, custoTotal);
     }
 
     /**
