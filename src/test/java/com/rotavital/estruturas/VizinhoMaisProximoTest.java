@@ -384,4 +384,220 @@ class VizinhoMaisProximoTest {
             assertTrue(roteiro.ordemDeVisita().containsAll(List.of("HC04", "HC05")));
         }
     }
+    // ------------------------------------------------------------------
+    @Nested
+    @DisplayName("Limitacao: a heuristica nao garante o roteiro otimo")
+    class NaoOtimalidade {
+
+        /**
+         * Grafo armado para o guloso errar. Do CD, P1 esta a 1 e P2 a 2,
+         * entao a heuristica vai a P1 primeiro; mas de P1 a volta ate P2 custa
+         * 100, enquanto de P2 a ida ate P1 custa 2.
+         *
+         * <pre>
+         *   CD --1--> P1 --100--> P2
+         *   CD --2--> P2 ---2---> P1
+         * </pre>
+         */
+        private Grafo<String> armadilhaParaOGuloso() {
+            Grafo<String> grafo = new Grafo<>();
+            grafo.inserirAresta("CD", "P1", 1.0);
+            grafo.inserirAresta("CD", "P2", 2.0);
+            grafo.inserirAresta("P1", "P2", 100.0);
+            grafo.inserirAresta("P2", "P1", 2.0);
+            return grafo;
+        }
+
+        /**
+         * Documenta uma limitacao conhecida da heuristica, nao um defeito da
+         * implementacao: decidindo so pelo passo seguinte, o vizinho mais
+         * proximo pode fechar com custo maior que o de outra ordem possivel.
+         * Encontrar a ordem otima e o problema do caixeiro viajante, de custo
+         * exponencial.
+         */
+        @Test
+        @DisplayName("O roteiro guloso pode custar mais que outra ordem: limitacao conhecida, nao defeito")
+        void roteiroGulosoPodeCustarMaisQueAOrdemAlternativa() {
+            Grafo<String> grafo = armadilhaParaOGuloso();
+
+            ResultadoRoteiro<String> guloso = new VizinhoMaisProximo<>(grafo)
+                    .calcularRoteiro("CD", List.of("P1", "P2"));
+
+            // O guloso escolhe P1 (custa 1) antes de P2 (custa 2).
+            assertEquals(List.of("P1", "P2"), guloso.ordemDeVisita());
+            assertEquals(101.0, guloso.custoTotalMinutos(), "1 ate P1 mais 100 ate P2");
+
+            // A ordem inversa, calculada pelo Dijkstra, sai bem mais barata.
+            Dijkstra<String> dijkstra = new Dijkstra<>(grafo);
+            double alternativa = dijkstra.calcularRota("CD", "P2").custoTotal()
+                    + dijkstra.calcularRota("P2", "P1").custoTotal();
+
+            assertEquals(4.0, alternativa, "2 ate P2 mais 2 ate P1");
+            assertTrue(alternativa < guloso.custoTotalMinutos(),
+                    "visitar P2 primeiro custaria " + alternativa
+                            + " contra os " + guloso.custoTotalMinutos() + " do guloso");
+        }
+    }
+
+    // ------------------------------------------------------------------
+    @Nested
+    @DisplayName("Desempate deterministico entre pontos equidistantes")
+    class DesempateDeterministico {
+
+        /**
+         * A e B estao exatamente a mesma distancia do CD, entao quem decide e
+         * a ordem de entrada.
+         */
+        private Grafo<String> doisEquidistantes() {
+            Grafo<String> grafo = new Grafo<>();
+            grafo.inserirAresta("CD", "A", 5.0);
+            grafo.inserirAresta("CD", "B", 5.0);
+            grafo.inserirAresta("A", "B", 1.0);
+            grafo.inserirAresta("B", "A", 1.0);
+            return grafo;
+        }
+
+        @Test
+        @DisplayName("Empate: vence o primeiro informado na lista de entrada")
+        void empateVenceOPrimeiroInformado() {
+            ResultadoRoteiro<String> roteiro = new VizinhoMaisProximo<>(doisEquidistantes())
+                    .calcularRoteiro("CD", List.of("A", "B"));
+
+            assertEquals(List.of("A", "B"), roteiro.ordemDeVisita());
+        }
+
+        @Test
+        @DisplayName("Empate: invertendo a ordem de entrada, vence o outro")
+        void empateInvertidoVenceOOutro() {
+            ResultadoRoteiro<String> roteiro = new VizinhoMaisProximo<>(doisEquidistantes())
+                    .calcularRoteiro("CD", List.of("B", "A"));
+
+            assertEquals(List.of("B", "A"), roteiro.ordemDeVisita(),
+                    "e a ordem de entrada que desempata, nao a ordem interna do grafo");
+        }
+
+        @Test
+        @DisplayName("Chamadas repetidas com a mesma entrada devolvem resultados iguais")
+        void chamadasRepetidasDevolvemOMesmoResultado() {
+            VizinhoMaisProximo<String> roteirizador =
+                    new VizinhoMaisProximo<>(doisEquidistantes());
+
+            ResultadoRoteiro<String> primeira = roteirizador.calcularRoteiro("CD", List.of("A", "B"));
+
+            for (int execucao = 0; execucao < 50; execucao++) {
+                assertEquals(primeira, roteirizador.calcularRoteiro("CD", List.of("A", "B")),
+                        "o resultado nao pode variar entre execucoes da mesma entrada");
+            }
+
+            assertEquals(primeira.hashCode(),
+                    roteirizador.calcularRoteiro("CD", List.of("A", "B")).hashCode());
+        }
+    }
+
+    // ------------------------------------------------------------------
+    @Nested
+    @DisplayName("Grafo dirigido: aresta de mao unica")
+    class GrafoDirigido {
+
+        /**
+         * CD alcanca X e Y. De Y, porem, nao ha volta para lugar nenhum: a
+         * aresta CD -> X e de mao unica e o veiculo que parou em Y fica sem
+         * como chegar em X.
+         *
+         * <pre>
+         *   CD --1--> Y        (Y nao tem aresta de saida)
+         *   CD --9--> X
+         * </pre>
+         */
+        @Test
+        @DisplayName("Ponto alcancavel da origem mas nao de onde o veiculo parou vai para inalcancaveis")
+        void maoUnicaDeixaPontoInalcancavelDepoisDaParada() {
+            Grafo<String> grafo = new Grafo<>(true);
+            grafo.inserirAresta("CD", "Y", 1.0);
+            grafo.inserirAresta("CD", "X", 9.0);
+
+            assertTrue(grafo.isDirecionado());
+
+            // A partir do CD, os dois sao alcancaveis.
+            Dijkstra<String> dijkstra = new Dijkstra<>(grafo);
+            assertTrue(dijkstra.calcularDistancias("CD").containsKey("X"));
+            assertTrue(dijkstra.calcularDistancias("CD").containsKey("Y"));
+            // A partir de Y, X nao e.
+            assertFalse(dijkstra.calcularDistancias("Y").containsKey("X"));
+
+            ResultadoRoteiro<String> roteiro = new VizinhoMaisProximo<>(grafo)
+                    .calcularRoteiro("CD", List.of("X", "Y"));
+
+            // O guloso vai a Y primeiro, porque custa 1, e perde o acesso a X.
+            assertEquals(List.of("Y"), roteiro.ordemDeVisita());
+            assertEquals(List.of("CD", "Y"), roteiro.caminhoCompleto());
+            assertEquals(1.0, roteiro.custoTotalMinutos());
+            assertEquals(List.of("X"), roteiro.pontosInalcancaveis());
+            assertFalse(roteiro.alcancouTodos());
+        }
+    }
+
+    // ------------------------------------------------------------------
+    @Nested
+    @DisplayName("Imutabilidade do ResultadoRoteiro")
+    class Imutabilidade {
+
+        @Test
+        @DisplayName("As tres listas devolvidas recusam alteracao")
+        void listasDevolvidasSaoImutaveis() {
+            Grafo<String> grafo = malhaDeExemplo();
+            grafo.inserirVertice("ILHA");
+
+            ResultadoRoteiro<String> roteiro = new VizinhoMaisProximo<>(grafo)
+                    .calcularRoteiro("CD", List.of("H1", "ILHA"));
+
+            assertThrows(UnsupportedOperationException.class,
+                    () -> roteiro.ordemDeVisita().add("X"));
+            assertThrows(UnsupportedOperationException.class,
+                    () -> roteiro.caminhoCompleto().add("X"));
+            assertThrows(UnsupportedOperationException.class,
+                    () -> roteiro.pontosInalcancaveis().add("X"));
+        }
+
+        @Test
+        @DisplayName("Alterar a lista de entrada depois da chamada nao muda o resultado")
+        void alterarAListaDeEntradaNaoAfetaOResultado() {
+            Grafo<String> grafo = malhaDeExemplo();
+            List<String> entrada = new ArrayList<>(List.of("H1", "H2"));
+
+            ResultadoRoteiro<String> roteiro =
+                    new VizinhoMaisProximo<>(grafo).calcularRoteiro("CD", entrada);
+
+            List<String> ordemAntes = List.copyOf(roteiro.ordemDeVisita());
+
+            entrada.clear();
+            entrada.add("OUTRO");
+
+            assertEquals(ordemAntes, roteiro.ordemDeVisita(),
+                    "o resultado nao pode acompanhar mudancas na lista do chamador");
+            assertEquals(List.of("H1", "H2"), roteiro.ordemDeVisita());
+        }
+
+        @Test
+        @DisplayName("equals e hashCode distinguem roteiros com inalcancaveis diferentes")
+        void equalsConsideraOsInalcancaveis() {
+            Grafo<String> completo = malhaDeExemplo();
+            Grafo<String> comIlha = malhaDeExemplo();
+            comIlha.inserirVertice("ILHA");
+
+            ResultadoRoteiro<String> semSobra = new VizinhoMaisProximo<>(completo)
+                    .calcularRoteiro("CD", List.of("H1"));
+            ResultadoRoteiro<String> comSobra = new VizinhoMaisProximo<>(comIlha)
+                    .calcularRoteiro("CD", List.of("H1", "ILHA"));
+
+            // Mesma ordem de visita, mesmo caminho e mesmo custo; o que separa
+            // os dois e a lista de nao atendidos.
+            assertEquals(semSobra.ordemDeVisita(), comSobra.ordemDeVisita());
+            assertEquals(semSobra.custoTotalMinutos(), comSobra.custoTotalMinutos());
+            assertNotEquals(semSobra, comSobra);
+
+            assertTrue(comSobra.toString().contains("ILHA"),
+                    "o toString precisa mostrar o que ficou por atender");
+        }
+    }
 }
