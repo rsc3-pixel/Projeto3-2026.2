@@ -147,7 +147,7 @@ nuvem; arquitetura de redes e telemetria; trabalho em equipe.
 | Contrato da API | [contrato_api.md](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/contrato_api.md) |
 | Histórias de usuário | [docs/historias-de-usuario.md](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/docs/historias-de-usuario.md) |
 | Issue / Bug tracker | [github.com/…/issues](https://github.com/rsc3-pixel/Projeto3-2026.2/issues) |
-| Screencast do sistema | _(a adicionar)_ |
+| Screencast do sistema | [assistir](https://luvaplay.com.br/game/Video01-%20O%20sistema.mp4) |
 | Screencast do código | _(a adicionar)_ |
 
 #### Histórias implementadas
