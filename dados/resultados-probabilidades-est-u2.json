@@ -1,0 +1,381 @@
+{
+  "dados_sinteticos": true,
+  "data_referencia": "2026-10-19",
+  "sementes": {
+    "bolsas": 2026,
+    "requisicoes": 2027,
+    "bootstrap": 20261019
+  },
+  "repeticoes": 5000,
+  "requisicoes_por_cenario": 300,
+  "metodo": "Bootstrap com reposição de requisições inteiras; estoque válido fixo; déficit quando D > S.",
+  "limites": "Sem alocação, substituição ABO/Rh, evolução temporal, reposição, rotas ou temperatura. Vencimento não é descarte realizado.",
+  "desabastecimento": [
+    {
+      "tipo": "O_POS",
+      "componente": "CONCENTRADO_HEMACIAS",
+      "estoque_valido": 303,
+      "demanda_original": 273,
+      "cenarios_com_deficit": 660,
+      "probabilidade_deficit": 0.132,
+      "deficit_medio_bolsas": 1.9506
+    },
+    {
+      "tipo": "A_POS",
+      "componente": "CONCENTRADO_HEMACIAS",
+      "estoque_valido": 290,
+      "demanda_original": 294,
+      "cenarios_com_deficit": 2729,
+      "probabilidade_deficit": 0.5458,
+      "deficit_medio_bolsas": 12.7108
+    },
+    {
+      "tipo": "B_POS",
+      "componente": "CONCENTRADO_HEMACIAS",
+      "estoque_valido": 60,
+      "demanda_original": 57,
+      "cenarios_com_deficit": 1838,
+      "probabilidade_deficit": 0.3676,
+      "deficit_medio_bolsas": 3.6376
+    },
+    {
+      "tipo": "O_NEG",
+      "componente": "CONCENTRADO_HEMACIAS",
+      "estoque_valido": 74,
+      "demanda_original": 57,
+      "cenarios_com_deficit": 407,
+      "probabilidade_deficit": 0.0814,
+      "deficit_medio_bolsas": 0.5554
+    },
+    {
+      "tipo": "A_NEG",
+      "componente": "CONCENTRADO_HEMACIAS",
+      "estoque_valido": 69,
+      "demanda_original": 85,
+      "cenarios_com_deficit": 4184,
+      "probabilidade_deficit": 0.8368,
+      "deficit_medio_bolsas": 17.3488
+    },
+    {
+      "tipo": "AB_POS",
+      "componente": "CONCENTRADO_HEMACIAS",
+      "estoque_valido": 19,
+      "demanda_original": 24,
+      "cenarios_com_deficit": 3360,
+      "probabilidade_deficit": 0.672,
+      "deficit_medio_bolsas": 6.481
+    },
+    {
+      "tipo": "B_NEG",
+      "componente": "CONCENTRADO_HEMACIAS",
+      "estoque_valido": 20,
+      "demanda_original": 13,
+      "cenarios_com_deficit": 636,
+      "probabilidade_deficit": 0.1272,
+      "deficit_medio_bolsas": 0.6006
+    },
+    {
+      "tipo": "AB_NEG",
+      "componente": "CONCENTRADO_HEMACIAS",
+      "estoque_valido": 5,
+      "demanda_original": 4,
+      "cenarios_com_deficit": 1308,
+      "probabilidade_deficit": 0.2616,
+      "deficit_medio_bolsas": 1.1584
+    },
+    {
+      "tipo": "O_POS",
+      "componente": "CONCENTRADO_PLAQUETAS",
+      "estoque_valido": 22,
+      "demanda_original": 101,
+      "cenarios_com_deficit": 5000,
+      "probabilidade_deficit": 1.0,
+      "deficit_medio_bolsas": 78.9788
+    },
+    {
+      "tipo": "A_POS",
+      "componente": "CONCENTRADO_PLAQUETAS",
+      "estoque_valido": 11,
+      "demanda_original": 92,
+      "cenarios_com_deficit": 5000,
+      "probabilidade_deficit": 1.0,
+      "deficit_medio_bolsas": 80.901
+    },
+    {
+      "tipo": "B_POS",
+      "componente": "CONCENTRADO_PLAQUETAS",
+      "estoque_valido": 2,
+      "demanda_original": 20,
+      "cenarios_com_deficit": 4989,
+      "probabilidade_deficit": 0.9978,
+      "deficit_medio_bolsas": 18.1856
+    },
+    {
+      "tipo": "O_NEG",
+      "componente": "CONCENTRADO_PLAQUETAS",
+      "estoque_valido": 3,
+      "demanda_original": 15,
+      "cenarios_com_deficit": 4926,
+      "probabilidade_deficit": 0.9852,
+      "deficit_medio_bolsas": 12.1494
+    },
+    {
+      "tipo": "A_NEG",
+      "componente": "CONCENTRADO_PLAQUETAS",
+      "estoque_valido": 1,
+      "demanda_original": 11,
+      "cenarios_com_deficit": 4924,
+      "probabilidade_deficit": 0.9848,
+      "deficit_medio_bolsas": 9.987
+    },
+    {
+      "tipo": "AB_POS",
+      "componente": "CONCENTRADO_PLAQUETAS",
+      "estoque_valido": 1,
+      "demanda_original": 10,
+      "cenarios_com_deficit": 4737,
+      "probabilidade_deficit": 0.9474,
+      "deficit_medio_bolsas": 9.0078
+    },
+    {
+      "tipo": "B_NEG",
+      "componente": "CONCENTRADO_PLAQUETAS",
+      "estoque_valido": 0,
+      "demanda_original": 4,
+      "cenarios_com_deficit": 3067,
+      "probabilidade_deficit": 0.6134,
+      "deficit_medio_bolsas": 3.9128
+    },
+    {
+      "tipo": "AB_NEG",
+      "componente": "CONCENTRADO_PLAQUETAS",
+      "estoque_valido": 0,
+      "demanda_original": 4,
+      "cenarios_com_deficit": 3161,
+      "probabilidade_deficit": 0.6322,
+      "deficit_medio_bolsas": 4.052
+    },
+    {
+      "tipo": "O_POS",
+      "componente": "PLASMA_FRESCO_CONGELADO",
+      "estoque_valido": 130,
+      "demanda_original": 114,
+      "cenarios_com_deficit": 945,
+      "probabilidade_deficit": 0.189,
+      "deficit_medio_bolsas": 2.0532
+    },
+    {
+      "tipo": "A_POS",
+      "componente": "PLASMA_FRESCO_CONGELADO",
+      "estoque_valido": 119,
+      "demanda_original": 126,
+      "cenarios_com_deficit": 3050,
+      "probabilidade_deficit": 0.61,
+      "deficit_medio_bolsas": 11.6518
+    },
+    {
+      "tipo": "B_POS",
+      "componente": "PLASMA_FRESCO_CONGELADO",
+      "estoque_valido": 36,
+      "demanda_original": 38,
+      "cenarios_com_deficit": 2731,
+      "probabilidade_deficit": 0.5462,
+      "deficit_medio_bolsas": 5.3138
+    },
+    {
+      "tipo": "O_NEG",
+      "componente": "PLASMA_FRESCO_CONGELADO",
+      "estoque_valido": 38,
+      "demanda_original": 21,
+      "cenarios_com_deficit": 110,
+      "probabilidade_deficit": 0.022,
+      "deficit_medio_bolsas": 0.0938
+    },
+    {
+      "tipo": "A_NEG",
+      "componente": "PLASMA_FRESCO_CONGELADO",
+      "estoque_valido": 27,
+      "demanda_original": 25,
+      "cenarios_com_deficit": 1854,
+      "probabilidade_deficit": 0.3708,
+      "deficit_medio_bolsas": 2.662
+    },
+    {
+      "tipo": "AB_POS",
+      "componente": "PLASMA_FRESCO_CONGELADO",
+      "estoque_valido": 10,
+      "demanda_original": 8,
+      "cenarios_com_deficit": 1588,
+      "probabilidade_deficit": 0.3176,
+      "deficit_medio_bolsas": 1.4472
+    },
+    {
+      "tipo": "B_NEG",
+      "componente": "PLASMA_FRESCO_CONGELADO",
+      "estoque_valido": 9,
+      "demanda_original": 12,
+      "cenarios_com_deficit": 3226,
+      "probabilidade_deficit": 0.6452,
+      "deficit_medio_bolsas": 4.0248
+    },
+    {
+      "tipo": "AB_NEG",
+      "componente": "PLASMA_FRESCO_CONGELADO",
+      "estoque_valido": 0,
+      "demanda_original": 0,
+      "cenarios_com_deficit": 0,
+      "probabilidade_deficit": 0.0,
+      "deficit_medio_bolsas": 0.0
+    },
+    {
+      "tipo": "O_POS",
+      "componente": "CRIOPRECIPITADO",
+      "estoque_valido": 37,
+      "demanda_original": 30,
+      "cenarios_com_deficit": 1147,
+      "probabilidade_deficit": 0.2294,
+      "deficit_medio_bolsas": 1.803
+    },
+    {
+      "tipo": "A_POS",
+      "componente": "CRIOPRECIPITADO",
+      "estoque_valido": 34,
+      "demanda_original": 37,
+      "cenarios_com_deficit": 2831,
+      "probabilidade_deficit": 0.5662,
+      "deficit_medio_bolsas": 5.9218
+    },
+    {
+      "tipo": "B_POS",
+      "componente": "CRIOPRECIPITADO",
+      "estoque_valido": 7,
+      "demanda_original": 3,
+      "cenarios_com_deficit": 195,
+      "probabilidade_deficit": 0.039,
+      "deficit_medio_bolsas": 0.0786
+    },
+    {
+      "tipo": "O_NEG",
+      "componente": "CRIOPRECIPITADO",
+      "estoque_valido": 4,
+      "demanda_original": 4,
+      "cenarios_com_deficit": 1620,
+      "probabilidade_deficit": 0.324,
+      "deficit_medio_bolsas": 1.0944
+    },
+    {
+      "tipo": "A_NEG",
+      "componente": "CRIOPRECIPITADO",
+      "estoque_valido": 13,
+      "demanda_original": 1,
+      "cenarios_com_deficit": 0,
+      "probabilidade_deficit": 0.0,
+      "deficit_medio_bolsas": 0.0
+    },
+    {
+      "tipo": "AB_POS",
+      "componente": "CRIOPRECIPITADO",
+      "estoque_valido": 0,
+      "demanda_original": 2,
+      "cenarios_com_deficit": 3209,
+      "probabilidade_deficit": 0.6418,
+      "deficit_medio_bolsas": 2.0296
+    },
+    {
+      "tipo": "B_NEG",
+      "componente": "CRIOPRECIPITADO",
+      "estoque_valido": 1,
+      "demanda_original": 0,
+      "cenarios_com_deficit": 0,
+      "probabilidade_deficit": 0.0,
+      "deficit_medio_bolsas": 0.0
+    },
+    {
+      "tipo": "AB_NEG",
+      "componente": "CRIOPRECIPITADO",
+      "estoque_valido": 0,
+      "demanda_original": 2,
+      "cenarios_com_deficit": 3136,
+      "probabilidade_deficit": 0.6272,
+      "deficit_medio_bolsas": 1.9492
+    },
+    {
+      "tipo": "TODOS",
+      "componente": "CONCENTRADO_HEMACIAS",
+      "estoque_valido": 840,
+      "demanda_original": 807,
+      "cenarios_com_deficit": 1020,
+      "probabilidade_deficit": 0.204,
+      "deficit_medio_bolsas": 4.5614
+    },
+    {
+      "tipo": "TODOS",
+      "componente": "CONCENTRADO_PLAQUETAS",
+      "estoque_valido": 40,
+      "demanda_original": 257,
+      "cenarios_com_deficit": 5000,
+      "probabilidade_deficit": 1.0,
+      "deficit_medio_bolsas": 217.1394
+    },
+    {
+      "tipo": "TODOS",
+      "componente": "PLASMA_FRESCO_CONGELADO",
+      "estoque_valido": 369,
+      "demanda_original": 344,
+      "cenarios_com_deficit": 980,
+      "probabilidade_deficit": 0.196,
+      "deficit_medio_bolsas": 3.4024
+    },
+    {
+      "tipo": "TODOS",
+      "componente": "CRIOPRECIPITADO",
+      "estoque_valido": 96,
+      "demanda_original": 79,
+      "cenarios_com_deficit": 661,
+      "probabilidade_deficit": 0.1322,
+      "deficit_medio_bolsas": 1.2162
+    }
+  ],
+  "descarte_por_vencimento": [
+    {
+      "componente": "CONCENTRADO_HEMACIAS",
+      "total": 1128,
+      "vencidas": 288,
+      "validas": 840,
+      "validas_ate_7_dias": 147,
+      "probabilidade_empirica_vencida": 0.2553191489361702,
+      "probabilidade_teorica_vencida": 0.29508196721311475,
+      "probabilidade_ate_7_dias_dada_valida": 0.175
+    },
+    {
+      "componente": "CONCENTRADO_PLAQUETAS",
+      "total": 407,
+      "vencidas": 367,
+      "validas": 40,
+      "validas_ate_7_dias": 40,
+      "probabilidade_empirica_vencida": 0.9017199017199017,
+      "probabilidade_teorica_vencida": 0.9016393442622951,
+      "probabilidade_ate_7_dias_dada_valida": 1.0
+    },
+    {
+      "componente": "PLASMA_FRESCO_CONGELADO",
+      "total": 369,
+      "vencidas": 0,
+      "validas": 369,
+      "validas_ate_7_dias": 0,
+      "probabilidade_empirica_vencida": 0.0,
+      "probabilidade_teorica_vencida": 0.0,
+      "probabilidade_ate_7_dias_dada_valida": 0.0
+    },
+    {
+      "componente": "CRIOPRECIPITADO",
+      "total": 96,
+      "vencidas": 0,
+      "validas": 96,
+      "validas_ate_7_dias": 0,
+      "probabilidade_empirica_vencida": 0.0,
+      "probabilidade_teorica_vencida": 0.0,
+      "probabilidade_ate_7_dias_dada_valida": 0.0
+    }
+  ]
+}

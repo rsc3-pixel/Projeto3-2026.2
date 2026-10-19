@@ -142,6 +142,7 @@ nuvem; arquitetura de redes e telemetria; trabalho em equipe.
 
 | Artefato | Link |
 |---|---|
+| Relatório EST U2 — interpretação e decisão | [docs/est-u2-interpretacao-decisao.md](docs/est-u2-interpretacao-decisao.md) |
 | **Aplicação no ar** | [rsc3-rotavital.duckdns.org](https://rsc3-rotavital.duckdns.org/api/v1/hemocentros) |
 | **API Reference (Scalar)** | [/docs](https://rsc3-rotavital.duckdns.org/docs) |
 | Contrato da API | [contrato_api.md](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/contrato_api.md) |
