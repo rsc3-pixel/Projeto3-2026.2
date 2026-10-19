@@ -1,0 +1,21 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Arial","fontSize":"14px","primaryColor":"#f8fafc","primaryTextColor":"#0f172a","primaryBorderColor":"#64748b","lineColor":"#475569","clusterBkg":"#f8fafc","clusterBorder":"#94a3b8"},"flowchart":{"wrappingWidth":400,"nodeSpacing":30,"rankSpacing":45}}}%%
+flowchart TB
+    U["Operadores: 5 sessões ativas<br/>1 req/s de negócio estimada"]
+    T["Telemetria simulada HU-07<br/>2 rotas; 1 leitura a cada 30 s"]
+    subgraph VM["BAIXO — topologia atual versionada, carga proposta<br/>VM compartilhada: 2 vCPU; cerca de 978 MB totais"]
+        N["Nginx + certificado TLS<br/>443 público; 80 redireciona"]
+        A["Uma JVM Java 21 / Spring Boot<br/>systemd; 127.0.0.1:8081<br/>heap 256 MiB; RSS histórico 331 MB"]
+        H[("H2 em memória<br/>dentro da JVM; dados efêmeros")]
+        F["Flux / outra aplicação<br/>127.0.0.1:3000; disputa recursos"]
+        L["Logs Nginx + journal<br/>health; medição de SO"]
+        N -->|"HTTP local: domínio Rota Vital"| A
+        N -->|"Outro domínio"| F
+        A -->|"JDBC interno"| H
+        A -.-> L
+        N -.-> L
+    end
+    U -->|"HTTPS / REST e painel"| N
+    T -->|"HTTPS POST temperaturas"| N
+    C["GitHub Actions<br/>build e testes fora da VM"] -.->|"SSH/SCP restrito; publicação"| A
+    classDef atual fill:#e0f2fe,stroke:#0369a1,color:#0f172a
+    class N,A,H,F,L atual
