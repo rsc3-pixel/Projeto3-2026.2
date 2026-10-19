@@ -1,0 +1,23 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Arial","fontSize":"14px","primaryColor":"#f8fafc","primaryTextColor":"#0f172a","primaryBorderColor":"#64748b","lineColor":"#475569","clusterBkg":"#f8fafc","clusterBorder":"#94a3b8"},"flowchart":{"wrappingWidth":400,"nodeSpacing":30,"rankSpacing":45}}}%%
+flowchart TB
+    U["Operadores: 25 sessões ativas<br/>5 req/s de negócio estimadas"]
+    T["Telemetria simulada HU-07<br/>20 rotas; 1 leitura a cada 15 s"]
+    subgraph VM["MODERADO — evolução proposta; não implantada<br/>VM dedicada: 2 vCPU; 4 GiB RAM; disco 40 GiB"]
+        N["Nginx + certificado TLS<br/>443 público; 80 redireciona"]
+        A["Uma JVM Java 21 / Spring Boot<br/>systemd; 127.0.0.1:8081<br/>heap inicial 1 GiB; pool JDBC 10"]
+        P[("PostgreSQL local proposto<br/>127.0.0.1:5432<br/>substitui H2; migrations")]
+        L["Logs com rotação + métricas de SO<br/>latência por endpoint; health"]
+        N -->|"HTTP local"| A
+        A -->|"JDBC local"| P
+        A -.-> L
+        N -.-> L
+        P -.-> L
+    end
+    U -->|"HTTPS / REST e painel"| N
+    T -->|"HTTPS POST temperaturas"| N
+    P -.->|"Cópia diária criptografada; testar restauração"| B["Backup fora da VM<br/>3 cópias; reserva inicial 15 GiB"]
+    C["GitHub Actions<br/>build e testes fora da VM"] -.->|"SSH/SCP restrito; publicação"| A
+    classDef mantido fill:#e0f2fe,stroke:#0369a1,color:#0f172a
+    classDef proposto fill:#fef3c7,stroke:#b45309,color:#0f172a
+    class N,A,L mantido
+    class P,B proposto
