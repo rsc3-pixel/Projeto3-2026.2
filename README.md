@@ -203,6 +203,20 @@ hemácias.
 
 A compatibilidade implementada é didática e não substitui protocolo clínico.
 
+---
+
+#### Issue / Bug tracker
+
+![Bug tracker da Entrega 03](docs/img/issue-tracker-e03.png)
+
+Nove issues resolvidas e três em aberto. As duas abertas nesta sprint vieram de
+defeitos encontrados durante a implementação:
+
+| Issue | O que é |
+|---|---|
+| [#57](https://github.com/rsc3-pixel/Projeto3-2026.2/issues/57) | existem dois caminhos de alocação, e o endpoint real ignora o índice e o FEFO |
+| [#58](https://github.com/rsc3-pixel/Projeto3-2026.2/issues/58) | `proxy_read_timeout` do Nginx corta o cold start e devolve 504 |
+
 ### Entrega 04
 
 **Status:** não iniciada
