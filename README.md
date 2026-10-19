@@ -143,6 +143,7 @@ nuvem; arquitetura de redes e telemetria; trabalho em equipe.
 | Artefato | Link |
 |---|---|
 | SO U2 — cenários e dimensionamento de arquitetura | [docs/so-u2-cenarios-dimensionamento.md](docs/so-u2-cenarios-dimensionamento.md) |
+| SO U2 — orçamento mensal dos três cenários | [docs/so-u2-orcamento-mensal.md](docs/so-u2-orcamento-mensal.md) |
 | **Aplicação no ar** | [rsc3-rotavital.duckdns.org](https://rsc3-rotavital.duckdns.org/api/v1/hemocentros) |
 | **API Reference (Scalar)** | [/docs](https://rsc3-rotavital.duckdns.org/docs) |
 | Contrato da API | [contrato_api.md](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/contrato_api.md) |
