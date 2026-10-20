@@ -136,7 +136,7 @@ nuvem; arquitetura de redes e telemetria; trabalho em equipe.
 
 ### Entrega 03
 
-**Status:** em andamento · prazo 19/10/2026
+**Status:** entregue em 19/10/2026
 
 **Artefatos**
 
