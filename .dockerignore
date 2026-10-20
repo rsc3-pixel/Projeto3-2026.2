@@ -1,0 +1,36 @@
+# O que NAO entra no contexto do build.
+#
+# Sem este arquivo, o Docker envia o diretorio inteiro ao daemon antes de
+# comecar: o target/ com os jars, o .git com todo o historico, os binarios de
+# C e C++ compilados. Isso torna o build lento e pode vazar para a imagem
+# arquivos que nao deveriam sair da maquina.
+
+target/
+.git/
+.gitattributes
+.github/
+
+# Artefatos de compilacao de C e C++
+aed/**/*.o
+aed/**/rota_vital_*
+
+# Configuracao local e segredos
+.env
+*.env
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Documentacao e dados: nao influenciam a compilacao
+docs/
+dados/
+apresentacao/
+*.md
+!README.md
+
+# Front-end, quando existir
+frontend-angular/node_modules/
+frontend-angular/dist/

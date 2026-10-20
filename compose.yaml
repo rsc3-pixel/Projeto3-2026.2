@@ -1,0 +1,83 @@
+# Rota Vital — ambiente completo em container
+#
+#   docker compose up -d --build
+#
+# Sobe a API e o banco do zero, em qualquer máquina com Docker. Nada precisa
+# estar instalado antes: nem Java, nem Maven, nem PostgreSQL.
+#
+# Antes da primeira subida, copie o modelo de configuração:
+#
+#   cp .env.example .env
+#
+# O .env não vai para o repositório, e é onde ficam as senhas.
+
+services:
+
+  banco:
+    image: postgres:17-alpine
+    container_name: rotavital-banco
+    environment:
+      POSTGRES_DB: ${DB_NAME:-rotavital}
+      POSTGRES_USER: ${DB_USER:-rotavital}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD no .env}
+    volumes:
+      # Volume nomeado, não bind mount: os dados ficam sob gestão do Docker e
+      # sobrevivem ao `docker compose down`. Com bind mount dependeríamos do
+      # caminho existir e ter permissão certa em cada máquina, o que costuma
+      # quebrar entre Windows, macOS e Linux.
+      - dados-postgres:/var/lib/postgresql/data
+    healthcheck:
+      # pg_isready responde quando o Postgres aceita conexão, não apenas
+      # quando o processo existe. É a diferença entre "subiu" e "está pronto".
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-rotavital} -d ${DB_NAME:-rotavital}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - rotavital
+    restart: unless-stopped
+    # A porta não é publicada no host de propósito: só a API precisa alcançar
+    # o banco, e ela o faz pela rede interna. Expor 5432 deixaria o Postgres
+    # acessível de fora da máquina sem necessidade.
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rotavital-api
+    depends_on:
+      banco:
+        # service_healthy, não apenas service_started: sem isso a aplicação
+        # tentaria conectar enquanto o Postgres ainda inicializa, falharia e
+        # entraria em laço de reinício.
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: banco
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-rotavital}
+      DB_USER: ${DB_USER:-rotavital}
+      DB_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD no .env}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 15s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
+    networks:
+      - rotavital
+    restart: unless-stopped
+
+volumes:
+  dados-postgres:
+    name: rotavital-dados
+
+networks:
+  rotavital:
+    name: rotavital-rede
+    # Rede própria em vez da default: os dois serviços se encontram pelo nome
+    # ("banco", "api") e ficam isolados de outros containers na mesma máquina.
+    driver: bridge
