@@ -54,7 +54,9 @@ Operacoes implementadas:
 - buscar bolsas por grupo sanguineo + componente;
 - remover bolsa do indice.
 
-A localizacao da lista correspondente a uma chave possui custo medio **O(1)**.
+A localizacao da lista correspondente a uma chave possui custo **O(1)**.
+
+> Atualizado na PI3-132: a chave passou a usar hash perfeito por `ordinal` e o mapa a ter capacidade 64, entao as 32 combinacoes possiveis nao colidem. O tratamento de colisao esta explicado em [W10-indice-estoque-hash.md](W10-indice-estoque-hash.md).
 
 ## Testes unitarios
 

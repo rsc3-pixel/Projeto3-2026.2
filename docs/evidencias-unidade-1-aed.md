@@ -113,16 +113,23 @@ O critério de desempate garante que execuções repetidas sejam 100% determiní
 ## 5. Estrutura 4: Índice Hash de Estoque
 
 **Arquivo:** [`src/main/java/com/rotavital/estruturas/IndiceEstoque.java`](../src/main/java/com/rotavital/estruturas/IndiceEstoque.java)  
-**Testes:** [`src/test/java/com/rotavital/estruturas/IndiceEstoqueTest.java`](../src/test/java/com/rotavital/estruturas/IndiceEstoqueTest.java) (4 testes unitários)
+**Testes:** [`src/test/java/com/rotavital/estruturas/IndiceEstoqueTest.java`](../src/test/java/com/rotavital/estruturas/IndiceEstoqueTest.java) (4 testes na U1; 21 após as PI3-131 e PI3-132)
+
+> Nota de atualização (PI3-132): esta seção descreve o estado da Unidade 1. Duas correções e um
+> acréscimo. A `ChaveEstoque` nunca foi um `record` — sempre foi uma classe interna privada com
+> `equals` e `hashCode`; o trecho abaixo foi corrigido. O retorno da busca deixou de ser visão
+> (`Collections.unmodifiableList`) e passou a ser cópia (`List.copyOf`) na PI3-131. E o tratamento
+> de colisão, que a U1 não documentava, está em
+> [W10-indice-estoque-hash.md](W10-indice-estoque-hash.md).
 
 ### 5.1 Chave Composta e Mapeamento
 Para evitar varreduras completas no estoque de bolsas, o sistema indexa o inventário por meio de chave composta imutável:
 ```java
-public record ChaveEstoque(GrupoSanguineo grupo, TipoHemocomponente tipo) {}
+private static final class ChaveEstoque { /* grupo + tipo, com equals e hashCode */ }
 private final Map<ChaveEstoque, List<Bolsa>> indice = new HashMap<>();
 ```
 - **Localização:** Busca por `(GrupoSanguineo, TipoHemocomponente)` em tempo médio **$O(1)$**.
-- **Consumo:** Retorna a lista correspondente em cópia não modificável (`Collections.unmodifiableList`).
+- **Consumo:** Retorna a lista correspondente, hoje como cópia imutável (`List.copyOf`).
 - **Remoção:** Localiza a chave em $O(1)$ e remove a bolsa em $O(k)$, onde $k$ é a quantidade de bolsas daquele mesmo tipo/grupo.
 
 ---

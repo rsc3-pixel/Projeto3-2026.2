@@ -32,10 +32,12 @@ Representacao: `PriorityQueue<Bolsa>` ordenada por `dataValidade` e, em caso de 
 
 Representacao: `HashMap<ChaveEstoque, List<Bolsa>>`, onde a chave combina `GrupoSanguineo` + `TipoHemocomponente`.
 
+A chave usa hash perfeito por `ordinal`, e o mapa e criado com capacidade 64: as 32 combinacoes possiveis caem em baldes distintos, sem colisao e sem redimensionamento. Entao o custo de localizar a chave e O(1) exato, nao apenas medio. Detalhes em [W10-indice-estoque-hash.md](W10-indice-estoque-hash.md).
+
 | Operacao | Complexidade media | Justificativa |
 |---|---:|---|
 | Adicionar bolsa | O(1) amortizado | Busca/insercao media no `HashMap` e adicao amortizada ao fim da `ArrayList`. |
-| Buscar por grupo + componente | O(1) medio para localizar a lista | A chave hash leva diretamente ao grupo de bolsas. Percorrer os `k` resultados custa O(k), o que e inevitavel para consumir os resultados. |
+| Buscar por grupo + componente | O(1) para localizar a lista | A chave hash leva diretamente ao grupo de bolsas. Percorrer os `k` resultados custa O(k), o que e inevitavel para consumir os resultados. |
 | Remover bolsa | O(k) no grupo encontrado | Encontrar a lista e O(1) medio, mas remover de `ArrayList` pode exigir percorrer/deslocar elementos do grupo. |
 
 ## Relacao com os criterios de aceite
@@ -44,5 +46,5 @@ Representacao: `HashMap<ChaveEstoque, List<Bolsa>>`, onde a chave combina `Grupo
 - Pesos negativos sao rejeitados na insercao, condicao exigida pela corretude do Dijkstra (PI3-19).
 - A fila FEFO prioriza a menor `dataValidade`.
 - Empates de validade sao resolvidos pelo `codigoRastreio`, garantindo comportamento deterministico.
-- O indice usa hash pela combinacao de grupo sanguineo e tipo de hemocomponente, com busca media O(1) para localizar o conjunto correspondente.
+- O indice usa hash pela combinacao de grupo sanguineo e tipo de hemocomponente, com busca O(1) para localizar o conjunto correspondente, sem colisao por construcao (PI3-132).
 - Os testes contemplam estrutura vazia, elemento unico e empate de validade.
