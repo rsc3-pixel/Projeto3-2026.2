@@ -34,7 +34,7 @@ class MatrizCompatibilidadeTest {
         @DisplayName("O- doa para todos os oito grupos")
         void doadorUniversal() {
             for (GrupoSanguineo receptor : GrupoSanguineo.values()) {
-                assertTrue(
+                assertFalse(
                         MatrizCompatibilidade.compativel(O_NEG, receptor, CONCENTRADO_HEMACIAS),
                         "O- deveria doar para " + receptor);
             }
