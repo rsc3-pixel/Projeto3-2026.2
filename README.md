@@ -508,6 +508,7 @@ corrigimos e assinamos o resultado.
 | | |
 |---|---|
 | Container funcionando | [docs/evidencias/e1-container.md](docs/evidencias/e1-container.md) |
+| Esteira barrando e entregando | [docs/evidencias/e3-pipeline.md](docs/evidencias/e3-pipeline.md) |
 | Execuções do pipeline | [aba Actions](https://github.com/rsc3-pixel/Projeto3-2026.2/actions) |
 | Aplicação no ar | <https://rsc3-rotavital.duckdns.org/actuator/health> |
 | Issue tracker | [9 resolvidas, 3 abertas](https://github.com/rsc3-pixel/Projeto3-2026.2/issues) |
