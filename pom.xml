@@ -56,6 +56,18 @@
 			<artifactId>h2</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+		<!--
+			PostgreSQL para o ambiente em container. O H2 continua para
+			desenvolvimento local e para os testes: ele sobe junto com a
+			aplicacao e nao exige nada instalado na maquina. O Postgres entra
+			onde os dados precisam sobreviver ao desligamento, que e o que o
+			H2 em memoria nao faz.
+		-->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator-test</artifactId>
