@@ -194,6 +194,150 @@ class SelecaoFefoTest {
                 TipoHemocomponente.CRIOPRECIPITADO, HOJE).isEmpty());
     }
 
+    /**
+     * O- e doador universal de hemacias: um paciente A+ pode receber dele.
+     * Sem consultar a matriz, a selecao recusaria essa doacao valida e
+     * deixaria estoque utilizavel parado.
+     */
+    @Test
+    void receptorAPositivoAceitaBolsaONegativo() {
+        Bolsa doadorUniversal = bolsaQueVenceEm("B001", HOJE.plusDays(10),
+                GrupoSanguineo.O_NEG, TipoHemocomponente.CONCENTRADO_HEMACIAS);
+
+        assertTrue(SelecaoFefo.alocavel(doadorUniversal, HOJE,
+                GrupoSanguineo.A_POS, TipoHemocomponente.CONCENTRADO_HEMACIAS));
+
+        Optional<Bolsa> escolhida = SelecaoFefo.escolher(List.of(doadorUniversal), HOJE,
+                GrupoSanguineo.A_POS, TipoHemocomponente.CONCENTRADO_HEMACIAS);
+
+        assertEquals("B001", escolhida.orElseThrow().getCodigoRastreio());
+    }
+
+    /**
+     * A relacao nao e simetrica: O- doa para A+, mas A+ nao doa para O-.
+     * A bolsa esta disponivel e na validade, e ainda assim nao pode sair.
+     */
+    @Test
+    void bolsaIncompativelNuncaEhSelecionada() {
+        Bolsa incompativel = bolsaQueVenceEm("B001", HOJE.plusDays(10),
+                GrupoSanguineo.A_POS, TipoHemocomponente.CONCENTRADO_HEMACIAS);
+
+        assertTrue(SelecaoFefo.alocavel(incompativel, HOJE),
+                "a bolsa esta valida e disponivel, o problema e so a compatibilidade");
+        assertFalse(SelecaoFefo.alocavel(incompativel, HOJE,
+                GrupoSanguineo.O_NEG, TipoHemocomponente.CONCENTRADO_HEMACIAS));
+
+        assertTrue(SelecaoFefo.escolher(List.of(incompativel), HOJE,
+                GrupoSanguineo.O_NEG, TipoHemocomponente.CONCENTRADO_HEMACIAS).isEmpty());
+    }
+
+    /**
+     * O caso que prova a ordem do filtro: a bolsa B- vence amanha e seria o
+     * topo da fila FEFO, mas e incompativel com um receptor A+. Se a
+     * compatibilidade fosse aplicada depois da ordenacao, ela ganharia a
+     * selecao e a escolha teria de ser descartada. Filtrada antes, nem
+     * compete.
+     */
+    @Test
+    void compatibilidadeEhAplicadaAntesDaOrdenacaoFefo() {
+        Bolsa incompativelQueVenceAmanha = bolsaQueVenceEm("B001", HOJE.plusDays(1),
+                GrupoSanguineo.B_NEG, TipoHemocomponente.CONCENTRADO_HEMACIAS);
+        Bolsa compativelComMaisPrazo = bolsaQueVenceEm("B002", HOJE.plusDays(30),
+                GrupoSanguineo.O_NEG, TipoHemocomponente.CONCENTRADO_HEMACIAS);
+
+        List<Bolsa> candidatas = List.of(incompativelQueVenceAmanha, compativelComMaisPrazo);
+
+        // Sem a compatibilidade, a B- seria a escolhida: vence antes.
+        assertEquals("B001",
+                SelecaoFefo.escolher(candidatas, HOJE).orElseThrow().getCodigoRastreio());
+
+        // Com o receptor informado, a B- nem entra na fila.
+        Optional<Bolsa> escolhida = SelecaoFefo.escolher(candidatas, HOJE,
+                GrupoSanguineo.A_POS, TipoHemocomponente.CONCENTRADO_HEMACIAS);
+
+        assertEquals("B002", escolhida.orElseThrow().getCodigoRastreio());
+        assertEquals(List.of("B002"),
+                SelecaoFefo.ordenar(candidatas, HOJE, GrupoSanguineo.A_POS,
+                                TipoHemocomponente.CONCENTRADO_HEMACIAS)
+                        .stream().map(Bolsa::getCodigoRastreio).toList());
+    }
+
+    /**
+     * A compatibilidade restringe quem pode competir, mas nao substitui o
+     * FEFO: entre duas bolsas que o receptor aceita, continua saindo a de
+     * validade mais proxima.
+     */
+    @Test
+    void entreDuasCompativeisOFefoContinuaDecidindo() {
+        Bolsa mesmoGrupoComMaisPrazo = bolsaQueVenceEm("B001", HOJE.plusDays(20),
+                GrupoSanguineo.A_POS, TipoHemocomponente.CONCENTRADO_HEMACIAS);
+        Bolsa universalQueVenceAntes = bolsaQueVenceEm("B002", HOJE.plusDays(3),
+                GrupoSanguineo.O_NEG, TipoHemocomponente.CONCENTRADO_HEMACIAS);
+
+        Optional<Bolsa> escolhida = SelecaoFefo.escolher(
+                List.of(mesmoGrupoComMaisPrazo, universalQueVenceAntes), HOJE,
+                GrupoSanguineo.A_POS, TipoHemocomponente.CONCENTRADO_HEMACIAS);
+
+        assertEquals("B002", escolhida.orElseThrow().getCodigoRastreio(),
+                "as duas servem, entao vence a que expira primeiro");
+    }
+
+    /**
+     * Plasma segue a tabela invertida: o receptor O-, que em hemacias so
+     * aceitaria O-, aceita plasma de qualquer grupo ABO. Ignorar essa
+     * inversao e o erro classico de modelagem, porque a intuicao construida
+     * com hemacias leva para o lado errado.
+     */
+    @Test
+    void plasmaSegueATabelaInvertida() {
+        TipoHemocomponente plasma = TipoHemocomponente.PLASMA_FRESCO_CONGELADO;
+        TipoHemocomponente hemacias = TipoHemocomponente.CONCENTRADO_HEMACIAS;
+
+        List<GrupoSanguineo> doadoresDePlasma = List.of(
+                GrupoSanguineo.O_NEG, GrupoSanguineo.A_NEG,
+                GrupoSanguineo.B_NEG, GrupoSanguineo.AB_NEG);
+
+        for (GrupoSanguineo doador : doadoresDePlasma) {
+            Bolsa bolsaPlasma = bolsaQueVenceEm("B001", HOJE.plusDays(10), doador, plasma);
+            assertTrue(SelecaoFefo.alocavel(bolsaPlasma, HOJE, GrupoSanguineo.O_NEG, plasma),
+                    "receptor O- deveria aceitar plasma de " + doador);
+
+            // O mesmo grupo, em hemacias, so passa se for O-.
+            Bolsa bolsaHemacias = bolsaQueVenceEm("B002", HOJE.plusDays(10), doador, hemacias);
+            assertEquals(doador == GrupoSanguineo.O_NEG,
+                    SelecaoFefo.alocavel(bolsaHemacias, HOJE, GrupoSanguineo.O_NEG, hemacias),
+                    "em hemacias, receptor O- so aceita O-, e nao " + doador);
+        }
+    }
+
+    /**
+     * O fluxo de requisicao usa a busca pelo indice: um receptor A+ tem de
+     * encontrar a bolsa O- que esta indexada sob O_NEG, sem que o chamador
+     * precise saber quais grupos procurar.
+     */
+    @Test
+    void escolherPeloIndiceEncontraDoadorCompativelDeOutroGrupo() {
+        IndiceEstoque estoque = new IndiceEstoque();
+
+        Bolsa universal = bolsaQueVenceEm("B001", HOJE.plusDays(15),
+                GrupoSanguineo.O_NEG, TipoHemocomponente.CONCENTRADO_HEMACIAS);
+        Bolsa incompativel = bolsaQueVenceEm("B002", HOJE.plusDays(1),
+                GrupoSanguineo.B_NEG, TipoHemocomponente.CONCENTRADO_HEMACIAS);
+
+        estoque.adicionar(universal);
+        estoque.adicionar(incompativel);
+
+        // Confirma que a bolsa esta indexada sob o grupo dela, nao sob A+.
+        assertTrue(estoque.buscar(GrupoSanguineo.A_POS,
+                TipoHemocomponente.CONCENTRADO_HEMACIAS).isEmpty());
+
+        Optional<Bolsa> escolhida = SelecaoFefo.escolher(estoque,
+                GrupoSanguineo.A_POS, TipoHemocomponente.CONCENTRADO_HEMACIAS, HOJE);
+
+        assertEquals("B001", escolhida.orElseThrow().getCodigoRastreio(),
+                "a B- vence antes, mas e incompativel com A+");
+    }
+
     private Bolsa bolsaQueVenceEm(String codigo, LocalDate dataValidade) {
         return bolsaQueVenceEm(codigo, dataValidade,
                 GrupoSanguineo.O_POS, TipoHemocomponente.CONCENTRADO_HEMACIAS);
