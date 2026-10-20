@@ -10,7 +10,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -271,6 +273,183 @@ class IndiceEstoqueTest {
             // Os dois corretos.
             assertEquals(1, indice.buscar(GrupoSanguineo.O_NEG,
                     TipoHemocomponente.CONCENTRADO_HEMACIAS).size());
+        }
+    }
+
+    // ------------------------------------------------------------------
+    @Nested
+    @DisplayName("Colisao")
+    class Colisao {
+
+        /**
+         * O numero de combinacoes possiveis e fechado e pequeno: e o que
+         * permite dimensionar a tabela e garantir hash perfeito.
+         */
+        @Test
+        @DisplayName("O espaco de chaves e 8 grupos por 4 tipos, ou seja, 32 combinacoes")
+        void espacoDeChavesEhFechadoEPequeno() {
+            assertEquals(8, GrupoSanguineo.values().length);
+            assertEquals(4, TipoHemocomponente.values().length);
+            assertEquals(32, GrupoSanguineo.values().length * TipoHemocomponente.values().length);
+        }
+
+        @Test
+        @DisplayName("As 32 combinacoes produzem hashCodes distintos, todos entre 0 e 31")
+        void hashPerfeitoSobreAsTrintaEDuasCombinacoes() {
+            Set<Integer> vistos = new HashSet<>();
+
+            for (GrupoSanguineo grupo : GrupoSanguineo.values()) {
+                for (TipoHemocomponente tipo : TipoHemocomponente.values()) {
+                    int hash = IndiceEstoque.hashDaChave(grupo, tipo);
+
+                    assertTrue(hash >= 0 && hash <= 31,
+                            "hash de " + grupo + "/" + tipo + " fora de 0..31: " + hash);
+                    assertTrue(vistos.add(hash),
+                            "hash repetido em " + grupo + "/" + tipo + ": " + hash);
+                }
+            }
+
+            assertEquals(32, vistos.size(), "nenhuma das 32 combinacoes pode repetir hash");
+        }
+
+        /**
+         * Reproduz a conta que o HashMap faz: espalha com h ^ (h >>> 16) e
+         * pega o indice com (n - 1) & hash. Com hash de 0 a 31 e n = 64, o
+         * deslocamento de 16 bits e zero e o indice e o proprio hash.
+         */
+        @Test
+        @DisplayName("Em tabela de 64 baldes, as 32 combinacoes caem em baldes distintos")
+        void nenhumBaldeCompartilhadoComCapacidadeSessentaEQuatro() {
+            final int capacidade = 64;
+            Set<Integer> baldes = new HashSet<>();
+
+            for (GrupoSanguineo grupo : GrupoSanguineo.values()) {
+                for (TipoHemocomponente tipo : TipoHemocomponente.values()) {
+                    int hash = IndiceEstoque.hashDaChave(grupo, tipo);
+                    int espalhado = hash ^ (hash >>> 16);
+                    int balde = espalhado & (capacidade - 1);
+
+                    assertEquals(hash, espalhado,
+                            "com hash abaixo de 2^16, o espalhamento nao muda nada");
+                    assertTrue(baldes.add(balde),
+                            "balde compartilhado por " + grupo + "/" + tipo + ": " + balde);
+                }
+            }
+
+            assertEquals(32, baldes.size(), "zero colisao por construcao");
+        }
+
+        /**
+         * O hash anterior vinha de Objects.hash sobre o hashCode de
+         * identidade dos enums, que nao e especificado entre execucoes. Este
+         * teste fixa o valor pela formula, que so depende da posicao
+         * declarada do enum.
+         */
+        @Test
+        @DisplayName("O hash e estavel: depende so do ordinal, nao da maquina virtual")
+        void hashEhEstavelEDeterministico() {
+            int tipos = TipoHemocomponente.values().length;
+
+            for (GrupoSanguineo grupo : GrupoSanguineo.values()) {
+                for (TipoHemocomponente tipo : TipoHemocomponente.values()) {
+                    int esperado = grupo.ordinal() * tipos + tipo.ordinal();
+
+                    assertEquals(esperado, IndiceEstoque.hashDaChave(grupo, tipo));
+                    assertEquals(IndiceEstoque.hashDaChave(grupo, tipo),
+                            IndiceEstoque.hashDaChave(grupo, tipo),
+                            "a mesma combinacao sempre da o mesmo valor");
+                }
+            }
+
+            // Ancoras explicitas nas pontas do intervalo.
+            assertEquals(0, IndiceEstoque.hashDaChave(
+                    GrupoSanguineo.values()[0], TipoHemocomponente.values()[0]));
+            assertEquals(31, IndiceEstoque.hashDaChave(
+                    GrupoSanguineo.values()[7], TipoHemocomponente.values()[3]));
+        }
+
+        @Test
+        @DisplayName("Contrato equals e hashCode: combinacoes iguais tem hash igual, diferentes nao colidem")
+        void contratoEqualsHashCode() {
+            for (GrupoSanguineo grupo : GrupoSanguineo.values()) {
+                for (TipoHemocomponente tipo : TipoHemocomponente.values()) {
+                    // Mesma combinacao, calculada duas vezes: hash igual.
+                    assertEquals(IndiceEstoque.hashDaChave(grupo, tipo),
+                            IndiceEstoque.hashDaChave(grupo, tipo));
+
+                    // Combinacao diferente: hash diferente, sem excecao.
+                    for (GrupoSanguineo outroGrupo : GrupoSanguineo.values()) {
+                        for (TipoHemocomponente outroTipo : TipoHemocomponente.values()) {
+                            boolean mesmaChave = grupo == outroGrupo && tipo == outroTipo;
+                            boolean mesmoHash = IndiceEstoque.hashDaChave(grupo, tipo)
+                                    == IndiceEstoque.hashDaChave(outroGrupo, outroTipo);
+
+                            assertEquals(mesmaChave, mesmoHash,
+                                    grupo + "/" + tipo + " contra " + outroGrupo + "/" + outroTipo);
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * Prova de comportamento: com uma bolsa em cada uma das 32
+         * combinacoes, cada busca devolve exatamente a sua e nenhuma de
+         * outra. Se duas chaves compartilhassem balde e o equals estivesse
+         * errado, uma busca traria a bolsa da chave vizinha.
+         */
+        @Test
+        @DisplayName("Com as 32 combinacoes indexadas, cada busca devolve so a sua bolsa")
+        void cadaCombinacaoDevolveApenasASuaBolsa() {
+            IndiceEstoque indice = new IndiceEstoque();
+
+            for (GrupoSanguineo grupo : GrupoSanguineo.values()) {
+                for (TipoHemocomponente tipo : TipoHemocomponente.values()) {
+                    indice.adicionar(criarBolsa(codigoDe(grupo, tipo), grupo, tipo));
+                }
+            }
+
+            assertEquals(32, indice.tamanho());
+
+            for (GrupoSanguineo grupo : GrupoSanguineo.values()) {
+                for (TipoHemocomponente tipo : TipoHemocomponente.values()) {
+                    List<Bolsa> encontradas = indice.buscar(grupo, tipo);
+
+                    assertEquals(1, encontradas.size(),
+                            "a busca de " + grupo + "/" + tipo + " trouxe mais de uma bolsa");
+                    assertEquals(codigoDe(grupo, tipo),
+                            encontradas.get(0).getCodigoRastreio());
+                }
+            }
+        }
+
+        /**
+         * Varias bolsas na mesma chave nao sao colisao de hash: sao o
+         * agrupamento que da sentido ao indice.
+         */
+        @Test
+        @DisplayName("Varias bolsas da mesma combinacao ficam juntas: agrupamento, nao colisao")
+        void bolsasDaMesmaChaveFicamJuntas() {
+            IndiceEstoque indice = new IndiceEstoque();
+
+            indice.adicionar(criarBolsa("B001", GrupoSanguineo.O_NEG,
+                    TipoHemocomponente.CONCENTRADO_HEMACIAS));
+            indice.adicionar(criarBolsa("B002", GrupoSanguineo.O_NEG,
+                    TipoHemocomponente.CONCENTRADO_HEMACIAS));
+            indice.adicionar(criarBolsa("B003", GrupoSanguineo.O_NEG,
+                    TipoHemocomponente.CONCENTRADO_HEMACIAS));
+
+            List<Bolsa> encontradas = indice.buscar(GrupoSanguineo.O_NEG,
+                    TipoHemocomponente.CONCENTRADO_HEMACIAS);
+
+            assertEquals(3, encontradas.size(), "as tres ficam na lista da mesma chave");
+            assertEquals(3, indice.tamanho());
+            assertEquals(List.of("B001", "B002", "B003"),
+                    encontradas.stream().map(Bolsa::getCodigoRastreio).toList());
+        }
+
+        private String codigoDe(GrupoSanguineo grupo, TipoHemocomponente tipo) {
+            return "B" + grupo.ordinal() + tipo.ordinal();
         }
     }
 
