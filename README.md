@@ -339,6 +339,168 @@ e [docs/deploy.md](docs/deploy.md).
 > Rodando localmente com o perfil `prod`, a aplicação responde em
 > `http://localhost:8081`, não na 8080.
 
+## Desafio de Infraestrutura de Software — Container, TDD e Deploy
+
+Unidade 2 · entrega em grupo · os **integrantes** estão na seção [Equipe](#equipe).
+
+### Como rodar
+
+**Com Docker, do zero, em qualquer máquina:**
+
+```bash
+git clone https://github.com/rsc3-pixel/Projeto3-2026.2.git
+cd Projeto3-2026.2
+cp .env.example .env          # defina DB_PASSWORD
+docker compose up -d --build
+```
+
+Sobe a API e o PostgreSQL. Nada precisa estar instalado antes: nem Java, nem
+Maven, nem banco. A aplicação responde em `http://localhost:8080`.
+
+```bash
+docker compose ps             # os dois serviços devem estar healthy
+docker compose logs -f api    # acompanhar a subida
+docker compose down           # parar, mantendo os dados no volume
+docker compose down -v        # parar e apagar os dados
+```
+
+**Sem Docker**, com JDK 21:
+
+```bash
+./mvnw spring-boot:run
+```
+
+Usa H2 em memória, sem banco externo.
+
+### Testes
+
+```bash
+./mvnw test                                  # a suíte completa
+./mvnw test -Dtest=CenariosAceitacaoTest     # só os de aceitação
+```
+
+São **421 testes** em três níveis:
+
+| Nível | O que exercita | Onde |
+|---|---|---|
+| Unitário | uma regra isolada, sem Spring | `MatrizCompatibilidadeTest`, `SelecaoFefoTest` |
+| Integração | um endpoint, com banco | `FluxoRequisicaoTest`, `TemperaturaRemessaTest` |
+| Aceitação | um cenário da história, de ponta a ponta | `CenariosAceitacaoTest` |
+
+Os testes de aceitação traduzem os cenários escritos em Gherkin no
+[documento de histórias](docs/historias-de-usuario.md), com a estrutura
+`Dado / Quando / Então` visível no nome e nos comentários.
+
+O [story map](docs/story-map.md) mostra o backbone do produto, as oito
+histórias da Release 1 quebradas em tarefas, e qual regra ganhou teste
+primeiro.
+
+### Pipeline e deploy
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+
+```
+build → testes → imagem → deploy
+```
+
+| Job | O que faz | Quando |
+|---|---|---|
+| **Build** | compila | todo push e PR |
+| **Testes** | roda os 421 testes | depois do build |
+| **Imagem** | constrói a imagem Docker e publica no GHCR | depois dos testes |
+| **Empacotamento** | gera o jar como artefato | depois dos testes |
+| **Deploy** | publica na VM por SSH | só na `main`, nunca em PR |
+
+Os jobs são encadeados por `needs`: **um teste vermelho barra tudo o que vem
+depois**, inclusive o deploy. É o portão que o enunciado pede.
+
+**Aplicação no ar:** <https://rsc3-rotavital.duckdns.org>
+
+#### Como fazer rollback
+
+O jar anterior fica guardado na VM a cada deploy:
+
+```bash
+gcloud compute ssh flux --zone=us-west1-a
+sudo systemctl stop rota-vital
+sudo cp /opt/rota-vital/rota-vital.jar.anterior /opt/rota-vital/rota-vital.jar
+sudo systemctl start rota-vital
+curl -s https://rsc3-rotavital.duckdns.org/actuator/health
+```
+
+Pela imagem, quando o deploy por container estiver ativo:
+
+```bash
+docker compose pull ghcr.io/rsc3-pixel/rota-vital:<sha-anterior>
+docker compose up -d
+```
+
+Cada imagem é marcada com o SHA do commit, então voltar é apontar para a tag
+anterior.
+
+### Decisões
+
+Uma linha por decisão: o que escolhemos, o que havia como alternativa, e o
+porquê.
+
+| Decisão | Alternativas | Por quê |
+|---|---|---|
+| **Imagem base**: `eclipse-temurin:21-jre-alpine` | `21-jdk`, `21-jre` (Debian) | JRE porque executar não exige compilador; Alpine baixa de ~450 MB para 410 MB e traz menos pacotes a acompanhar em boletim de segurança |
+| **Multi-stage** | estágio único | o 2º estágio leva só o jar; sem isso a imagem carregaria Maven, JDK e código-fonte, e tudo isso vira superfície de ataque |
+| **Testes dentro do build** | só no CI | a imagem não é gerada se um teste falhar, mesmo compilando na máquina de quem clonou |
+| **Banco**: PostgreSQL no Docker, H2 fora | só H2, só PostgreSQL | o desafio pede volume para os dados, e H2 em memória não sobrevive a reinício. H2 continua no perfil padrão porque sobe junto com a aplicação e não exige nada instalado |
+| **Volume nomeado** | bind mount | os dados ficam sob gestão do Docker e sobrevivem ao `compose down`; bind mount depende de caminho e permissão, e costuma quebrar entre Windows, macOS e Linux |
+| **`depends_on: service_healthy`** | `service_started` | sem isso a API tentaria conectar durante a inicialização do Postgres, falharia e entraria em laço de reinício |
+| **Rede própria do Compose** | rede default | os serviços se encontram pelo nome (`banco`, `api`) e ficam isolados de outros containers na máquina |
+| **Porta do banco não publicada** | expor 5432 | só a API precisa alcançá-lo, e faz isso pela rede interna |
+| **Primeiro teste: compatibilidade ABO/Rh** | FEFO, cadastro | um erro ali põe um paciente em risco. E o defeito era real: a alocação comparava grupos por igualdade e recusava doação válida de O− |
+| **Segundo: filtro antes da ordenação no FEFO** | ordenar e filtrar depois | o FEFO põe no topo quem vence primeiro, e bolsa vencida vence antes de todas; filtrando depois, ela ocuparia o topo em toda seleção |
+| **Aceitação em JUnit** | Cucumber com `.feature` | o enunciado diz que *pode* ser Gherkin, não que precisa ser; os cenários já estavam escritos, e Cucumber traria duas dependências e uma camada de cola sem acrescentar garantia |
+| **CI/CD**: GitHub Actions | GitLab CI, Jenkins | o código já está no GitHub; sem ferramenta a mais para manter |
+| **Fluxo de branch**: GitHub Flow | Git Flow, GitLab Flow | grupo pequeno, uma versão no ar, deploy a cada merge. Git Flow traria branches de release e hotfix que esta cadência não usa |
+| **Deploy**: VM no Google Cloud por SSH | Render, Railway, Fly.io | a VM já tem domínio próprio e HTTPS com Let's Encrypt, e é a evidência das entregas de SO e RSD. Os planos gratuitos hibernam, o que pioraria o cold start que já enfrentamos |
+| **Segredos**: GitHub Secrets | `.env` versionado, hardcode | `VM_HOST`, `VM_USUARIO` e `VM_CHAVE_SSH` ficam no cofre do GitHub; o `.env` está no `.gitignore` e o `.env.example` documenta as variáveis sem conter valor nenhum |
+| **Jar por SSH, não imagem** | deploy por container | decisão de hoje, por limite de memória: a VM tem 955 MB e 296 livres, e os containers somariam ~510 MB. O pipeline já publica a imagem; o deploy por container entra quando a infraestrutura comportar |
+
+### Uso de IA
+
+Declarado, conforme o enunciado pede.
+
+**Ferramenta:** Claude (Anthropic), via Claude Code no terminal.
+
+**Como foi usada:**
+
+| Etapa | O que a IA fez | O que validamos |
+|---|---|---|
+| Dockerfile e compose | rascunhou a estrutura multi-stage e o compose | subimos do zero, conferimos os healthchecks e provamos a persistência reiniciando os containers |
+| Testes | sugeriu cenários de borda | rodamos; **um falhou** e revelou uma regra que não conhecíamos |
+| Story map | organizou o backbone a partir das histórias existentes | revisamos a classificação de cada tarefa |
+| Documentação | redigiu justificativas | conferimos cada número contra medição real |
+
+**Exemplos de prompts usados:**
+
+- "Confere se temos algo sobre isso no nosso repositório" — levantamento do que existia antes de escrever qualquer coisa
+- "Cuidado para não alucinar por falta de contexto" — a IA passou a verificar antes de afirmar
+- "Vamos para a E2 e depois tentamos resolver esse problema" — priorização nossa, não dela
+
+**Onde a IA errou e corrigimos:**
+
+- Afirmou que a colisão no índice de estoque era "rara por construção". Medimos: `Objects.hash` sobre enum usa hash de identidade, que varia entre execuções. A chave passou a usar `ordinal()`
+- Escreveu um teste supondo que bolsa vencida seria recusada na alocação. O teste falhou: a recusa acontece **na entrada do estoque**, antes disso
+- Esqueceu de copiar `infra/` no Dockerfile, e o build quebrou porque um teste lê a configuração do Nginx
+
+A IA rascunhou; nós validamos, corrigimos e assinamos.
+
+### Evidências
+
+| | |
+|---|---|
+| Container funcionando | [docs/evidencias/e1-container.md](docs/evidencias/e1-container.md) |
+| Execuções do pipeline | [aba Actions](https://github.com/rsc3-pixel/Projeto3-2026.2/actions) |
+| Aplicação no ar | <https://rsc3-rotavital.duckdns.org/actuator/health> |
+| Issue tracker | [9 resolvidas, 3 abertas](https://github.com/rsc3-pixel/Projeto3-2026.2/issues) |
+
+
 ## Documentação técnica
 
 Material de apoio, não exigido pelas entregas:

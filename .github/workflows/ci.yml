@@ -109,6 +109,61 @@ jobs:
   # exatamente o binario que passou nos testes, em vez de compilar de novo e
   # arriscar diferenca entre o que foi testado e o que foi publicado.
   # ---------------------------------------------------------------------------
+  # A imagem e construida a cada push na main e publicada no GitHub Container
+  # Registry, marcada com o SHA do commit. Isso cumpre o passo "imagem" do
+  # pipeline e deixa o deploy por container pronto: para voltar a uma versao
+  # anterior basta apontar para a tag daquele commit.
+  #
+  # O deploy em si ainda envia o jar por SSH, porque a VM atual tem 955 MB de
+  # memoria e os containers somariam cerca de 510 MB, o que derrubaria as
+  # outras aplicacoes hospedadas nela. A decisao esta registrada no README.
+  imagem:
+    name: Imagem Docker
+    runs-on: ubuntu-latest
+    needs: teste
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Baixar o codigo
+        uses: actions/checkout@v4
+
+      - name: Entrar no registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # O nome do repositorio vem em maiusculas e minusculas misturadas, e o
+      # registry so aceita minusculas.
+      - name: Montar o nome da imagem
+        id: nome
+        run: echo "valor=ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/rota-vital" >> "$GITHUB_OUTPUT"
+
+      - name: Construir e publicar
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.nome.outputs.valor }}:latest
+            ${{ steps.nome.outputs.valor }}:${{ github.sha }}
+          # Cache entre execucoes: sem ele cada build baixaria as dependencias
+          # do Maven de novo, somando varios minutos a cada merge.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Registrar a imagem publicada
+        run: |
+          echo "### Imagem publicada" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "${{ steps.nome.outputs.valor }}:${{ github.sha }}" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
   empacotar:
     name: Empacotamento
     runs-on: ubuntu-latest
