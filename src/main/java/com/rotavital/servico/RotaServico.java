@@ -13,8 +13,10 @@ import com.rotavital.dominio.enums.StatusBolsa;
 import com.rotavital.dominio.enums.StatusRota;
 import com.rotavital.repositorio.BolsaRepository;
 import com.rotavital.repositorio.RotaRepository;
+import com.rotavital.servico.evento.BolsaAlterada;
 import com.rotavital.servico.excecao.OperacaoInvalidaException;
 import com.rotavital.servico.excecao.RecursoNaoEncontradoException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,15 +46,18 @@ public class RotaServico {
     private final BolsaRepository bolsas;
     private final HemocentroServico hemocentroServico;
     private final HospitalServico hospitalServico;
+    private final ApplicationEventPublisher eventos;
 
     public RotaServico(RotaRepository rotas,
                        BolsaRepository bolsas,
                        HemocentroServico hemocentroServico,
-                       HospitalServico hospitalServico) {
+                       HospitalServico hospitalServico,
+                       ApplicationEventPublisher eventos) {
         this.rotas = rotas;
         this.bolsas = bolsas;
         this.hemocentroServico = hemocentroServico;
         this.hospitalServico = hospitalServico;
+        this.eventos = eventos;
     }
 
     @Transactional(readOnly = true)
@@ -132,15 +137,24 @@ public class RotaServico {
                     throw new OperacaoInvalidaException("Rota sem bolsas embarcadas nao pode sair");
                 }
                 rota.setSaidaReal(dados.saidaReal() != null ? dados.saidaReal() : LocalDateTime.now());
-                rota.getBolsas().forEach(b -> b.setStatus(StatusBolsa.EM_TRANSITO));
+                rota.getBolsas().forEach(b -> {
+                    b.setStatus(StatusBolsa.EM_TRANSITO);
+                    eventos.publishEvent(new BolsaAlterada(b));
+                });
             }
             case CONCLUIDA -> {
                 rota.setChegadaReal(dados.chegadaReal() != null ? dados.chegadaReal() : LocalDateTime.now());
-                rota.getBolsas().forEach(b -> b.setStatus(StatusBolsa.ENTREGUE));
+                rota.getBolsas().forEach(b -> {
+                    b.setStatus(StatusBolsa.ENTREGUE);
+                    eventos.publishEvent(new BolsaAlterada(b));
+                });
             }
             case CANCELADA -> {
                 // Carga volta ao estoque: rota cancelada nao consome bolsa.
-                rota.getBolsas().forEach(b -> b.setStatus(StatusBolsa.RESERVADA));
+                rota.getBolsas().forEach(b -> {
+                    b.setStatus(StatusBolsa.RESERVADA);
+                    eventos.publishEvent(new BolsaAlterada(b));
+                });
             }
             default -> throw new OperacaoInvalidaException("Status nao suportado: " + novo);
         }

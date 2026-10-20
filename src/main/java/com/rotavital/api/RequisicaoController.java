@@ -10,6 +10,9 @@ import com.rotavital.api.dto.RequisicaoResponse;
 import com.rotavital.dominio.enums.PrioridadeRequisicao;
 import com.rotavital.dominio.enums.StatusRequisicao;
 import com.rotavital.servico.RequisicaoServico;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -117,6 +120,26 @@ public class RequisicaoController {
                                                    @PathVariable String itemId,
                                                    @Valid @RequestBody AlocacaoRequest dados) {
         AlocacaoResponse alocacao = requisicoes.alocar(id, itemId, dados);
+        return ResponseEntity
+                .created(URI.create("/api/v1/requisicoes/" + id + "/itens/" + itemId
+                        + "/alocacoes/" + alocacao.id()))
+                .body(alocacao);
+    }
+
+    @Operation(summary = "Aloca automaticamente a melhor bolsa para o item",
+            description = "Consulta o indice de estoque por hash, filtra por compatibilidade "
+                    + "ABO/Rh e escolhe por FEFO a bolsa de validade mais proxima. "
+                    + "Nao recebe corpo: a bolsa e escolhida pelo sistema.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Bolsa alocada"),
+            @ApiResponse(responseCode = "404", description = "Requisicao ou item nao encontrado"),
+            @ApiResponse(responseCode = "409",
+                    description = "Sem estoque disponivel, item ja atendido ou requisicao fechada")
+    })
+    @PostMapping("/{id}/itens/{itemId}/alocacoes/automatica")
+    public ResponseEntity<AlocacaoResponse> alocarAutomaticamente(@PathVariable String id,
+                                                                  @PathVariable String itemId) {
+        AlocacaoResponse alocacao = requisicoes.alocarAutomaticamente(id, itemId);
         return ResponseEntity
                 .created(URI.create("/api/v1/requisicoes/" + id + "/itens/" + itemId
                         + "/alocacoes/" + alocacao.id()))

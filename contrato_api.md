@@ -145,6 +145,7 @@
 | DELETE | `/api/v1/requisicoes/{id}/itens/{itemId}` | path: `id`, `itemId` | — | — | 204, 404, 409 |
 | GET | `/api/v1/requisicoes/{id}/itens/{itemId}/alocacoes` | path: `id`, `itemId` | — | `List<AlocacaoDetalhe>` | 200, 404 |
 | POST | `/api/v1/requisicoes/{id}/itens/{itemId}/alocacoes` | path: `id`, `itemId` | `{ "bolsaId": "..." }` | `AlocacaoDetalhe` | 201, 400, 404, 409 |
+| POST | `/api/v1/requisicoes/{id}/itens/{itemId}/alocacoes/automatica` | path: `id`, `itemId` | — | `AlocacaoDetalhe` | 201, 404, 409 |
 | DELETE | `/api/v1/requisicoes/{id}/itens/{itemId}/alocacoes/{alocacaoId}` | path: `id`, `itemId`, `alocacaoId` | — | — | 204, 404, 409 |
 
 ### 2.5 Rotas — `/api/v1/rotas`
@@ -306,6 +307,40 @@ Content-Type: application/json
 
 Efeito colateral que vale documentar para os testes: a bolsa referenciada passa de `status: "DISPONIVEL"` para
 `"ALOCADA"`, e o item de requisição passa a refletir `quantidadeAlocada: 1`, `status: "PARCIALMENTE_ALOCADO"`.
+
+### 3.4 `POST /api/v1/requisicoes/{id}/itens/{itemId}/alocacoes/automatica` — o sistema escolhe a bolsa
+
+Diferente do endpoint acima, aqui o cliente **não informa a bolsa**. O sistema consulta o índice de
+estoque por hash, que resolve em O(1) quais bolsas disponíveis existem de cada grupo compatível,
+filtra pela compatibilidade ABO/Rh da `MatrizCompatibilidade` e escolhe por FEFO a de validade mais
+próxima, com desempate determinístico por código de rastreio.
+
+```http
+POST /api/v1/requisicoes/7f8e9d0c-1b2a-3948-5766-7a8b9c0d1e2f/itens/aa11bb22-cc33-dd44-ee55-ff6677889900/alocacoes/automatica HTTP/1.1
+Host: api.rotavital.local
+```
+
+Sem corpo de requisição.
+
+```http
+HTTP/1.1 201 Created
+Location: /api/v1/requisicoes/7f8e9d0c.../itens/aa11bb22.../alocacoes/dd44ee55-ff66-7788-9900-112233445566
+Content-Type: application/json
+
+{
+  "id": "dd44ee55-ff66-7788-9900-112233445566",
+  "itemRequisicaoId": "aa11bb22-cc33-dd44-ee55-ff6677889900",
+  "bolsaId": "BS-2026-000314",
+  "alocadoEm": "2026-10-19T14:15:47Z"
+}
+```
+
+Quando não há bolsa disponível e compatível, a resposta é `409 Conflict` com a mensagem
+`Sem estoque disponivel para <grupo> <tipo>`, e a requisição permanece aberta para ser atendida
+quando chegar estoque.
+
+As demais regras são as mesmas do endpoint manual: a bolsa escolhida passa a `RESERVADA`, o item
+recalcula `quantidadeAlocada` e a requisição recalcula o seu `status`.
 
 **Compatibilidade ABO/Rh.** A bolsa não precisa ser do mesmo grupo sanguíneo do
 item: precisa ser **compatível**. Um item que pede `A_POS` aceita bolsa `O_NEG`,
