@@ -1,0 +1,264 @@
+{
+  "data_consulta": "2026-10-19",
+  "moeda": "USD",
+  "regiao": "us-west1",
+  "horas_mes": "730",
+  "natureza": "Estimativa bruta, não fatura; cotas gratuitas e impostos não aplicados.",
+  "cenarios": [
+    {
+      "cenario": "baixo",
+      "itens": [
+        {
+          "item": "VM e2-micro (host integral)",
+          "quantidade": "730",
+          "unidade": "VM-hora",
+          "tarifa_usd": "0.008376428",
+          "custo_usd": "6.11",
+          "custo_sem_arredondar_usd": "6.114792440",
+          "fonte": "https://cloud.google.com/products/compute/pricing/general-purpose?hl=en"
+        },
+        {
+          "item": "Disco pd-standard",
+          "quantidade": "14600",
+          "unidade": "GiB-hora",
+          "tarifa_usd": "0.000054795",
+          "custo_usd": "0.80",
+          "custo_sem_arredondar_usd": "0.800007000",
+          "fonte": "https://cloud.google.com/compute/disks-image-pricing?hl=en"
+        },
+        {
+          "item": "IPv4 público em uso",
+          "quantidade": "730",
+          "unidade": "IP-hora",
+          "tarifa_usd": "0.005",
+          "custo_usd": "3.65",
+          "custo_sem_arredondar_usd": "3.650",
+          "fonte": "https://cloud.google.com/vpc/network-pricing"
+        },
+        {
+          "item": "Saída Premium para América do Sul",
+          "quantidade": "11",
+          "unidade": "GiB",
+          "tarifa_usd": "por faixas",
+          "custo_usd": "2.09",
+          "custo_sem_arredondar_usd": "2.09",
+          "fonte": "https://cloud.google.com/vpc/network-pricing"
+        }
+      ],
+      "backup_ativo_gib": 0,
+      "backup_soft_delete_gib": 0,
+      "trafego_gib_base": "8.789062500000000000000000003",
+      "trafego_gib_com_folga": "10.54687500000000000000000000",
+      "trafego_gib_cotado": "11",
+      "total_usd": "12.65",
+      "reserva_15_porcento_usd": "1.90",
+      "limite_planejamento_usd": "14.55"
+    },
+    {
+      "cenario": "moderado",
+      "itens": [
+        {
+          "item": "CPU aplicação e banco (e2-custom-2-4096)",
+          "quantidade": "1460",
+          "unidade": "vCPU-hora",
+          "tarifa_usd": "0.02290217",
+          "custo_usd": "33.44",
+          "custo_sem_arredondar_usd": "33.43716820",
+          "fonte": "https://cloud.google.com/products/compute/pricing/general-purpose?hl=en"
+        },
+        {
+          "item": "RAM aplicação e banco (e2-custom-2-4096)",
+          "quantidade": "2920",
+          "unidade": "GiB-hora",
+          "tarifa_usd": "0.003069707",
+          "custo_usd": "8.96",
+          "custo_sem_arredondar_usd": "8.963544440",
+          "fonte": "https://cloud.google.com/products/compute/pricing/general-purpose?hl=en"
+        },
+        {
+          "item": "Disco pd-balanced",
+          "quantidade": "29200",
+          "unidade": "GiB-hora",
+          "tarifa_usd": "0.000136986",
+          "custo_usd": "4.00",
+          "custo_sem_arredondar_usd": "3.999991200",
+          "fonte": "https://cloud.google.com/compute/disks-image-pricing?hl=en"
+        },
+        {
+          "item": "IPv4 público em uso",
+          "quantidade": "730",
+          "unidade": "IP-hora",
+          "tarifa_usd": "0.005",
+          "custo_usd": "3.65",
+          "custo_sem_arredondar_usd": "3.650",
+          "fonte": "https://cloud.google.com/vpc/network-pricing"
+        },
+        {
+          "item": "Backup: cópias ativas",
+          "quantidade": "10950",
+          "unidade": "GiB-hora",
+          "tarifa_usd": "0.000027397",
+          "custo_usd": "0.30",
+          "custo_sem_arredondar_usd": "0.299997150",
+          "fonte": "https://cloud.google.com/storage/pricing?hl=en"
+        },
+        {
+          "item": "Backup: cópias em soft delete",
+          "quantidade": "25550",
+          "unidade": "GiB-hora",
+          "tarifa_usd": "0.000027397",
+          "custo_usd": "0.70",
+          "custo_sem_arredondar_usd": "0.699993350",
+          "fonte": "https://cloud.google.com/storage/pricing?hl=en"
+        },
+        {
+          "item": "Backup: operações classe A",
+          "quantidade": "10",
+          "unidade": "1000 operações",
+          "tarifa_usd": "0.005",
+          "custo_usd": "0.05",
+          "custo_sem_arredondar_usd": "0.050",
+          "fonte": "https://cloud.google.com/storage/pricing?hl=en"
+        },
+        {
+          "item": "Backup: operações classe B",
+          "quantidade": "10",
+          "unidade": "1000 operações",
+          "tarifa_usd": "0.0004",
+          "custo_usd": "0.00",
+          "custo_sem_arredondar_usd": "0.0040",
+          "fonte": "https://cloud.google.com/storage/pricing?hl=en"
+        },
+        {
+          "item": "Saída Premium para América do Sul",
+          "quantidade": "63",
+          "unidade": "GiB",
+          "tarifa_usd": "por faixas",
+          "custo_usd": "11.97",
+          "custo_sem_arredondar_usd": "11.97",
+          "fonte": "https://cloud.google.com/vpc/network-pricing"
+        }
+      ],
+      "backup_ativo_gib": 15,
+      "backup_soft_delete_gib": 35,
+      "trafego_gib_base": "52.18505859375000000",
+      "trafego_gib_com_folga": "62.6220703125000000000",
+      "trafego_gib_cotado": "63",
+      "total_usd": "63.07",
+      "reserva_15_porcento_usd": "9.46",
+      "limite_planejamento_usd": "72.53"
+    },
+    {
+      "cenario": "alto",
+      "itens": [
+        {
+          "item": "CPU aplicação (e2-custom-4-8192)",
+          "quantidade": "2920",
+          "unidade": "vCPU-hora",
+          "tarifa_usd": "0.02290217",
+          "custo_usd": "66.87",
+          "custo_sem_arredondar_usd": "66.87433640",
+          "fonte": "https://cloud.google.com/products/compute/pricing/general-purpose?hl=en"
+        },
+        {
+          "item": "RAM aplicação (e2-custom-4-8192)",
+          "quantidade": "5840",
+          "unidade": "GiB-hora",
+          "tarifa_usd": "0.003069707",
+          "custo_usd": "17.93",
+          "custo_sem_arredondar_usd": "17.927088880",
+          "fonte": "https://cloud.google.com/products/compute/pricing/general-purpose?hl=en"
+        },
+        {
+          "item": "CPU banco privado (e2-custom-2-4096)",
+          "quantidade": "1460",
+          "unidade": "vCPU-hora",
+          "tarifa_usd": "0.02290217",
+          "custo_usd": "33.44",
+          "custo_sem_arredondar_usd": "33.43716820",
+          "fonte": "https://cloud.google.com/products/compute/pricing/general-purpose?hl=en"
+        },
+        {
+          "item": "RAM banco privado (e2-custom-2-4096)",
+          "quantidade": "2920",
+          "unidade": "GiB-hora",
+          "tarifa_usd": "0.003069707",
+          "custo_usd": "8.96",
+          "custo_sem_arredondar_usd": "8.963544440",
+          "fonte": "https://cloud.google.com/products/compute/pricing/general-purpose?hl=en"
+        },
+        {
+          "item": "Disco pd-balanced",
+          "quantidade": "116800",
+          "unidade": "GiB-hora",
+          "tarifa_usd": "0.000136986",
+          "custo_usd": "16.00",
+          "custo_sem_arredondar_usd": "15.999964800",
+          "fonte": "https://cloud.google.com/compute/disks-image-pricing?hl=en"
+        },
+        {
+          "item": "IPv4 público em uso",
+          "quantidade": "730",
+          "unidade": "IP-hora",
+          "tarifa_usd": "0.005",
+          "custo_usd": "3.65",
+          "custo_sem_arredondar_usd": "3.650",
+          "fonte": "https://cloud.google.com/vpc/network-pricing"
+        },
+        {
+          "item": "Backup: cópias ativas",
+          "quantidade": "131400",
+          "unidade": "GiB-hora",
+          "tarifa_usd": "0.000027397",
+          "custo_usd": "3.60",
+          "custo_sem_arredondar_usd": "3.599965800",
+          "fonte": "https://cloud.google.com/storage/pricing?hl=en"
+        },
+        {
+          "item": "Backup: cópias em soft delete",
+          "quantidade": "306600",
+          "unidade": "GiB-hora",
+          "tarifa_usd": "0.000027397",
+          "custo_usd": "8.40",
+          "custo_sem_arredondar_usd": "8.399920200",
+          "fonte": "https://cloud.google.com/storage/pricing?hl=en"
+        },
+        {
+          "item": "Backup: operações classe A",
+          "quantidade": "10",
+          "unidade": "1000 operações",
+          "tarifa_usd": "0.005",
+          "custo_usd": "0.05",
+          "custo_sem_arredondar_usd": "0.050",
+          "fonte": "https://cloud.google.com/storage/pricing?hl=en"
+        },
+        {
+          "item": "Backup: operações classe B",
+          "quantidade": "10",
+          "unidade": "1000 operações",
+          "tarifa_usd": "0.0004",
+          "custo_usd": "0.00",
+          "custo_sem_arredondar_usd": "0.0040",
+          "fonte": "https://cloud.google.com/storage/pricing?hl=en"
+        },
+        {
+          "item": "Saída Premium para América do Sul",
+          "quantidade": "396",
+          "unidade": "GiB",
+          "tarifa_usd": "por faixas",
+          "custo_usd": "75.24",
+          "custo_sem_arredondar_usd": "75.24",
+          "fonte": "https://cloud.google.com/vpc/network-pricing"
+        }
+      ],
+      "backup_ativo_gib": 180,
+      "backup_soft_delete_gib": 420,
+      "trafego_gib_base": "329.58984375",
+      "trafego_gib_com_folga": "395.5078125000",
+      "trafego_gib_cotado": "396",
+      "total_usd": "234.15",
+      "reserva_15_porcento_usd": "35.12",
+      "limite_planejamento_usd": "269.27"
+    }
+  ]
+}

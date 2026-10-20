@@ -1,0 +1,53 @@
+{
+  "data_consulta": "2026-10-19",
+  "provedor": "Google Cloud",
+  "moeda": "USD",
+  "regiao_cotada": "us-west1",
+  "zona_proposta": "us-west1-a",
+  "regiao_real_confirmada": false,
+  "modelo": "On-demand, Linux sem licença premium, preços brutos sem créditos ou franquias",
+  "horas_mes": "730",
+  "dias_trafego_mes": "30",
+  "horas_trafego_dia": "8",
+  "fator_trafego": "1.20",
+  "margem_planejamento": "0.15",
+  "fontes": {
+    "compute": "https://cloud.google.com/products/compute/pricing/general-purpose?hl=en",
+    "maquinas": "https://docs.cloud.google.com/compute/docs/general-purpose-machines#e2_shared-core",
+    "disco": "https://cloud.google.com/compute/disks-image-pricing?hl=en",
+    "rede": "https://cloud.google.com/vpc/network-pricing",
+    "storage": "https://cloud.google.com/storage/pricing?hl=en",
+    "soft_delete": "https://docs.cloud.google.com/storage/docs/soft-delete",
+    "acesso_privado": "https://docs.cloud.google.com/vpc/docs/private-google-access"
+  },
+  "tarifas": {
+    "e2_micro_hora": {"usd": "0.008376428", "unidade": "VM-hora", "fonte": "compute"},
+    "e2_custom_cpu_hora": {"usd": "0.02290217", "unidade": "vCPU-hora", "fonte": "compute"},
+    "e2_custom_memoria_hora": {"usd": "0.003069707", "unidade": "GiB-hora", "fonte": "compute"},
+    "pd_standard_gib_hora": {"usd": "0.000054795", "unidade": "GiB-hora", "fonte": "disco"},
+    "pd_balanced_gib_hora": {"usd": "0.000136986", "unidade": "GiB-hora", "fonte": "disco"},
+    "ipv4_hora": {"usd": "0.005", "unidade": "IP-hora", "fonte": "rede"},
+    "gcs_standard_gib_hora": {"usd": "0.000027397", "unidade": "GiB-hora", "fonte": "storage"},
+    "gcs_classe_a_1000": {"usd": "0.005", "unidade": "1000 operações", "fonte": "storage"},
+    "gcs_classe_b_1000": {"usd": "0.0004", "unidade": "1000 operações", "fonte": "storage"}
+  },
+  "egress_premium_america_sul": [
+    {"ate_gib": "1024", "usd_por_gib": "0.19"},
+    {"ate_gib": "10240", "usd_por_gib": "0.18"},
+    {"ate_gib": null, "usd_por_gib": "0.15"}
+  ],
+  "backup": {
+    "classe": "Standard regional, namespace plano",
+    "copias_ativas": 3,
+    "soft_delete_dias": 7,
+    "dumps_por_dia": 1,
+    "operacoes_a_mes": "10000",
+    "operacoes_b_mes": "10000",
+    "versionamento_adicional": false
+  },
+  "cenarios": [
+    {"nome": "baixo", "vms": [{"papel": "host compartilhado de referência", "tipo": "e2-micro", "vcpu_visiveis": 2, "vcpu_fracionarias": "0.25", "memoria_gib": 1}], "disco_standard_gib": 20, "disco_balanced_gib": 0, "dump_gib": 0, "ipv4_publicos": 1},
+    {"nome": "moderado", "vms": [{"papel": "aplicação e banco", "tipo": "e2-custom-2-4096", "vcpu": 2, "memoria_gib": 4}], "disco_standard_gib": 0, "disco_balanced_gib": 40, "dump_gib": 5, "ipv4_publicos": 1},
+    {"nome": "alto", "vms": [{"papel": "aplicação", "tipo": "e2-custom-4-8192", "vcpu": 4, "memoria_gib": 8}, {"papel": "banco privado", "tipo": "e2-custom-2-4096", "vcpu": 2, "memoria_gib": 4}], "disco_standard_gib": 0, "disco_balanced_gib": 160, "dump_gib": 60, "ipv4_publicos": 1}
+  ]
+}

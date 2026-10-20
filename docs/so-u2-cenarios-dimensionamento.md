@@ -168,6 +168,8 @@ O orçamento do banco deve considerar memória por consulta e conexão, não ape
 
 Esta tabela é o **orçamento de recursos do item 1**, não uma cotação monetária. A apuração de preço exige confirmar provedor/região, tipo de disco, horas mensais, tráfego e retenção de backup. A VM atual não é considerada gratuita só por já existir: há consumo compartilhado. Não foram inventados preços, créditos ou custos mensais.
 
+A entrega do [item 2 — orçamento mensal](so-u2-orcamento-mensal.md) apresenta a cotação desses recursos no Google Cloud, com Oregon como premissa explícita, fontes oficiais e cálculos reproduzíveis. Ela também contabiliza a retenção adicional dos backups excluídos por soft delete.
+
 **Componentes não adicionados:** Redis (sem cache invalidável definido), RabbitMQ/Kafka (ingestão atual é síncrona e a taxa ainda deve ser medida), microsserviços/Kubernetes (monólito e poucas VMs), balanceador adicional (uma JVM), réplica de banco (sem requisito de disponibilidade que a fundamente nesta task). Reavaliar apenas com gargalo ou requisito explícito. Antes de duplicar a JVM, é obrigatório banco compartilhado e teste de consistência de alocação; duas instâncias com H2 teriam estoques independentes.
 
 ## 4. Gargalos e critérios para evoluir
