@@ -47,15 +47,48 @@ Esse PR não deve ser mergeado: existe apenas como evidência.
 
 ## 2. Esteira verde: a entrega aconteceu
 
-> A preencher no merge do PR #71. O job `imagem` tem
-> `if: github.ref == 'refs/heads/main'`, então ele só executa na `main`, e a
-> primeira imagem no GHCR nasce desse merge.
+[Execução 39466760242](https://github.com/rsc3-pixel/Projeto3-2026.2/actions/runs/39466760242)
+· commit `712b63b` · 20/10/2026 17:34
+
+```
+Build             SUCCESS
+Testes            SUCCESS
+Empacotamento     SUCCESS
+Imagem Docker     SUCCESS
+Deploy na VM      SUCCESS
+```
 
 | | |
 |---|---|
-| Execução | _a preencher_ |
-| Imagem publicada | `ghcr.io/rsc3-pixel/rota-vital:<sha>` |
+| Imagem publicada | `ghcr.io/rsc3-pixel/rota-vital:712b63b` e `:latest` |
+| Digest | `sha256:252eb50af8cd3ebf85f04fe46b7c1c9bdca6a195f9fb5a8210f303288d62fd2f` |
 | Aplicação respondendo | <https://rsc3-rotavital.duckdns.org/actuator/health> |
+
+Os dois nomes apontam para o mesmo digest: `latest` para quem quer a última
+versão, e a tag do SHA para quem precisa de uma específica, que é o que torna o
+rollback possível.
+
+### A primeira tentativa falhou, e vale registrar
+
+O job `imagem` tem `if: github.ref == 'refs/heads/main'`, então ele nunca
+executou em PR algum. Sua estreia foi no merge do PR #71
+([execução 39466040276](https://github.com/rsc3-pixel/Projeto3-2026.2/actions/runs/39466040276)),
+e ele falhou:
+
+```
+ERROR: failed to build: Cache export is not supported for the docker driver
+```
+
+O passo de build usa `cache-to: type=gha` para não rebaixar as dependências do
+Maven a cada merge, e esse cache exige o driver `docker-container` do Buildx. O
+runner vem com o driver `docker` padrão, que não exporta cache. Faltava o
+`setup-buildx-action`, corrigido no
+[PR #73](https://github.com/rsc3-pixel/Projeto3-2026.2/pull/73).
+
+O que essa falha demonstra, e por isso ela fica registrada: **o dano ficou
+contido em um job**. Build, testes, empacotamento e deploy concluíram, e a
+aplicação seguiu no ar durante todo o período. Um pipeline com os jobs
+encadeados corretamente falha onde o defeito está, e não em cascata.
 
 ## Rollback
 
