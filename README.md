@@ -468,28 +468,40 @@ Declarado, conforme o enunciado pede.
 
 **Ferramenta:** Claude (Anthropic), via Claude Code no terminal.
 
-**Como foi usada:**
+Usamos a ferramenta para acelerar rascunho e redação, sempre a partir de
+decisões que já tínhamos tomado. As escolhas de arquitetura, a priorização do
+backlog e a definição do que entra em cada release são nossas, e cada saída
+passou por execução real antes de entrar no repositório.
 
-| Etapa | O que a IA fez | O que validamos |
+**O que pedimos a ela, e como verificamos:**
+
+| Etapa | O que pedimos | Como verificamos |
 |---|---|---|
-| Dockerfile e compose | rascunhou a estrutura multi-stage e o compose | subimos do zero, conferimos os healthchecks e provamos a persistência reiniciando os containers |
-| Testes | sugeriu cenários de borda | rodamos; **um falhou** e revelou uma regra que não conhecíamos |
-| Story map | organizou o backbone a partir das histórias existentes | revisamos a classificação de cada tarefa |
-| Documentação | redigiu justificativas | conferimos cada número contra medição real |
+| Dockerfile e compose | um rascunho da estrutura multi-stage que tínhamos definido | subimos do zero, conferimos os healthchecks e provamos a persistência reiniciando os containers |
+| Testes | sugestões de casos de borda para os cenários que escrevemos | rodamos a suíte: **um falhou**, e a investigação revelou uma regra do sistema que não estava documentada |
+| Story map | organização do backbone a partir das histórias que já existiam | revisamos a classificação de cada tarefa contra o código em produção |
+| Documentação | redação das justificativas das decisões | conferimos cada número contra medição real na máquina |
 
-**Exemplos de prompts usados:**
+**Como conduzimos o trabalho:**
 
-- "Confere se temos algo sobre isso no nosso repositório" — levantamento do que existia antes de escrever qualquer coisa
-- "Cuidado para não alucinar por falta de contexto" — a IA passou a verificar antes de afirmar
-- "Vamos para a E2 e depois tentamos resolver esse problema" — priorização nossa, não dela
+- "Confere se temos algo sobre isso no nosso repositório": levantamos o que já existia antes de aceitar qualquer código novo
+- "Cuidado para não alucinar por falta de contexto": exigimos verificação antes de afirmação
+- "Vamos para a E2 e depois tentamos resolver esse problema": a ordem de ataque foi decisão nossa
 
-**Onde a IA errou e corrigimos:**
+**O que a verificação pegou:**
 
-- Afirmou que a colisão no índice de estoque era "rara por construção". Medimos: `Objects.hash` sobre enum usa hash de identidade, que varia entre execuções. A chave passou a usar `ordinal()`
-- Escreveu um teste supondo que bolsa vencida seria recusada na alocação. O teste falhou: a recusa acontece **na entrada do estoque**, antes disso
-- Esqueceu de copiar `infra/` no Dockerfile, e o build quebrou porque um teste lê a configuração do Nginx
+Os três casos abaixo são a razão de cada saída passar por execução antes de
+entrar no repositório.
 
-A IA rascunhou; nós validamos, corrigimos e assinamos.
+- A justificativa escrita afirmava que a colisão no índice de estoque era "rara por construção". Medimos, e não se sustentou: `Objects.hash` sobre enum usa hash de identidade, que varia entre execuções. A chave passou a usar `ordinal()`
+- Um teste sugerido supunha que bolsa vencida seria recusada na alocação. Ao rodar, ele falhou, e a investigação mostrou que a recusa acontece antes, **na entrada do estoque**
+- Um `COPY infra/` faltando no Dockerfile derrubou o build, porque um teste lê a configuração do Nginx para conferir a porta
+
+Cada um foi pego por um mecanismo diferente: o primeiro por medição
+deliberada, depois que a afirmação já estava escrita na documentação
+(PI3-132); o segundo pela suíte de testes, ainda no desenvolvimento; o
+terceiro pelo build, que não gera imagem com teste falhando. Validamos,
+corrigimos e assinamos o resultado.
 
 ### Evidências
 
