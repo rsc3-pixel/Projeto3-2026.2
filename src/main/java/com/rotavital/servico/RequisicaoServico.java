@@ -6,6 +6,7 @@ import com.rotavital.api.dto.ItemRequisicaoRequest;
 import com.rotavital.api.dto.ItemRequisicaoResponse;
 import com.rotavital.api.dto.RequisicaoRequest;
 import com.rotavital.api.dto.RequisicaoResponse;
+import com.rotavital.alocacao.SelecaoFefo;
 import com.rotavital.compatibilidade.MatrizCompatibilidade;
 import com.rotavital.dominio.Alocacao;
 import com.rotavital.dominio.Bolsa;
@@ -17,8 +18,10 @@ import com.rotavital.dominio.enums.StatusBolsa;
 import com.rotavital.dominio.enums.StatusRequisicao;
 import com.rotavital.repositorio.BolsaRepository;
 import com.rotavital.repositorio.RequisicaoRepository;
+import com.rotavital.servico.evento.BolsaAlterada;
 import com.rotavital.servico.excecao.OperacaoInvalidaException;
 import com.rotavital.servico.excecao.RecursoNaoEncontradoException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,13 +36,19 @@ public class RequisicaoServico {
     private final RequisicaoRepository requisicoes;
     private final BolsaRepository bolsas;
     private final HospitalServico hospitalServico;
+    private final IndiceEstoqueServico indiceEstoque;
+    private final ApplicationEventPublisher eventos;
 
     public RequisicaoServico(RequisicaoRepository requisicoes,
                              BolsaRepository bolsas,
-                             HospitalServico hospitalServico) {
+                             HospitalServico hospitalServico,
+                             IndiceEstoqueServico indiceEstoque,
+                             ApplicationEventPublisher eventos) {
         this.requisicoes = requisicoes;
         this.bolsas = bolsas;
         this.hospitalServico = hospitalServico;
+        this.indiceEstoque = indiceEstoque;
+        this.eventos = eventos;
     }
 
     // -----------------------------------------------------------------------
@@ -140,6 +149,7 @@ public class RequisicaoServico {
         for (ItemRequisicao item : requisicao.getItens()) {
             for (Alocacao alocacao : List.copyOf(item.getAlocacoes())) {
                 alocacao.getBolsa().setStatus(StatusBolsa.DISPONIVEL);
+                eventos.publishEvent(new BolsaAlterada(alocacao.getBolsa()));
                 item.removerAlocacao(alocacao);
             }
         }
@@ -257,10 +267,57 @@ public class RequisicaoServico {
 
         item.adicionarAlocacao(alocacao);
         bolsa.setStatus(StatusBolsa.RESERVADA);
+        // A bolsa sai do indice de estoque, mas so depois do commit: se esta
+        // transacao reverter, ela continua disponivel e continua indexada.
+        eventos.publishEvent(new BolsaAlterada(bolsa));
         requisicao.recalcularStatus();
         requisicoes.save(requisicao);
 
         return AlocacaoResponse.de(alocacao);
+    }
+
+    /**
+     * Aloca automaticamente a melhor bolsa disponivel para o item.
+     *
+     * <p>E o caminho que exercita o indice de estoque por hash: em vez de o
+     * usuario escolher a bolsa e o sistema apenas validar, aqui o sistema
+     * consulta o {@link IndiceEstoqueServico}, que resolve em O(1) por grupo
+     * compativel quais bolsas existem, e aplica FEFO sobre o resultado.</p>
+     *
+     * <p>A compatibilidade ABO/Rh ja vem resolvida pelo indice, que consulta a
+     * {@code MatrizCompatibilidade} para saber quais grupos procurar. Por isso
+     * a selecao usa a sobrecarga de lista mais data da {@code SelecaoFefo}: a
+     * bolsa escolhida e a de validade mais proxima entre as compativeis e
+     * disponiveis, com desempate deterministico por codigo de rastreio.</p>
+     *
+     * <p>Depois de escolher, delega para
+     * {@link #alocar(String, String, AlocacaoRequest)}. Todas as regras de
+     * alocacao - status, validade, tipo, compatibilidade, troca de status da
+     * bolsa e recalculo da requisicao - continuam num lugar so, e as duas
+     * portas de entrada nao podem divergir.</p>
+     *
+     * @throws OperacaoInvalidaException se nao houver bolsa disponivel e
+     *         compativel para a combinacao pedida
+     */
+    @Transactional
+    public AlocacaoResponse alocarAutomaticamente(String requisicaoId, String itemId) {
+        Requisicao requisicao = buscar(requisicaoId);
+        exigirRequisicaoAberta(requisicao);
+
+        ItemRequisicao item = itemDe(requisicao, itemId);
+        if (item.estaAtendido()) {
+            throw new OperacaoInvalidaException("Item ja esta totalmente atendido");
+        }
+
+        List<Bolsa> candidatas = indiceEstoque.buscarCompativeis(
+                item.getGrupoSanguineo(), item.getTipo());
+
+        Bolsa escolhida = SelecaoFefo.escolher(candidatas, LocalDate.now())
+                .orElseThrow(() -> new OperacaoInvalidaException(
+                        "Sem estoque disponivel para " + item.getGrupoSanguineo()
+                        + " " + item.getTipo()));
+
+        return alocar(requisicaoId, itemId, new AlocacaoRequest(escolhida.getCodigoRastreio()));
     }
 
     @Transactional
@@ -280,6 +337,7 @@ public class RequisicaoServico {
         }
 
         alocacao.getBolsa().setStatus(StatusBolsa.DISPONIVEL);
+        eventos.publishEvent(new BolsaAlterada(alocacao.getBolsa()));
         item.removerAlocacao(alocacao);
         requisicao.recalcularStatus();
         requisicoes.save(requisicao);
