@@ -31,7 +31,7 @@ import java.util.List;
 
 /**
  * Endpoints de requisicao, item e alocacao, conforme a secao 2.4 do
- * contrato_api.md.
+ * docs/contrato_api.md.
  *
  * <p>Item e alocacao sao sub-recursos: so existem dentro de uma requisicao,
  * por isso a URL aninhada em vez de {@code /api/v1/itens}.</p>

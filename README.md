@@ -314,7 +314,7 @@ processo em [docs/deploy.md](docs/deploy.md).
 | `http://localhost:8080/docs` | API Reference interativa (Scalar) |
 | `http://localhost:8080/h2-console` | Console do banco H2 |
 
-Os endpoints de negócio seguem o [contrato_api.md](contrato_api.md):
+Os endpoints de negócio seguem o [contrato_api.md](docs/contrato_api.md):
 
 | Recurso | Operações |
 |---|---|
@@ -382,6 +382,7 @@ Material de apoio, não exigido pelas entregas:
 |---|---|
 | [docs/entendendo-o-rota-vital.md](docs/entendendo-o-rota-vital.md) | guia comentado do código, do modelo de domínio ao deploy |
 | [docs/plano-frontends.md](docs/plano-frontends.md) | plano dos dois front-ends: Thymeleaf e Angular |
+| [frontend/](frontend/) | onde cada front-end mora e como trabalhar só nele |
 
 ## Entregas anteriores
 
@@ -400,9 +401,9 @@ Material de apoio, não exigido pelas entregas:
 | Histórias de usuário com cenários BDD | [docs/historias-de-usuario.md](docs/historias-de-usuario.md) |
 | Protótipo Lo-Fi (Figma) | [abrir protótipo](https://www.figma.com/make/FjQBa3isHRI4lxbASP8AEn/Dark-Web-Blood-Bank-Prototype?p=f&t=b0uZNhfKp6MHIZBO-0&fullscreen=1) |
 | Screencast do protótipo | [assistir no YouTube](https://youtu.be/33CGLaHzz9A) |
-| Modelo de domínio (diagrama de classes) | [dominio.png](dominio.png) · [dominio.drawio](dominio.drawio) |
-| Contrato da API REST | [contrato_api.md](contrato_api.md) |
-| Arquitetura de rede | [diagrama_arquitetura_redes.png](diagrama_arquitetura_redes.png) |
+| Modelo de domínio (diagrama de classes) | [dominio.png](docs/diagramas/dominio.png) · [dominio.drawio](docs/diagramas/dominio.drawio) |
+| Contrato da API REST | [contrato_api.md](docs/contrato_api.md) |
+| Arquitetura de rede | [diagrama_arquitetura_redes.png](docs/diagramas/diagrama_arquitetura_redes.png) |
 | Escopo do grafo de distribuição | [docs/W02-escopo-grafo-rede-distribuicao.md](docs/W02-escopo-grafo-rede-distribuicao.md) · [diagrama](docs/img/W02-grafo-rede-distribuicao.png) |
 | Estruturas de dados (grafo, FEFO, índice) | [docs/W04-estruturas-base.md](docs/W04-estruturas-base.md) |
 | Complexidade das estruturas | [docs/complexidade-estruturas.md](docs/complexidade-estruturas.md) |
@@ -486,7 +487,7 @@ Material de apoio, não exigido pelas entregas:
 | SO U2 — orçamento mensal dos três cenários | [docs/so-u2-orcamento-mensal.md](docs/so-u2-orcamento-mensal.md) |
 | **Aplicação no ar** | [rsc3-rotavital.duckdns.org](https://rsc3-rotavital.duckdns.org/api/v1/hemocentros) |
 | **API Reference (Scalar)** | [/docs](https://rsc3-rotavital.duckdns.org/docs) |
-| Contrato da API | [contrato_api.md](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/contrato_api.md) |
+| Contrato da API | [contrato_api.md](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/docs/contrato_api.md) |
 | Histórias de usuário | [docs/historias-de-usuario.md](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/docs/historias-de-usuario.md) |
 | Issue / Bug tracker | [github.com/…/issues](https://github.com/rsc3-pixel/Projeto3-2026.2/issues) |
 | Screencast do sistema | [assistir](https://luvaplay.com.br/game/Video01-%20O%20sistema.mp4) |

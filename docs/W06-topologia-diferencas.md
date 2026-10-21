@@ -1,6 +1,6 @@
 # W06 — Diferenças na arquitetura de rede em relação à W04 (PI3-22)
 
-Este documento registra, por escrito, o que mudou no diagrama de arquitetura de rede (`diagrama_arquitetura_redes.drawio`) entre a versão da W04 (PI3-16) e a atualização da W06 (PI3-22), e por quê. A W04 desenhava uma arquitetura-alvo (VPC segmentada, load balancer, mensageria, cache, banco gerenciado); a W06 confronta esse desenho com o que o deploy da PI3-21 efetivamente colocou no ar.
+Este documento registra, por escrito, o que mudou no diagrama de arquitetura de rede (`docs/diagramas/diagrama_arquitetura_redes.drawio`) entre a versão da W04 (PI3-16) e a atualização da W06 (PI3-22), e por quê. A W04 desenhava uma arquitetura-alvo (VPC segmentada, load balancer, mensageria, cache, banco gerenciado); a W06 confronta esse desenho com o que o deploy da PI3-21 efetivamente colocou no ar.
 
 | Elemento do diagrama W04 | Situação real na W06 | Justificativa |
 |---|---|---|

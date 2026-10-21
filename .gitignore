@@ -29,3 +29,8 @@ desktop.ini
 # Python
 __pycache__/
 *.py[cod]
+
+# Front-end
+node_modules/
+frontend/angular/dist/
+frontend/angular/.angular/

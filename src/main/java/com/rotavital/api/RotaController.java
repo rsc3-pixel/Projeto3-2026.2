@@ -27,7 +27,7 @@ import java.net.URI;
 import java.util.List;
 
 /**
- * Endpoints de rota, conforme a secao 2.5 do contrato_api.md.
+ * Endpoints de rota, conforme a secao 2.5 do docs/contrato_api.md.
  */
 @Tag(name = "Rotas")
 @RestController

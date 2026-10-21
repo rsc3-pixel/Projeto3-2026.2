@@ -29,7 +29,7 @@ Três consequências:
 
 2. **A aplicação entra atrás do Nginx que já está lá**, com domínio próprio.
    Nenhuma regra nova de firewall, HTTPS pelo Certbot, e o desenho fica igual
-   ao [diagrama de arquitetura do PI3-16](../diagrama_arquitetura_redes.png),
+   ao [diagrama de arquitetura do PI3-16](diagramas/diagrama_arquitetura_redes.png),
    que já previa o Nginx como ponto único de entrada.
 
 3. **Nada do provisionamento toca no que já roda.** O script não para,

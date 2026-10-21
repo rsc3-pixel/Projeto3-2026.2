@@ -24,7 +24,7 @@ import java.net.URI;
 import java.util.List;
 
 /**
- * Endpoints de hospital, conforme a secao 2.2 do contrato_api.md.
+ * Endpoints de hospital, conforme a secao 2.2 do docs/contrato_api.md.
  */
 @Tag(name = "Hospitais")
 @RestController
