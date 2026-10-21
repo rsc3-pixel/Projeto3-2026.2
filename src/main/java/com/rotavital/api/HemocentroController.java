@@ -29,7 +29,7 @@ import java.net.URI;
 import java.util.List;
 
 /**
- * Endpoints de hemocentro, conforme a secao 2.1 do contrato_api.md.
+ * Endpoints de hemocentro, conforme a secao 2.1 do docs/contrato_api.md.
  *
  * <p>O controlador so cuida de HTTP: le parametro, chama o servico e escolhe
  * o codigo de resposta. Regra de negocio nenhuma mora aqui.</p>

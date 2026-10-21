@@ -31,6 +31,6 @@ apresentacao/
 *.md
 !README.md
 
-# Front-end, quando existir
-frontend-angular/node_modules/
-frontend-angular/dist/
+# Front-end: nao entra no build da imagem Java. O Angular tem o proprio
+# ciclo de build, e node_modules sozinho passa de centenas de MB.
+frontend/

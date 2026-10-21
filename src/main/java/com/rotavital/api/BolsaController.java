@@ -25,7 +25,7 @@ import java.net.URI;
 import java.util.List;
 
 /**
- * Endpoints de bolsa, conforme a secao 2.3 do contrato_api.md.
+ * Endpoints de bolsa, conforme a secao 2.3 do docs/contrato_api.md.
  *
  * <p>Nao ha PUT: bolsa nao se edita por inteiro. O que muda ao longo da vida
  * dela e o status, e para isso existe o PATCH.</p>
