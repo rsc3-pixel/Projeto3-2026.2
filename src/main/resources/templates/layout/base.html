@@ -26,7 +26,11 @@
 
 <header class="topo">
     <a class="marca" th:href="@{/}" style="text-decoration:none">
-        <span class="gota"></span>
+        <!-- Gota desenhada em SVG: a ponta fina em cima e a barriga embaixo nao
+             saem de um quadrado arredondado, por mais que se gire. -->
+        <svg class="gota" viewBox="0 0 24 30" aria-hidden="true">
+            <path d="M12 0 C12 0 23 13.5 23 20 A11 11 0 0 1 1 20 C1 13.5 12 0 12 0 Z"/>
+        </svg>
         <h1>ROTA VITAL</h1>
     </a>
 

@@ -18,7 +18,10 @@
 
             .mapa {
                 width: 100%;
-                max-width: 960px;
+                max-width: 1400px;
+                /* Limita pela altura da janela: o mapa e quadrado e, sem isto,
+                   a metade de baixo so aparece rolando a pagina. */
+                max-height: calc(100vh - 230px);
                 margin: 0 auto;
                 display: block;
                 background:
@@ -74,13 +77,13 @@
             .nome {
                 fill: var(--texto);
                 font-family: 'VT323', monospace;
-                font-size: 21px;
+                font-size: 26px;
                 text-anchor: middle;
             }
             .bairro {
                 fill: var(--texto-fraco);
                 font-family: 'VT323', monospace;
-                font-size: 16px;
+                font-size: 20px;
                 text-anchor: middle;
             }
 
@@ -103,7 +106,7 @@
     <section class="area-mapa">
         <h2 style="max-width:960px;margin:0 auto 14px">REDE DE DISTRIBUICAO &middot; RECIFE</h2>
 
-        <svg class="mapa" th:attr="viewBox='0 0 ' + ${lado} + ' ' + ${lado}"
+        <svg class="mapa" th:attr="viewBox=${caixa}"
              xmlns="http://www.w3.org/2000/svg" role="img"
              aria-label="Mapa da rede de hemocentros e hospitais do Recife">
 
@@ -113,7 +116,7 @@
                           stroke="var(--grade)" stroke-width="1"/>
                 </pattern>
             </defs>
-            <rect width="100%" height="100%" fill="url(#malha)"/>
+            <rect x="-2000" y="-2000" width="5000" height="5000" fill="url(#malha)"/>
 
             <!-- caminhos: de cada hemocentro para cada hospital -->
             <g>
@@ -133,8 +136,11 @@
                       th:attr="transform='rotate(45 ' + ${h.x()} + ' ' + ${h.y()} + ')'"/>
                 <text class="sigla" th:x="${h.x()}" th:y="${h.y() + 4}"
                       th:text="${h.id()}">H1</text>
-                <text class="nome" th:x="${h.x()}" th:y="${h.y() + 46}"
-                      th:text="${#strings.abbreviate(h.nome(), 22)}">hospital</text>
+                <text class="nome" th:x="${h.x()}" th:y="${h.y() + 46}">
+                    <tspan th:each="linha, it : ${h.linhasDoNome()}"
+                           th:x="${h.x()}" th:dy="${it.index == 0} ? 0 : 24"
+                           th:text="${linha}">hospital</tspan>
+                </text>
             </g>
 
             <!-- hemocentros: circulo, desenhado por cima -->
@@ -144,8 +150,12 @@
                 <circle class="casa" th:cx="${c.x()}" th:cy="${c.y()}" r="19"/>
                 <text class="sigla" th:x="${c.x()}" th:y="${c.y() + 4}"
                       th:text="${c.id()}">HC</text>
-                <text class="nome" th:x="${c.x()}" th:y="${c.y() - 34}"
-                      th:text="${#strings.abbreviate(c.nome(), 22)}">centro</text>
+                <text class="nome"
+                      th:y="${c.y() - 34 - (c.linhasDoNome().size() - 1) * 24}">
+                    <tspan th:each="linha, it : ${c.linhasDoNome()}"
+                           th:x="${c.x()}" th:dy="${it.index == 0} ? 0 : 24"
+                           th:text="${linha}">centro</tspan>
+                </text>
                 <text class="bairro" th:x="${c.x()}" th:y="${c.y() + 48}"
                       th:text="${c.bairro()}">bairro</text>
             </a>

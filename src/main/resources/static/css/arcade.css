@@ -62,7 +62,7 @@ h1, h2, h3, .pixel {
 }
 
 h1 {
-    font-size: 18px;
+    font-size: 13px;
     color: var(--sangue-claro);
     text-shadow: 0 0 12px var(--sangue);
 }
@@ -78,7 +78,7 @@ h2 {
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    padding: 16px 24px;
+    padding: 9px 20px;
     background: var(--fundo-painel);
     border-bottom: var(--borda) solid var(--sangue-escuro);
 }
@@ -91,20 +91,18 @@ h2 {
 
 /* A gota pulsa devagar: sinaliza que a tela esta viva sem distrair. */
 .gota {
-    width: 14px;
+    width: 11px;
     height: 14px;
-    /* Cantos redondos em tres lados e um canto vivo: girado 45 graus, o canto
-       vivo vira a ponta de cima e a barriga fica embaixo, como uma gota real. */
-    border-radius: 0 50% 50% 50%;
-    transform: rotate(45deg);
-    background: var(--sangue);
-    box-shadow: 0 0 10px var(--sangue);
+    flex: none;
+    fill: var(--sangue);
+    filter: drop-shadow(0 0 7px var(--sangue));
     animation: pulsar 2.4s ease-in-out infinite;
 }
 
 @keyframes pulsar {
-    0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--sangue); }
-    50%      { opacity: .55; box-shadow: 0 0 22px var(--sangue-claro); }
+    0%, 100% { opacity: 1; }
+    50%      { opacity: .5; filter: drop-shadow(0 0 16px var(--sangue-claro)); }
+}
 }
 
 /* --- painel --- */
