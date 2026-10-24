@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!--
+  Layout base das telas do painel operacional (PI3-137).
+
+  Toda tela declara layout:decorate="~{layout/base}" e preenche os fragmentos
+  "titulo" e "conteudo". O cabecalho, o rodape e o carregamento de CSS ficam
+  aqui, entao mudanca de identidade acontece num lugar so.
+-->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title layout:title-pattern="$CONTENT_TITLE · Rota Vital">Rota Vital</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+
+    <link rel="stylesheet" th:href="@{/css/arcade.css}">
+    <th:block layout:fragment="estilos"></th:block>
+</head>
+<body>
+
+<header class="topo">
+    <a class="marca" th:href="@{/}" style="text-decoration:none">
+        <!-- Gota desenhada em SVG: a ponta fina em cima e a barriga embaixo nao
+             saem de um quadrado arredondado, por mais que se gire. -->
+        <svg class="gota" viewBox="0 0 24 30" aria-hidden="true">
+            <path d="M12 0 C12 0 23 13.5 23 20 A11 11 0 0 1 1 20 C1 13.5 12 0 12 0 Z"/>
+        </svg>
+        <h1>ROTA VITAL</h1>
+    </a>
+
+    <!-- O hemocentro em operacao: e o "voce esta aqui" do painel. -->
+    <div class="metrica" th:if="${centroAtual != null}">
+        <span class="rotulo">operando em</span>
+        <span class="valor" style="font-size:13px" th:text="${centroAtual.nome}">Hemocentro</span>
+    </div>
+</header>
+
+<main layout:fragment="conteudo">
+    <!-- cada tela entra aqui -->
+</main>
+
+<footer class="rodape">
+    <span th:text="${'atualizado ' + #temporals.format(agora, 'dd/MM HH:mm:ss')}">atualizado</span>
+    <span> · dados sinteticos, telemetria simulada</span>
+</footer>
+
+<th:block layout:fragment="scripts"></th:block>
+</body>
+</html>
