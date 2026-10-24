@@ -5,6 +5,10 @@
   A leitura e de tabuleiro, no espirito dos mapas de jogo: cada local e uma
   casa, e as linhas tracejadas sao os caminhos por onde o sangue anda. Um
   hemocentro abastece hospitais, entao toda ligacao sai de um centro.
+
+  O SVG leva so as formas e os caminhos; os nomes sao HTML posicionado por
+  cima, ancorado no mesmo ponto. Texto dentro do SVG obrigaria o viewBox a
+  enquadrar o rotulo inteiro, e cada nome mais longo encolheria o mapa todo.
 -->
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
@@ -14,24 +18,30 @@
     <title>Rede</title>
     <th:block layout:fragment="estilos">
         <style>
-            .area-mapa { padding: 20px 24px 28px; }
+            .area-mapa { padding: 12px 20px 18px; }
 
-            .mapa {
+            /* A caixa que o SVG e os rotulos dividem: as posicoes em
+               porcentagem valem para os dois. */
+            .palco {
+                position: relative;
                 width: 100%;
-                max-width: 1400px;
-                /* Limita pela altura da janela: o mapa e quadrado e, sem isto,
-                   a metade de baixo so aparece rolando a pagina. */
-                max-height: calc(100vh - 230px);
+                max-width: 1700px;
                 margin: 0 auto;
-                display: block;
-                background:
-                    radial-gradient(circle at 50% 42%, #1b1014 0%, var(--fundo) 72%);
+                max-height: calc(100vh - 185px);
+                background: radial-gradient(circle at 50% 45%, #1b1014 0%, var(--fundo) 72%);
                 border: var(--borda) solid var(--sangue-escuro);
                 border-radius: var(--raio);
+                overflow: hidden;
+            }
+            .palco svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+            .faixa {
+                fill: var(--texto-fraco);
+                font-family: 'Press Start 2P', monospace;
+                font-size: 15px;
+                opacity: .55;
             }
 
-            /* O tracejado corre devagar: mostra que a rota existe e tem sentido,
-               do centro para o hospital. */
             .caminho {
                 stroke: var(--ambar);
                 stroke-width: 2.5;
@@ -42,54 +52,109 @@
             }
             @keyframes correr { to { stroke-dashoffset: -22; } }
 
-            .local { cursor: pointer; }
-            .local.hospital { cursor: default; }
-            .local .halo {
-                fill: var(--sangue);
-                opacity: .16;
-                animation: respirar 3.6s ease-in-out infinite;
-            }
-            @keyframes respirar {
-                0%, 100% { opacity: .16; }
-                50%      { opacity: .05; }
-            }
-
-            /* Hemocentro: circulo cheio, e o no que abastece.
-               Hospital: losango vazado, e quem consome. */
-            .local .casa {
-                fill: var(--fundo-painel);
-                stroke: var(--sangue-claro);
-                stroke-width: 3;
-            }
-            .local.hospital .casa { stroke: var(--texto-fraco); }
-            .local:hover .casa { stroke: var(--ambar); fill: #2a1a0c; }
-            .local:hover .nome { fill: var(--ambar); }
-
-            .sigla {
-                fill: var(--sangue-claro);
-                font-family: 'Press Start 2P', monospace;
-                font-size: 11px;
-                text-anchor: middle;
+            /* --- rotulos em HTML, ancorados na mesma coordenada --- */
+            .marcador {
+                position: absolute;
+                transform: translate(-50%, -50%);
+                width: 200px;
+                height: 120px;
+                text-align: center;
+                color: inherit;
+                text-decoration: none;
                 pointer-events: none;
             }
-            .local.hospital .sigla { fill: var(--texto-fraco); }
+            /* A sigla fica no centro exato do marcador, que e o mesmo centro
+               da forma no SVG. */
+            /* A forma do ponto, centrada no marcador. */
+            .forma {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                background: var(--fundo-painel);
+                border: 3px solid var(--sangue-claro);
+            }
+            .marcador.centro .forma {
+                width: 58px;
+                height: 58px;
+                border-radius: 50%;
+                box-shadow: 0 0 0 14px rgba(226, 40, 60, .13);
+                animation: respirar 3.6s ease-in-out infinite;
+            }
+            .marcador.hospital .forma {
+                width: 46px;
+                height: 46px;
+                border-color: var(--texto-fraco);
+                border-radius: 5px;
+                transform: translate(-50%, -50%) rotate(45deg);
+            }
+            @keyframes respirar {
+                0%, 100% { box-shadow: 0 0 0 14px rgba(226, 40, 60, .13); }
+                50%      { box-shadow: 0 0 0 22px rgba(226, 40, 60, .05); }
+            }
 
-            .nome {
-                fill: var(--texto);
-                font-family: 'VT323', monospace;
-                font-size: 26px;
-                text-anchor: middle;
+            .marcador .sigla {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                font-family: 'Press Start 2P', monospace;
+                font-size: 11px;
+                color: var(--sangue-claro);
+                line-height: 1;
             }
-            .bairro {
-                fill: var(--texto-fraco);
+            .marcador.hospital .sigla { color: var(--texto-fraco); }
+
+            .marcador .nome {
                 font-family: 'VT323', monospace;
-                font-size: 20px;
-                text-anchor: middle;
+                font-size: 22px;
+                line-height: 1.05;
+                color: var(--texto);
             }
+            .marcador .bairro {
+                font-family: 'VT323', monospace;
+                font-size: 18px;
+                color: var(--texto-fraco);
+                line-height: 1;
+            }
+
+            /* O nome do hemocentro fica acima do ponto e o do hospital abaixo:
+               com dez pontos proximos, alternar o lado evita sobreposicao. */
+            /* Nome acima do ponto no hemocentro e abaixo no hospital: com dez
+               pontos proximos, alternar o lado evita sobreposicao.
+
+               As distancias sao absolutas, medidas a partir do centro da forma,
+               e nao em porcentagem do marcador: o marcador muda de altura com o
+               numero de linhas do nome, e o texto acabava encostando na forma. */
+            .marcador.centro .nome {
+                position: absolute;
+                left: 50%;
+                bottom: calc(50% + 50px);
+                transform: translateX(-50%);
+                width: 215px;
+            }
+            .marcador.centro .bairro {
+                position: absolute;
+                left: 50%;
+                top: calc(50% + 54px);
+                transform: translateX(-50%);
+                width: 215px;
+            }
+            .marcador.hospital .nome {
+                position: absolute;
+                left: 50%;
+                top: calc(50% + 40px);
+                transform: translateX(-50%);
+                width: 215px;
+            }
+
+            a.marcador { cursor: pointer; pointer-events: auto; }
+            a.marcador:hover .nome,
+            a.marcador:hover .sigla { color: var(--ambar); }
 
             .legenda {
-                max-width: 960px;
-                margin: 14px auto 0;
+                max-width: 1700px;
+                margin: 12px auto 0;
                 display: flex;
                 gap: 26px;
                 flex-wrap: wrap;
@@ -104,62 +169,55 @@
 <div layout:fragment="conteudo">
 
     <section class="area-mapa">
-        <h2 style="max-width:960px;margin:0 auto 14px">REDE DE DISTRIBUICAO &middot; RECIFE</h2>
+        <h2 style="max-width:1700px;margin:0 auto 10px">REDE DE DISTRIBUICAO &middot; RECIFE</h2>
 
-        <svg class="mapa" th:attr="viewBox=${caixa}"
-             xmlns="http://www.w3.org/2000/svg" role="img"
-             aria-label="Mapa da rede de hemocentros e hospitais do Recife">
+        <div class="palco" th:style="'aspect-ratio: ' + ${proporcao}">
+            <svg th:attr="viewBox=${caixa}" preserveAspectRatio="none"
+                 xmlns="http://www.w3.org/2000/svg" role="img"
+                 aria-label="Mapa da rede de hemocentros e hospitais do Recife">
 
-            <defs>
-                <pattern id="malha" width="50" height="50" patternUnits="userSpaceOnUse">
-                    <path d="M 50 0 L 0 0 0 50" fill="none"
-                          stroke="var(--grade)" stroke-width="1"/>
-                </pattern>
-            </defs>
-            <rect x="-2000" y="-2000" width="5000" height="5000" fill="url(#malha)"/>
+                <defs>
+                    <pattern id="malha" width="50" height="50" patternUnits="userSpaceOnUse">
+                        <path d="M 50 0 L 0 0 0 50" fill="none"
+                              stroke="var(--grade)" stroke-width="1"/>
+                    </pattern>
+                </defs>
+                <rect x="-3000" y="-3000" width="9000" height="9000" fill="url(#malha)"/>
 
-            <!-- caminhos: de cada hemocentro para cada hospital -->
-            <g>
+                <!-- Faixas nomeadas: dizem o que e cada fileira sem exigir que
+                     o leitor decifre circulo contra losango. -->
+                <text class="faixa" x="24" y="40">QUEM FORNECE</text>
+                <text class="faixa" x="24" y="745">QUEM RECEBE</text>
+
+                <!-- caminhos: de cada hemocentro para cada hospital -->
                 <th:block th:each="c : ${centros}">
                     <line th:each="h : ${hospitais}" class="caminho"
                           th:x1="${c.x()}" th:y1="${c.y()}"
                           th:x2="${h.x()}" th:y2="${h.y()}"/>
                 </th:block>
-            </g>
 
-            <!-- Hospitais: losango vazado, sem link. Hospital consome sangue,
-                 nao gere estoque, entao nao ha painel de gestao para abrir. -->
-            <g th:each="h : ${hospitais}" class="local hospital">
-                <title th:text="${h.nome()}">hospital</title>
-                <rect class="casa" th:x="${h.x() - 31}" th:y="${h.y() - 31}"
-                      width="62" height="62" rx="4"
-                      th:attr="transform='rotate(45 ' + ${h.x()} + ' ' + ${h.y()} + ')'"/>
-                <text class="sigla" th:x="${h.x()}" th:y="${h.y() + 4}"
-                      th:text="${h.id()}">H1</text>
-                <text class="nome" th:x="${h.x()}" th:y="${h.y() + 60}">
-                    <tspan th:each="linha, it : ${h.linhasDoNome()}"
-                           th:x="${h.x()}" th:dy="${it.index == 0} ? 0 : 24"
-                           th:text="${linha}">hospital</tspan>
-                </text>
-            </g>
+                <!-- As formas dos pontos sao HTML, dentro do marcador: o SVG
+                     e esticado para preencher o palco, e o que fosse desenhado
+                     aqui sairia achatado num eixo. -->
+            </svg>
 
-            <!-- hemocentros: circulo, desenhado por cima -->
-            <a th:each="c : ${centros}" th:href="@{'/painel/' + ${c.id()}}" class="local">
-                <title th:text="${c.nome()}">hemocentro</title>
-                <circle class="halo" th:cx="${c.x()}" th:cy="${c.y()}" r="41"/>
-                <circle class="casa" th:cx="${c.x()}" th:cy="${c.y()}" r="28"/>
-                <text class="sigla" th:x="${c.x()}" th:y="${c.y() + 4}"
-                      th:text="${c.id()}">HC</text>
-                <text class="nome"
-                      th:y="${c.y() - 45 - (c.linhasDoNome().size() - 1) * 24}">
-                    <tspan th:each="linha, it : ${c.linhasDoNome()}"
-                           th:x="${c.x()}" th:dy="${it.index == 0} ? 0 : 24"
-                           th:text="${linha}">centro</tspan>
-                </text>
-                <text class="bairro" th:x="${c.x()}" th:y="${c.y() + 58}"
-                      th:text="${c.bairro()}">bairro</text>
+            <!-- rotulos, sobre as formas -->
+            <div class="marcador hospital" th:each="h : ${hospitais}"
+                 th:style="'left:' + ${h.percentualX()} + '%; top:' + ${h.percentualY()} + '%'">
+                <span class="forma"></span>
+                <div class="sigla" th:text="${h.id()}">HO01</div>
+                <div class="nome" th:text="${h.nome()}">hospital</div>
+            </div>
+
+            <a class="marcador centro" th:each="c : ${centros}"
+               th:href="@{'/painel/' + ${c.id()}}"
+               th:style="'left:' + ${c.percentualX()} + '%; top:' + ${c.percentualY()} + '%'">
+                <span class="forma"></span>
+                <div class="nome" th:text="${c.nome()}">centro</div>
+                <div class="sigla" th:text="${c.id()}">HC01</div>
+                <div class="bairro" th:text="${c.bairro()}">bairro</div>
             </a>
-        </svg>
+        </div>
 
         <div class="legenda">
             <span><b th:text="${centros.size()}">0</b> hemocentros</span>
