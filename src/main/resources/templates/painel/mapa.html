@@ -131,12 +131,12 @@
                  nao gere estoque, entao nao ha painel de gestao para abrir. -->
             <g th:each="h : ${hospitais}" class="local hospital">
                 <title th:text="${h.nome()}">hospital</title>
-                <rect class="casa" th:x="${h.x() - 15}" th:y="${h.y() - 15}"
-                      width="30" height="30" rx="3"
+                <rect class="casa" th:x="${h.x() - 31}" th:y="${h.y() - 31}"
+                      width="62" height="62" rx="4"
                       th:attr="transform='rotate(45 ' + ${h.x()} + ' ' + ${h.y()} + ')'"/>
                 <text class="sigla" th:x="${h.x()}" th:y="${h.y() + 4}"
                       th:text="${h.id()}">H1</text>
-                <text class="nome" th:x="${h.x()}" th:y="${h.y() + 46}">
+                <text class="nome" th:x="${h.x()}" th:y="${h.y() + 60}">
                     <tspan th:each="linha, it : ${h.linhasDoNome()}"
                            th:x="${h.x()}" th:dy="${it.index == 0} ? 0 : 24"
                            th:text="${linha}">hospital</tspan>
@@ -146,17 +146,17 @@
             <!-- hemocentros: circulo, desenhado por cima -->
             <a th:each="c : ${centros}" th:href="@{'/painel/' + ${c.id()}}" class="local">
                 <title th:text="${c.nome()}">hemocentro</title>
-                <circle class="halo" th:cx="${c.x()}" th:cy="${c.y()}" r="30"/>
-                <circle class="casa" th:cx="${c.x()}" th:cy="${c.y()}" r="19"/>
+                <circle class="halo" th:cx="${c.x()}" th:cy="${c.y()}" r="41"/>
+                <circle class="casa" th:cx="${c.x()}" th:cy="${c.y()}" r="28"/>
                 <text class="sigla" th:x="${c.x()}" th:y="${c.y() + 4}"
                       th:text="${c.id()}">HC</text>
                 <text class="nome"
-                      th:y="${c.y() - 34 - (c.linhasDoNome().size() - 1) * 24}">
+                      th:y="${c.y() - 45 - (c.linhasDoNome().size() - 1) * 24}">
                     <tspan th:each="linha, it : ${c.linhasDoNome()}"
                            th:x="${c.x()}" th:dy="${it.index == 0} ? 0 : 24"
                            th:text="${linha}">centro</tspan>
                 </text>
-                <text class="bairro" th:x="${c.x()}" th:y="${c.y() + 48}"
+                <text class="bairro" th:x="${c.x()}" th:y="${c.y() + 58}"
                       th:text="${c.bairro()}">bairro</text>
             </a>
         </svg>

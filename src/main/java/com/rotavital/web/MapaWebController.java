@@ -107,9 +107,15 @@ public class MapaWebController {
             yMax = Math.max(yMax, p.y());
         }
 
-        // Folga para caber o rotulo, que fica acima e abaixo do ponto.
+        // Folga para caber o rotulo. Na vertical ela depende do nome mais
+        // longo: um nome de tres linhas sobe bem acima do ponto, e sem esta
+        // conta o primeiro e o ultimo ponto saem cortados pela borda.
+        int maisLinhas = 1;
+        for (PontoMapa p : todos) {
+            maisLinhas = Math.max(maisLinhas, p.linhasDoNome().size());
+        }
         double folgaX = 230;
-        double folgaY = 70;
+        double folgaY = 90 + maisLinhas * 26;
         double x = xMin - folgaX;
         double y = yMin - folgaY;
         double largura = (xMax - xMin) + 2 * folgaX;
@@ -120,7 +126,7 @@ public class MapaWebController {
     }
 
     /** Distancia minima entre dois pontos para os rotulos nao colidirem. */
-    private static final double DISTANCIA_MINIMA = 230;
+    private static final double DISTANCIA_MINIMA = 260;
 
     /**
      * Afasta pontos que cairiam praticamente no mesmo lugar.
