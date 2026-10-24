@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<!--
+  Painel operacional: o estado do estoque para quem opera o hemocentro.
+
+  As tres metricas do topo respondem as perguntas que essa pessoa faz primeiro:
+  quanto tenho, quanto vence logo, e onde estou descoberto.
+-->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}"
+      lang="pt-BR">
+<head>
+    <title>Painel</title>
+    <th:block layout:fragment="estilos">
+        <style>
+            .grade-painel {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 16px;
+                padding: 16px 24px;
+            }
+            .resumo {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+                gap: 16px;
+                padding: 20px 24px 4px;
+            }
+            .barra {
+                height: 6px;
+                background: var(--grade);
+                border-radius: 3px;
+                overflow: hidden;
+            }
+            .barra > span {
+                display: block;
+                height: 100%;
+                background: var(--sangue);
+            }
+            .barra.cheia > span { background: var(--ok); }
+            .barra.baixa  > span { background: var(--ambar); }
+        </style>
+    </th:block>
+</head>
+<body>
+<div layout:fragment="conteudo">
+
+    <!-- === as tres perguntas de quem opera === -->
+    <section class="resumo">
+        <div class="painel metrica">
+            <span class="valor" th:text="${#aggregates.sum(estoque.![quantidade])}">0</span>
+            <span class="rotulo">bolsas em estoque</span>
+        </div>
+
+        <div class="painel metrica"
+             th:classappend="${criticas.quantidade() > 0} ? 'critico' : ''">
+            <span class="valor" th:text="${criticas.quantidade()}">0</span>
+            <span class="rotulo"
+                  th:text="|vencem em ${criticas.limiteDias()} dias|">vencem logo</span>
+        </div>
+
+        <div class="painel metrica"
+             th:with="descobertos=${cobertura.?[deficit > 0].size()}"
+             th:classappend="${descobertos > 0} ? 'alerta' : ''">
+            <span class="valor" th:text="${descobertos}">0</span>
+            <span class="rotulo">tipos descobertos</span>
+        </div>
+    </section>
+
+    <div class="grade-painel">
+
+        <!-- === estoque por tipo sanguineo === -->
+        <section class="painel">
+            <h2>ESTOQUE POR TIPO</h2>
+            <table>
+                <thead>
+                <tr>
+                    <th>tipo</th>
+                    <th>bolsas</th>
+                    <th style="width:45%">proporcao</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="linha : ${estoque}">
+                    <td th:text="${linha.grupoSanguineo()}">O-</td>
+                    <td th:text="${linha.quantidade()}">0</td>
+                    <td>
+                        <div class="barra">
+                            <span th:style="|width: ${linha.percentual()}%|"></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${estoque.isEmpty()}">
+                    <td colspan="3" style="color: var(--texto-fraco)">
+                        nenhuma bolsa valida no estoque
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- === cobertura: onde falta sangue === -->
+        <section class="painel">
+            <h2>COBERTURA DA DEMANDA</h2>
+            <table>
+                <thead>
+                <tr>
+                    <th>tipo</th>
+                    <th>tem</th>
+                    <th>pedido</th>
+                    <th>situacao</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="linha : ${cobertura}">
+                    <td th:text="${linha.grupoSanguineo()}">A+</td>
+                    <td th:text="${linha.disponivel()}">0</td>
+                    <td th:text="${linha.demandado()}">0</td>
+                    <td>
+                        <span th:if="${linha.deficit() > 0}"
+                              class="etiqueta critico"
+                              th:text="|faltam ${linha.deficit()}|">falta</span>
+                        <span th:unless="${linha.deficit() > 0}"
+                              class="etiqueta ok">coberto</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+    </div>
+</div>
+</body>
+</html>

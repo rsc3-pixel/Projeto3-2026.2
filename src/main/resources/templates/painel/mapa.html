@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<!--
+  Mapa da rede: a tela de entrada (PI3-139).
+
+  A leitura e de tabuleiro, no espirito dos mapas de jogo: cada local e uma
+  casa, e as linhas tracejadas sao os caminhos por onde o sangue anda. Um
+  hemocentro abastece hospitais, entao toda ligacao sai de um centro.
+-->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}"
+      lang="pt-BR">
+<head>
+    <title>Rede</title>
+    <th:block layout:fragment="estilos">
+        <style>
+            .area-mapa { padding: 20px 24px 28px; }
+
+            .mapa {
+                width: 100%;
+                max-width: 960px;
+                margin: 0 auto;
+                display: block;
+                background:
+                    radial-gradient(circle at 50% 42%, #1b1014 0%, var(--fundo) 72%);
+                border: var(--borda) solid var(--sangue-escuro);
+                border-radius: var(--raio);
+            }
+
+            /* O tracejado corre devagar: mostra que a rota existe e tem sentido,
+               do centro para o hospital. */
+            .caminho {
+                stroke: var(--ambar);
+                stroke-width: 2.5;
+                stroke-dasharray: 9 13;
+                stroke-linecap: round;
+                opacity: .4;
+                animation: correr 3s linear infinite;
+            }
+            @keyframes correr { to { stroke-dashoffset: -22; } }
+
+            .local { cursor: pointer; }
+            .local.hospital { cursor: default; }
+            .local .halo {
+                fill: var(--sangue);
+                opacity: .16;
+                animation: respirar 3.6s ease-in-out infinite;
+            }
+            @keyframes respirar {
+                0%, 100% { opacity: .16; }
+                50%      { opacity: .05; }
+            }
+
+            /* Hemocentro: circulo cheio, e o no que abastece.
+               Hospital: losango vazado, e quem consome. */
+            .local .casa {
+                fill: var(--fundo-painel);
+                stroke: var(--sangue-claro);
+                stroke-width: 3;
+            }
+            .local.hospital .casa { stroke: var(--texto-fraco); }
+            .local:hover .casa { stroke: var(--ambar); fill: #2a1a0c; }
+            .local:hover .nome { fill: var(--ambar); }
+
+            .sigla {
+                fill: var(--sangue-claro);
+                font-family: 'Press Start 2P', monospace;
+                font-size: 11px;
+                text-anchor: middle;
+                pointer-events: none;
+            }
+            .local.hospital .sigla { fill: var(--texto-fraco); }
+
+            .nome {
+                fill: var(--texto);
+                font-family: 'VT323', monospace;
+                font-size: 21px;
+                text-anchor: middle;
+            }
+            .bairro {
+                fill: var(--texto-fraco);
+                font-family: 'VT323', monospace;
+                font-size: 16px;
+                text-anchor: middle;
+            }
+
+            .legenda {
+                max-width: 960px;
+                margin: 14px auto 0;
+                display: flex;
+                gap: 26px;
+                flex-wrap: wrap;
+                color: var(--texto-fraco);
+                font-size: 17px;
+            }
+            .legenda b { color: var(--texto); font-weight: normal; }
+        </style>
+    </th:block>
+</head>
+<body>
+<div layout:fragment="conteudo">
+
+    <section class="area-mapa">
+        <h2 style="max-width:960px;margin:0 auto 14px">REDE DE DISTRIBUICAO &middot; RECIFE</h2>
+
+        <svg class="mapa" th:attr="viewBox='0 0 ' + ${lado} + ' ' + ${lado}"
+             xmlns="http://www.w3.org/2000/svg" role="img"
+             aria-label="Mapa da rede de hemocentros e hospitais do Recife">
+
+            <defs>
+                <pattern id="malha" width="50" height="50" patternUnits="userSpaceOnUse">
+                    <path d="M 50 0 L 0 0 0 50" fill="none"
+                          stroke="var(--grade)" stroke-width="1"/>
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#malha)"/>
+
+            <!-- caminhos: de cada hemocentro para cada hospital -->
+            <g>
+                <th:block th:each="c : ${centros}">
+                    <line th:each="h : ${hospitais}" class="caminho"
+                          th:x1="${c.x()}" th:y1="${c.y()}"
+                          th:x2="${h.x()}" th:y2="${h.y()}"/>
+                </th:block>
+            </g>
+
+            <!-- Hospitais: losango vazado, sem link. Hospital consome sangue,
+                 nao gere estoque, entao nao ha painel de gestao para abrir. -->
+            <g th:each="h : ${hospitais}" class="local hospital">
+                <title th:text="${h.nome()}">hospital</title>
+                <rect class="casa" th:x="${h.x() - 15}" th:y="${h.y() - 15}"
+                      width="30" height="30" rx="3"
+                      th:attr="transform='rotate(45 ' + ${h.x()} + ' ' + ${h.y()} + ')'"/>
+                <text class="sigla" th:x="${h.x()}" th:y="${h.y() + 4}"
+                      th:text="${h.id()}">H1</text>
+                <text class="nome" th:x="${h.x()}" th:y="${h.y() + 46}"
+                      th:text="${#strings.abbreviate(h.nome(), 22)}">hospital</text>
+            </g>
+
+            <!-- hemocentros: circulo, desenhado por cima -->
+            <a th:each="c : ${centros}" th:href="@{'/painel/' + ${c.id()}}" class="local">
+                <title th:text="${c.nome()}">hemocentro</title>
+                <circle class="halo" th:cx="${c.x()}" th:cy="${c.y()}" r="30"/>
+                <circle class="casa" th:cx="${c.x()}" th:cy="${c.y()}" r="19"/>
+                <text class="sigla" th:x="${c.x()}" th:y="${c.y() + 4}"
+                      th:text="${c.id()}">HC</text>
+                <text class="nome" th:x="${c.x()}" th:y="${c.y() - 34}"
+                      th:text="${#strings.abbreviate(c.nome(), 22)}">centro</text>
+                <text class="bairro" th:x="${c.x()}" th:y="${c.y() + 48}"
+                      th:text="${c.bairro()}">bairro</text>
+            </a>
+        </svg>
+
+        <div class="legenda">
+            <span><b th:text="${centros.size()}">0</b> hemocentros</span>
+            <span><b th:text="${hospitais.size()}">0</b> hospitais</span>
+            <span>clique num ponto para abrir a gestao</span>
+        </div>
+    </section>
+
+</div>
+</body>
+</html>

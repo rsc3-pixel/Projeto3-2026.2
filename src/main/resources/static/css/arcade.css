@@ -1,0 +1,198 @@
+/*
+ * Identidade visual do painel operacional (PI3-138).
+ *
+ * A paleta parte do sangue: vermelho como cor dominante, ambar para o que
+ * exige atencao. Fundo quase preto para os pontos luminosos terem contraste,
+ * como num radar de fliperama.
+ *
+ * Para ajustar as cores, mexa apenas nas variaveis abaixo. Todo o resto do
+ * arquivo as referencia, entao mudar aqui muda o painel inteiro.
+ */
+:root {
+    /* --- fundo --- */
+    --fundo: #0a0608;
+    --fundo-painel: #140b0f;
+    --grade: #2a1419;
+
+    /* --- sangue: a cor dominante --- */
+    --sangue: #e2283c;
+    --sangue-claro: #ff5a6e;
+    --sangue-escuro: #8e1322;
+
+    /* --- destaque: onde o olho deve ir --- */
+    --ambar: #ffb627;
+    --laranja: #ff7518;
+
+    /* --- estado --- */
+    --ok: #3ddc84;
+    --alerta: var(--ambar);
+    --critico: var(--sangue-claro);
+
+    /* --- texto --- */
+    --texto: #f4ecee;
+    --texto-fraco: #9a8289;
+
+    /* --- medidas --- */
+    --borda: 2px;
+    --raio: 4px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: 'VT323', 'Courier New', monospace;
+    font-size: 20px;
+    /* A grade de fundo e o que da a leitura de "radar" antes de qualquer
+       elemento ser desenhado. */
+    background-image:
+        linear-gradient(var(--grade) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grade) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+h1, h2, h3, .pixel {
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    letter-spacing: 1px;
+    line-height: 1.6;
+}
+
+h1 {
+    font-size: 18px;
+    color: var(--sangue-claro);
+    text-shadow: 0 0 12px var(--sangue);
+}
+
+h2 {
+    font-size: 13px;
+    color: var(--ambar);
+}
+
+/* --- cabecalho --- */
+.topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 16px 24px;
+    background: var(--fundo-painel);
+    border-bottom: var(--borda) solid var(--sangue-escuro);
+}
+
+.topo .marca {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* A gota pulsa devagar: sinaliza que a tela esta viva sem distrair. */
+.gota {
+    width: 14px;
+    height: 14px;
+    /* Cantos redondos em tres lados e um canto vivo: girado 45 graus, o canto
+       vivo vira a ponta de cima e a barriga fica embaixo, como uma gota real. */
+    border-radius: 0 50% 50% 50%;
+    transform: rotate(45deg);
+    background: var(--sangue);
+    box-shadow: 0 0 10px var(--sangue);
+    animation: pulsar 2.4s ease-in-out infinite;
+}
+
+@keyframes pulsar {
+    0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--sangue); }
+    50%      { opacity: .55; box-shadow: 0 0 22px var(--sangue-claro); }
+}
+
+/* --- painel --- */
+.painel {
+    background: var(--fundo-painel);
+    border: var(--borda) solid var(--sangue-escuro);
+    border-radius: var(--raio);
+    padding: 16px;
+}
+
+.painel > h2 {
+    margin: 0 0 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--grade);
+}
+
+/* --- numeros grandes --- */
+.metrica {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.metrica .valor {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 26px;
+    color: var(--texto);
+}
+
+.metrica .rotulo {
+    font-size: 16px;
+    color: var(--texto-fraco);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.metrica.alerta .valor  { color: var(--alerta); text-shadow: 0 0 10px var(--ambar); }
+.metrica.critico .valor { color: var(--critico); text-shadow: 0 0 10px var(--sangue); }
+
+/* --- tabela --- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 18px;
+}
+
+th {
+    text-align: left;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: var(--ambar);
+    padding: 8px 10px;
+    border-bottom: var(--borda) solid var(--sangue-escuro);
+    letter-spacing: 1px;
+}
+
+td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--grade);
+}
+
+tr:hover td {
+    background: rgba(226, 40, 60, .08);
+}
+
+/* --- etiquetas de estado --- */
+.etiqueta {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--raio);
+    font-size: 15px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 1px solid currentColor;
+}
+
+.etiqueta.ok      { color: var(--ok); }
+.etiqueta.alerta  { color: var(--alerta); }
+.etiqueta.critico { color: var(--critico); animation: piscar 1.1s steps(2) infinite; }
+
+@keyframes piscar {
+    50% { opacity: .35; }
+}
+
+/* --- rodape --- */
+.rodape {
+    padding: 14px 24px;
+    color: var(--texto-fraco);
+    font-size: 16px;
+    border-top: 1px solid var(--grade);
+}

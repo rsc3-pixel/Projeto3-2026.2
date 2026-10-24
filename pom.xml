@@ -50,6 +50,26 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
+		<!--
+			Thymeleaf: o front-end renderizado pelo servidor (PI3-133). As telas
+			sao HTML montado aqui dentro, a partir dos mesmos servicos que a API
+			REST usa, entao nao existe logica de negocio duplicada entre os dois.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
+		<!--
+			Layout Dialect: permite que as telas herdem um layout comum em vez de
+			repetir cabecalho, rodape e <head> em cada arquivo. O Thymeleaf sozinho
+			so faz inclusao de fragmento, que obrigaria cada tela a remontar a
+			pagina inteira.
+		-->
+		<dependency>
+			<groupId>nz.net.ultraq.thymeleaf</groupId>
+			<artifactId>thymeleaf-layout-dialect</artifactId>
+			<version>3.4.0</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.h2database</groupId>
