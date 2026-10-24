@@ -59,6 +59,8 @@ public class PainelWebController {
         model.addAttribute("criticas", criticas);
         model.addAttribute("centroAtual", hemocentroServico.buscar(id));
         model.addAttribute("agora", LocalDateTime.now());
+        model.addAttribute("centroId", id);
+        model.addAttribute("aba", "painel");
 
         return "painel/indicadores";
     }

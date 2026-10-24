@@ -105,6 +105,35 @@ h2 {
 }
 }
 
+/* --- abas de navegacao --- */
+.abas {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+    margin-left: 20px;
+}
+
+.abas a {
+    padding: 7px 14px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: var(--texto-fraco);
+    text-decoration: none;
+    border: 1px solid transparent;
+    border-radius: var(--raio);
+    letter-spacing: 1px;
+}
+
+.abas a:hover { color: var(--texto); border-color: var(--grade); }
+
+/* A aba atual fica marcada pela borda e pela cor: so a cor excluiria quem
+   nao distingue vermelho de cinza. */
+.abas a.ativa {
+    color: var(--ambar);
+    border-color: var(--ambar);
+    background: rgba(255, 182, 39, .08);
+}
+
 /* --- painel --- */
 .painel {
     background: var(--fundo-painel);
@@ -193,4 +222,19 @@ tr:hover td {
     color: var(--texto-fraco);
     font-size: 16px;
     border-top: 1px solid var(--grade);
+}
+
+/* --- movimento reduzido ---
+ *
+ * Quem configurou o sistema para menos animacao costuma ter motivo: enxaqueca,
+ * vertigem, transtorno vestibular. A tela continua inteira, so para de se
+ * mexer. O alerta critico perde o piscar, mas nao a cor nem a palavra. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
 }

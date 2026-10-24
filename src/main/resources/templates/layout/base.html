@@ -34,6 +34,18 @@
         <h1>ROTA VITAL</h1>
     </a>
 
+    <!-- Navegacao entre as telas do centro, visivel so dentro dele. -->
+    <nav class="abas" th:if="${centroId != null}">
+        <a th:href="@{'/painel/' + ${centroId}}"
+           th:classappend="${aba == 'painel'} ? 'ativa' : ''">PAINEL</a>
+        <a th:href="@{'/painel/' + ${centroId} + '/estoque'}"
+           th:classappend="${aba == 'estoque'} ? 'ativa' : ''">ESTOQUE</a>
+        <a th:href="@{'/painel/' + ${centroId} + '/fila'}"
+           th:classappend="${aba == 'fila'} ? 'ativa' : ''">FILA DE SAIDA</a>
+        <a th:href="@{'/painel/' + ${centroId} + '/requisicoes'}"
+           th:classappend="${aba == 'requisicoes'} ? 'ativa' : ''">PEDIDOS</a>
+    </nav>
+
     <!-- O hemocentro em operacao: e o "voce esta aqui" do painel. -->
     <div class="metrica" th:if="${centroAtual != null}">
         <span class="rotulo">operando em</span>
