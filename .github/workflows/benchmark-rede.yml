@@ -1,0 +1,103 @@
+name: Benchmark de rede
+
+# Uma rodada do benchmarking de rede (PI3-31), disparada a mao pela aba
+# Actions > "Benchmark de rede" > Run workflow.
+#
+# Por que rodar daqui: a carga sai SEMPRE do mesmo tipo de maquina e da mesma
+# regiao, o que torna as tres repeticoes comparaveis entre si. E a carga nunca
+# sai de dentro da VM, onde disputaria CPU e memoria com o Flux e mediria o
+# loopback em vez da rede.
+#
+# O resultado vem como artefato (aba da execucao > Artifacts). Baixe, descompacte
+# em benchmark/dados-brutos/ e faca commit: o criterio de aceite pede os dados
+# brutos no repositorio. O workflow nao faz commit sozinho de proposito, para
+# uma rodada ruim (deploy no meio, VM fora do ar) nao entrar sem revisao.
+#
+# Nunca disparar junto com um push na main: o deploy reinicia a aplicacao no
+# meio da medicao.
+
+on:
+  workflow_dispatch:
+    inputs:
+      repeticao:
+        description: 'Numero da repeticao (1, 2, 3...)'
+        required: true
+      taxa1:
+        description: 'req/s na etapa 1'
+        default: '5'
+      taxa2:
+        description: 'req/s na etapa 2'
+        default: '10'
+      duracao_etapa_s:
+        description: 'Duracao de cada etapa, em segundos'
+        default: '300'
+      telemetria:
+        description: 'Incluir telemetria simulada (so depois da PI3-112)'
+        type: boolean
+        default: false
+
+# Uma rodada por vez: duas cargas simultaneas sobre a mesma VM invalidariam
+# as duas. A segunda espera a primeira terminar.
+concurrency:
+  group: benchmark-rede
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  rodada:
+    name: Rodada ${{ inputs.repeticao }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@v1
+
+      # Opcional: se os segredos de deploy existem, usa a mesma chave para ler
+      # o vmstat da VM durante a carga (so leitura, nao altera nada la).
+      - name: Preparar SSH para o vmstat
+        id: ssh
+        env:
+          VM_HOST: ${{ secrets.VM_HOST }}
+          VM_USUARIO: ${{ secrets.VM_USUARIO }}
+          VM_CHAVE_SSH: ${{ secrets.VM_CHAVE_SSH }}
+        run: |
+          if [ -z "$VM_HOST" ] || [ -z "$VM_USUARIO" ] || [ -z "$VM_CHAVE_SSH" ]; then
+            echo "::notice::Segredos da VM ausentes; rodada sem vmstat."
+            exit 0
+          fi
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$VM_CHAVE_SSH" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$VM_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          echo "vm_ssh=${VM_USUARIO}@${VM_HOST}" >> "$GITHUB_OUTPUT"
+
+      - name: Coletar
+        env:
+          ORIGEM: github-actions
+          REPETICAO: ${{ inputs.repeticao }}
+          TAXA1: ${{ inputs.taxa1 }}
+          TAXA2: ${{ inputs.taxa2 }}
+          DUR_ETAPA_S: ${{ inputs.duracao_etapa_s }}
+          TELEMETRIA: ${{ inputs.telemetria && '1' || '0' }}
+          VM_SSH: ${{ steps.ssh.outputs.vm_ssh }}
+        run: bash benchmark/coletar.sh
+
+      - name: Analisar esta rodada
+        if: always()
+        run: python3 benchmark/analisar_rede.py --saida benchmark/resumo-rodada.json
+
+      - name: Guardar dados brutos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-rede-rep${{ inputs.repeticao }}-${{ github.run_id }}
+          path: |
+            benchmark/dados-brutos/
+            benchmark/resumo-rodada.json
+            benchmark/resumo-rodada.csv
+          retention-days: 30
