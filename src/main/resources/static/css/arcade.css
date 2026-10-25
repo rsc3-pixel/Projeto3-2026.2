@@ -238,3 +238,15 @@ tr:hover td {
         transition-duration: .01ms !important;
     }
 }
+
+/* O selo do rodape acende quando a tela recebe dados novos: sem isso a
+ * atualizacao passa despercebida e a pessoa nao sabe se esta vendo o estado
+ * atual ou o de dez minutos atras. */
+[data-selo-atualizacao] {
+    transition: color .3s, text-shadow .3s;
+}
+
+[data-selo-atualizacao].piscou {
+    color: var(--ambar);
+    text-shadow: 0 0 10px var(--ambar);
+}

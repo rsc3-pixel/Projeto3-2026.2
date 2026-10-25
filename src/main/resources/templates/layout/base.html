@@ -53,15 +53,19 @@
     </div>
 </header>
 
-<main layout:fragment="conteudo">
-    <!-- cada tela entra aqui -->
+<main data-atualizar>
+    <div layout:fragment="conteudo">
+        <!-- cada tela entra aqui -->
+    </div>
 </main>
 
 <footer class="rodape">
-    <span th:text="${'atualizado ' + #temporals.format(agora, 'dd/MM HH:mm:ss')}">atualizado</span>
+    <span data-selo-atualizacao
+          th:text="${'atualizado ' + #temporals.format(agora, 'dd/MM HH:mm:ss')}">atualizado</span>
     <span> · dados sinteticos, telemetria simulada</span>
 </footer>
 
+<script th:src="@{/js/atualizar.js}" defer></script>
 <th:block layout:fragment="scripts"></th:block>
 </body>
 </html>
