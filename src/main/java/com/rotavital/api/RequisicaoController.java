@@ -9,6 +9,7 @@ import com.rotavital.api.dto.RequisicaoRequest;
 import com.rotavital.api.dto.RequisicaoResponse;
 import com.rotavital.dominio.enums.PrioridadeRequisicao;
 import com.rotavital.dominio.enums.StatusRequisicao;
+import com.rotavital.servico.AlocacaoComRepeticao;
 import com.rotavital.servico.RequisicaoServico;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -43,8 +44,13 @@ public class RequisicaoController {
 
     private final RequisicaoServico requisicoes;
 
-    public RequisicaoController(RequisicaoServico requisicoes) {
+    /** Repete a alocacao quando outra operacao chega primeiro (PI3-108). */
+    private final AlocacaoComRepeticao alocacaoComRepeticao;
+
+    public RequisicaoController(RequisicaoServico requisicoes,
+                                AlocacaoComRepeticao alocacaoComRepeticao) {
         this.requisicoes = requisicoes;
+        this.alocacaoComRepeticao = alocacaoComRepeticao;
     }
 
     // -----------------------------------------------------------------------
@@ -119,7 +125,7 @@ public class RequisicaoController {
     public ResponseEntity<AlocacaoResponse> alocar(@PathVariable String id,
                                                    @PathVariable String itemId,
                                                    @Valid @RequestBody AlocacaoRequest dados) {
-        AlocacaoResponse alocacao = requisicoes.alocar(id, itemId, dados);
+        AlocacaoResponse alocacao = alocacaoComRepeticao.alocar(id, itemId, dados);
         return ResponseEntity
                 .created(URI.create("/api/v1/requisicoes/" + id + "/itens/" + itemId
                         + "/alocacoes/" + alocacao.id()))
