@@ -49,7 +49,11 @@
     <!-- O hemocentro em operacao: e o "voce esta aqui" do painel. -->
     <div class="metrica" th:if="${centroAtual != null}">
         <span class="rotulo">operando em</span>
-        <span class="valor" style="font-size:13px" th:text="${centroAtual.nome}">Hemocentro</span>
+        <!-- O title traz o nome inteiro: o texto e cortado com reticencias
+             quando nao cabe, e sem isso a informacao se perderia. -->
+        <span class="valor" style="font-size:13px"
+              th:title="${centroAtual.nome}"
+              th:text="${centroAtual.nome}">Hemocentro</span>
     </div>
 </header>
 

@@ -27,9 +27,15 @@
                 font-size: 12px;
                 color: var(--ambar);
             }
-            /* As tres primeiras saem primeiro: destacar a frente da fila
-               responde a pergunta de quem opera sem precisar ler a tabela toda. */
-            tr.topo td { background: rgba(255, 182, 39, .06); }
+            /* As tres primeiras saem primeiro: a marca fica numa borda a
+               esquerda, que destaca sem alterar o layout da celula. Fundo na
+               celula quebrava o alinhamento das colunas. O nome precisa ser
+               especifico: "topo" colidia com a classe do cabecalho da pagina,
+               que e display:flex, e transformava a linha inteira em flex. */
+            tr.frente-da-fila td:first-child {
+                border-left: 3px solid var(--ambar);
+            }
+            tr.frente-da-fila .posicao { color: var(--ambar); }
             .codigo { font-family: 'JetBrains Mono', monospace; font-size: 16px; }
         </style>
     </th:block>
@@ -61,7 +67,7 @@
                 </thead>
                 <tbody>
                 <tr th:each="b, it : ${fila}"
-                    th:classappend="${it.index < 3} ? 'topo' : ''"
+                    th:classappend="${it.index < 3} ? 'frente-da-fila' : ''"
                     th:with="dias=${T(java.time.temporal.ChronoUnit).DAYS.between(hoje, b.dataValidade)}">
                     <td class="posicao" th:text="${it.count}">1</td>
                     <td class="codigo" th:text="${#strings.abbreviate(b.codigoRastreio, 12)}">cod</td>
