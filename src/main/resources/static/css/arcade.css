@@ -87,6 +87,24 @@ h2 {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex: none;
+    white-space: nowrap;
+}
+
+/* O nome do centro ocupa uma linha so. Nomes como "IHENE - Instituto de
+   Hematologia do Nordeste" quebravam em duas e empurravam a marca e as abas
+   para fora do lugar. */
+.topo .metrica {
+    flex: none;
+    max-width: 440px;
+    align-items: flex-end;
+}
+
+.topo .metrica .valor {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 440px;
 }
 
 /* A gota pulsa devagar: sinaliza que a tela esta viva sem distrair. */
@@ -111,7 +129,11 @@ h2 {
     gap: 4px;
     flex: 1;
     margin-left: 20px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
 }
+
+.abas a { white-space: nowrap; }
 
 .abas a {
     padding: 7px 14px;
