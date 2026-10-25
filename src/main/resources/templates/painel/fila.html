@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<!--
+  Fila de saida: a ordem em que as bolsas seriam alocadas (PI3-140).
+
+  A ordenacao vem da mesma classe que a alocacao real usa, entao o que a tela
+  mostra e o que o sistema faria. Bolsa vencida nao aparece: ela e descartada
+  antes da ordenacao, nao depois.
+-->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}"
+      lang="pt-BR">
+<head>
+    <title>Fila de saida</title>
+    <th:block layout:fragment="estilos">
+        <style>
+            .area { padding: 16px 24px; }
+            .explica {
+                color: var(--texto-fraco);
+                font-size: 19px;
+                margin: 0 0 16px;
+                max-width: 900px;
+                line-height: 1.4;
+            }
+            .posicao {
+                font-family: 'Press Start 2P', monospace;
+                font-size: 12px;
+                color: var(--ambar);
+            }
+            /* As tres primeiras saem primeiro: destacar a frente da fila
+               responde a pergunta de quem opera sem precisar ler a tabela toda. */
+            tr.topo td { background: rgba(255, 182, 39, .06); }
+            .codigo { font-family: 'JetBrains Mono', monospace; font-size: 16px; }
+        </style>
+    </th:block>
+</head>
+<body>
+<div layout:fragment="conteudo">
+    <section class="area">
+        <h2>FILA DE SAIDA &middot; QUEM SAI PRIMEIRO</h2>
+
+        <p class="explica">
+            A bolsa que vence antes sai antes. Bolsa vencida nao entra na fila:
+            ela e descartada antes da ordenacao, porque venceu antes de todas as
+            validas e ocuparia o topo em toda selecao.
+            <span th:if="${foraDaFila > 0}">
+                <b th:text="${foraDaFila}">0</b> bolsa(s) ficaram de fora.
+            </span>
+        </p>
+
+        <div class="painel">
+            <table>
+                <thead>
+                <tr>
+                    <th style="width:70px">ordem</th>
+                    <th>codigo</th>
+                    <th>tipo</th>
+                    <th>componente</th>
+                    <th>vence em</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="b, it : ${fila}"
+                    th:classappend="${it.index < 3} ? 'topo' : ''"
+                    th:with="dias=${T(java.time.temporal.ChronoUnit).DAYS.between(hoje, b.dataValidade)}">
+                    <td class="posicao" th:text="${it.count}">1</td>
+                    <td class="codigo" th:text="${#strings.abbreviate(b.codigoRastreio, 12)}">cod</td>
+                    <td th:text="${b.grupoSanguineo}">O-</td>
+                    <td th:text="${#strings.replace(b.tipo, '_', ' ')}">HEMACIAS</td>
+                    <td>
+                        <span th:if="${dias <= 7}" class="etiqueta alerta"
+                              th:text="${dias} + ' dias'">3 dias</span>
+                        <span th:if="${dias > 7}" th:text="${dias} + ' dias'">30 dias</span>
+                    </td>
+                </tr>
+                <tr th:if="${fila.isEmpty()}">
+                    <td colspan="5" style="color: var(--texto-fraco)">
+                        nenhuma bolsa alocavel neste centro
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<!--
+  Estoque do hemocentro: o que existe hoje, com validade e status (PI3-140).
+
+  O estado critico aparece pela palavra e pelo simbolo, nao so pela cor: quem
+  nao distingue vermelho de verde precisa ler a mesma informacao.
+-->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}"
+      lang="pt-BR">
+<head>
+    <title>Estoque</title>
+    <th:block layout:fragment="estilos">
+        <style>
+            .area { padding: 16px 24px; }
+            .resumo-linha {
+                display: flex;
+                gap: 32px;
+                flex-wrap: wrap;
+                margin-bottom: 16px;
+                color: var(--texto-fraco);
+                font-size: 19px;
+            }
+            .resumo-linha b { color: var(--texto); font-weight: normal; }
+            .codigo { font-family: 'JetBrains Mono', monospace; font-size: 16px; }
+        </style>
+    </th:block>
+</head>
+<body>
+<div layout:fragment="conteudo">
+    <section class="area">
+        <h2>ESTOQUE DO CENTRO</h2>
+
+        <p class="resumo-linha">
+            <span><b th:text="${bolsas.size()}">0</b> bolsas cadastradas</span>
+            <span><b th:text="${#lists.size(bolsas.?[status.name() == 'DISPONIVEL'])}">0</b> disponiveis</span>
+            <span><b th:text="${#lists.size(bolsas.?[status.name() == 'RESERVADA'])}">0</b> reservadas</span>
+        </p>
+
+        <div class="painel">
+            <table>
+                <thead>
+                <tr>
+                    <th>codigo</th>
+                    <th>tipo</th>
+                    <th>componente</th>
+                    <th>volume</th>
+                    <th>vence em</th>
+                    <th>situacao</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="b : ${bolsas}"
+                    th:with="dias=${T(java.time.temporal.ChronoUnit).DAYS.between(hoje, b.dataValidade)}">
+                    <td class="codigo" th:text="${#strings.abbreviate(b.codigoRastreio, 12)}">cod</td>
+                    <td th:text="${b.grupoSanguineo}">O-</td>
+                    <td th:text="${#strings.replace(b.tipo, '_', ' ')}">HEMACIAS</td>
+                    <td th:text="${b.volumeMl} + ' ml'">450 ml</td>
+
+                    <!-- Vencida, critica ou normal: a palavra diz o estado, a
+                         cor so reforca. -->
+                    <td>
+                        <span th:if="${dias < 0}" class="etiqueta critico">VENCIDA</span>
+                        <span th:if="${dias >= 0 and dias <= 7}" class="etiqueta alerta"
+                              th:text="${dias} + ' dias'">3 dias</span>
+                        <span th:if="${dias > 7}" th:text="${dias} + ' dias'">30 dias</span>
+                    </td>
+
+                    <td th:text="${b.status}">DISPONIVEL</td>
+                </tr>
+                <tr th:if="${bolsas.isEmpty()}">
+                    <td colspan="6" style="color: var(--texto-fraco)">
+                        nenhuma bolsa cadastrada neste centro
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+</body>
+</html>
