@@ -220,7 +220,8 @@ public class RequisicaoServico {
      * crioprecipitado seguem tabela invertida em relacao as hemacias.</p>
      */
     @Transactional
-    public AlocacaoResponse alocar(String requisicaoId, String itemId, AlocacaoRequest dados) {
+    public AlocacaoResponse alocar(String requisicaoId, String itemId,
+                                   AlocacaoRequest dados) {
         Requisicao requisicao = buscar(requisicaoId);
         exigirRequisicaoAberta(requisicao);
 

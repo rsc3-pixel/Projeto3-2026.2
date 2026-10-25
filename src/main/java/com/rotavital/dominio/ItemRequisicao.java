@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Version;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,6 +22,21 @@ public class ItemRequisicao {
 
     @Id
     private String id;
+
+    /**
+     * Versao da linha, para bloqueio otimista (PI3-108).
+     *
+     * <p>Duas alocacoes simultaneas para o mesmo item liam quantidadeAlocada,
+     * somavam um e gravavam de volta. As duas liam o mesmo valor, e a segunda
+     * escrita apagava a primeira: o item ficava marcado como menos atendido do
+     * que estava, e o sistema alocava sangue a mais do que o hospital pediu.
+     *
+     * <p>Com a versao, a segunda transacao descobre que a linha mudou desde que
+     * ela leu e falha com OptimisticLockingFailureException, em vez de
+     * sobrescrever em silencio.
+     */
+    @Version
+    private Long versao;
 
     @ManyToOne
     @JoinColumn(name = "requisicao_id")
