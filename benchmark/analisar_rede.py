@@ -331,12 +331,30 @@ INDICADORES = [
 
 
 def agregar(rodadas):
+    """Media e desvio entre repeticoes, so com rodadas completas.
+
+    Uma rodada interrompida pelo threshold mediu um regime diferente (o
+    sistema em falha) e, misturada na media, produz um numero que nao descreve
+    nenhuma das rodadas. Ela fica listada a parte, em 'rodadas_excluidas', e
+    continua inteira em 'rodadas' para o relatorio discutir.
+    """
     por_origem = defaultdict(list)
+    excluidas = defaultdict(list)
     for r in rodadas:
-        por_origem[r["origem"]].append(r)
+        if r.get("abortada_por_threshold"):
+            excluidas[r["origem"]].append(r["id"])
+        else:
+            por_origem[r["origem"]].append(r)
     agregado = {}
-    for origem, lista in sorted(por_origem.items()):
-        bloco = {"repeticoes": len(lista), "indicadores": {}}
+    for origem in sorted(set(por_origem) | set(excluidas)):
+        lista = por_origem.get(origem, [])
+        bloco = {
+            "repeticoes": len(lista),
+            "rodadas_incluidas": [r["id"] for r in lista],
+            "rodadas_excluidas": excluidas.get(origem, []),
+            "motivo_exclusao": "interrompida por threshold de protecao (abortOnFail)",
+            "indicadores": {},
+        }
         for rotulo, unidade, chaves in INDICADORES:
             valores = [v for v in (caminho(r, *chaves) for r in lista) if v is not None]
             if not valores:

@@ -333,6 +333,11 @@ function render() {
   }
   raiz.append(el('div', { class: 'section-title' }, 'Reprodutibilidade entre repetições'));
   raiz.append(el('p', { class: 'nota' }, 'Desvio pequeno entre repetições indica medição estável; desvio grande pede investigar a rodada fora da curva.'));
+  const excluidas = Object.values(agregado).flatMap((b) => b.rodadas_excluidas || []);
+  if (excluidas.length) {
+    raiz.append(el('p', { class: 'nota' },
+      `⚠ Fora da média por terem sido interrompidas pela proteção da VM: ${excluidas.join(', ')}. Continuam disponíveis no seletor de rodada.`));
+  }
   raiz.append(el('div', { class: 'tabela-rolavel' }, el('table', {},
     el('thead', {}, el('tr', {}, ...['Origem', 'Indicador', 'reps', 'média', 'desvio', 'mín – máx'].map((t, i) => el('th', { class: i > 1 ? 'num' : '' }, t)))),
     corpoAg)));
