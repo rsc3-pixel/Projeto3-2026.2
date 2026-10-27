@@ -1,43 +1,59 @@
-# Front-end em Angular
+# RotaVitalWeb
 
-**História:** PI3-134 · **Responsáveis:** Victor e Guilherme
+This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.4.
 
-Ainda não iniciado. Esta pasta é o território do projeto Angular: o
-`package.json`, o `angular.json` e tudo o mais nascem aqui dentro, como num
-projeto independente.
+## Development server
 
-```bash
-cd frontend/angular
-ng new rota-vital-web --directory . --routing --style css
-```
-
-## O que já está decidido
-
-**Build para `/app`.** A aplicação é servida como subpasta do mesmo domínio, e
-não em outro endereço, o que elimina CORS. No `angular.json`, aponte
-`baseHref` para `/app/`.
-
-**A API responde na mesma origem.** Em produção o caminho é `/api/v1/...`,
-sem host. Em desenvolvimento, use o proxy do Angular apontando para
-`http://localhost:8080`, assim o código não precisa saber em qual ambiente está.
-
-**Subir o back sem instalar Java:**
+To start a local development server, run:
 
 ```bash
-docker compose up -d
+ng serve
 ```
 
-## Telas previstas
+Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
-Pelas subtarefas da PI3-134:
+## Code scaffolding
 
-| Subtarefa | Tela |
-|---|---|
-| PI3-142 | estrutura do projeto |
-| PI3-143 | serviço HTTP da API |
-| PI3-144 | roteamento |
-| PI3-145 | painel de indicadores |
-| PI3-146 | estoque, hemocentros, hospitais, requisições e rotas |
-| PI3-147 | build para a subpasta `/app` |
+Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
 
-O contrato dos endpoints está em [`docs/contrato_api.md`](../../docs/contrato_api.md).
+```bash
+ng generate component component-name
+```
+
+For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+
+```bash
+ng generate --help
+```
+
+## Building
+
+To build the project run:
+
+```bash
+ng build
+```
+
+This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+
+## Running unit tests
+
+To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+
+```bash
+ng test
+```
+
+## Running end-to-end tests
+
+For end-to-end (e2e) testing, run:
+
+```bash
+ng e2e
+```
+
+Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+
+## Additional Resources
+
+For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.

@@ -75,8 +75,9 @@ nuvem; arquitetura de redes e telemetria; trabalho em equipe.
 | Build | Maven, via wrapper (`mvnw`) |
 | Persistência | Spring Data JPA / Hibernate |
 | Banco de dados | H2 em memória (desenvolvimento) · PostgreSQL 17 em container (`compose.yaml`) |
-| Front-end | HTML/CSS/JS estático (`src/main/resources/static/painel.html`) |
-| Testes | JUnit 5 |
+| Front-end (SPA) | Angular 22.2 · Node.js 24 · TypeScript 6 |
+| Front-end (legado) | HTML/CSS/JS estático (`src/main/resources/static/painel.html`) |
+| Testes | JUnit 5 · Vitest (front) |
 | Integração contínua | GitHub Actions |
 | Análise de dados | Python 3 (biblioteca padrão) |
 | Prototipação | Figma |
