@@ -134,6 +134,122 @@ void testarCalculadorDesabastecimento() {
     assert(rel[0].nivelRisco == "CRITICO");
     assert(rel[0].deficitPontual == 8);
     assert(rel[0].probDesabastecimentoPoisson > 0.95);
+    // Sem datas nas requisicoes nao ha serie diaria: o modelo assume variancia = media (Poisson)
+    assert(rel[0].indiceDispersao == 1.0);
+    assert(std::abs(rel[0].probDesabastecimento - rel[0].probDesabastecimentoPoisson) < 1e-12);
+
+    std::cout << "PASSOU!\n";
+}
+
+Requisicao requisicaoNoDia(const std::string& data, TipoSanguineo tipo, int quantidade) {
+    Requisicao r;
+    r.data = data;
+    r.prioridade = "ROTINA";
+    r.itens.push_back(ItemRequisicao("IT", tipo, TipoHemocomponente::CONCENTRADO_HEMACIAS, quantidade));
+    return r;
+}
+
+void testarSerieDiaria() {
+    std::cout << "[TESTE] testarSerieDiaria (dias sem pedido entram com zero)... ";
+    AcumuladorDemanda dem;
+    dem += requisicaoNoDia("2026-07-30", TipoSanguineo::O_NEG, 3);
+    dem += requisicaoNoDia("2026-08-02", TipoSanguineo::O_NEG, 2);
+    dem += requisicaoNoDia("2026-08-02", TipoSanguineo::A_POS, 5);
+
+    // 30/07 a 02/08 atravessa a virada de mes: 4 dias
+    auto serieONeg = dem.getSerieDiaria(TipoSanguineo::O_NEG);
+    assert((serieONeg == std::vector<long>{3, 0, 0, 2}));
+    auto serieAPos = dem.getSerieDiaria(TipoSanguineo::A_POS);
+    assert((serieAPos == std::vector<long>{0, 0, 0, 5}));
+    auto serieHemacias = dem.getSerieDiaria(TipoHemocomponente::CONCENTRADO_HEMACIAS);
+    assert((serieHemacias == std::vector<long>{3, 0, 0, 7}));
+
+    // Requisicao sem data continua acumulando o total, mas nao entra na serie
+    AcumuladorDemanda semData;
+    semData += requisicaoNoDia("", TipoSanguineo::O_NEG, 4);
+    assert(semData.getDemanda(TipoSanguineo::O_NEG) == 4);
+    assert(semData.getSerieDiaria(TipoSanguineo::O_NEG).empty());
+
+    std::cout << "PASSOU!\n";
+}
+
+void testarBinomialNegativa() {
+    std::cout << "[TESTE] testarBinomialNegativa (sobredispersao)... ";
+    ModeloDemanda mod;
+
+    // Sem sobredispersao (variancia = media) a Binomial Negativa e a propria Poisson
+    for (int k : {0, 3, 10, 25}) {
+        assert(std::abs(ModeloDemanda::binomialNegativaCDF(10.0, 10.0, k) - ModeloDemanda::poissonCDF(10.0, k)) < 1e-12);
+    }
+
+    // Valor de referencia: media 4, variancia 8 -> r = 4, p = 0.5; P(X = 0) = 0.5^4 = 0.0625
+    assert(std::abs(ModeloDemanda::binomialNegativaCDF(4.0, 8.0, 0) - 0.0625) < 1e-9);
+    // P(X <= 2) = 0.0625 + 0.125 + 0.15625 = 0.34375
+    assert(std::abs(ModeloDemanda::binomialNegativaCDF(4.0, 8.0, 2) - 0.34375) < 1e-9);
+
+    // Com estoque acima da media, mais variancia significa mais risco de faltar
+    double riscoPoisson = mod.calcularProbabilidadeExcedentePoisson(97.0, 119);
+    double riscoBinNeg = mod.calcularProbabilidadeExcedenteBinomialNegativa(97.0, 3.3 * 97.0, 119);
+    assert(riscoBinNeg > 3.0 * riscoPoisson);
+
+    // Media alta nao causa underflow
+    double cdfAlta = ModeloDemanda::binomialNegativaCDF(818.0, 2500.0, 2000);
+    assert(cdfAlta > 0.999 && cdfAlta <= 1.0);
+
+    std::cout << "PASSOU!\n";
+}
+
+void testarBootstrap() {
+    std::cout << "[TESTE] testarBootstrap (Monte Carlo reamostrando os dias)... ";
+    ModeloDemanda mod;
+
+    // Variancia do horizonte = N * s²: serie {0, 2, 4} tem s² = 4, N = 3 -> 12
+    assert(std::abs(ModeloDemanda::varianciaDoHorizonte({0, 2, 4}) - 12.0) < 1e-9);
+    assert(ModeloDemanda::varianciaDoHorizonte({5}) < 0.0);
+
+    // Serie constante: a demanda do horizonte e sempre 3 * 2 = 6
+    std::vector<long> constante = {2, 2, 2};
+    assert(mod.simularProbabilidadeDesabastecimentoBootstrap(constante, 5, 1000) == 1.0);
+    assert(mod.simularProbabilidadeDesabastecimentoBootstrap(constante, 6, 1000) == 0.0);
+
+    // Mesma semente, mesmo resultado
+    std::vector<long> serie = {0, 1, 0, 4, 2, 0, 3, 1};
+    double p1 = mod.simularProbabilidadeDesabastecimentoBootstrap(serie, 12, 20000, 2026);
+    double p2 = mod.simularProbabilidadeDesabastecimentoBootstrap(serie, 12, 20000, 2026);
+    assert(p1 == p2);
+
+    // O bootstrap concorda com a Binomial Negativa ajustada a mesma serie
+    double variancia = ModeloDemanda::varianciaDoHorizonte(serie);
+    double pBinNeg = mod.calcularProbabilidadeExcedenteBinomialNegativa(11.0, variancia, 12);
+    assert(std::abs(p1 - pBinNeg) < 0.05);
+
+    std::cout << "PASSOU!\n";
+}
+
+void testarCalculadorComSerieDiaria() {
+    std::cout << "[TESTE] testarCalculadorComSerieDiaria... ";
+    AcumuladorEstoque est;
+    AcumuladorDemanda dem;
+    ModeloDemanda mod;
+
+    for (int i = 0; i < 12; ++i) {
+        est += Bolsa("B" + std::to_string(i), TipoSanguineo::O_NEG, TipoHemocomponente::CONCENTRADO_HEMACIAS, 300, "", "", "HC01", 10, false);
+    }
+    // 10 bolsas em 5 dias, concentradas em picos: variancia maior que a media
+    dem += requisicaoNoDia("2026-08-01", TipoSanguineo::O_NEG, 4);
+    dem += requisicaoNoDia("2026-08-03", TipoSanguineo::O_NEG, 6);
+    dem += requisicaoNoDia("2026-08-05", TipoSanguineo::O_NEG, 0);
+
+    CalculadorDesabastecimento calc(est, dem, mod);
+    auto rel = calc.avaliarPorTipoSanguineo();
+    const RelatorioDesabastecimento* oNeg = nullptr;
+    for (const auto& r : rel) {
+        if (r.chave == "O_NEG") oNeg = &r;
+    }
+    assert(oNeg != nullptr);
+    assert(oNeg->demandaEsperada == 10);
+    assert(oNeg->indiceDispersao > 1.0);
+    assert(oNeg->probDesabastecimento > oNeg->probDesabastecimentoPoisson);
 
     std::cout << "PASSOU!\n";
 }
@@ -147,6 +263,10 @@ int main() {
     testarAcumuladorDemanda();
     testarModeloDemandaEstatistico();
     testarCalculadorDesabastecimento();
+    testarSerieDiaria();
+    testarBinomialNegativa();
+    testarBootstrap();
+    testarCalculadorComSerieDiaria();
 
     std::cout << "==============================================================================\n";
     std::cout << " TODOS OS TESTES PASSARAM COM 100% DE SUCESSO!\n";

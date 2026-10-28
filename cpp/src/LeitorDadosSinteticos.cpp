@@ -1,5 +1,7 @@
 #include "LeitorDadosSinteticos.hpp"
 #include "nlohmann/json.hpp"
+#include <chrono>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <random>
@@ -46,6 +48,7 @@ bool LeitorDadosSinteticos::carregarDoJson(
                 r.unidadeId = rItem.value("unidade_id", "");
                 r.cidade = rItem.value("cidade", "");
                 r.prioridade = rItem.value("prioridade", "ROTINA");
+                r.data = rItem.value("data", "");
                 r.prazoHoras = rItem.value("prazo_horas", 72);
                 r.totalBolsas = rItem.value("total_bolsas", 0);
 
@@ -125,11 +128,20 @@ void LeitorDadosSinteticos::gerarDadosNativos(
     std::discrete_distribution<int> distPrio(pesosPrioridades.begin(), pesosPrioridades.end());
     std::uniform_int_distribution<int> distQtdItens(1, 3);
     std::uniform_int_distribution<int> distQtdBolsas(1, 4);
+    std::uniform_int_distribution<int> distDia(0, 60);
+
+    // Requisicoes espalhadas em 61 dias a partir de 2026-07-19, como na base oficial
+    const std::chrono::sys_days inicio{std::chrono::year{2026} / std::chrono::July / 19};
 
     for (int i = 1; i <= 300; ++i) {
         Requisicao r;
         r.id = "REQ" + std::to_string(100000 + i).substr(1);
         r.prioridade = prioridades[distPrio(rngReq)];
+        std::chrono::year_month_day dia{inicio + std::chrono::days{distDia(rngReq)}};
+        char dataFormatada[11];
+        std::snprintf(dataFormatada, sizeof(dataFormatada), "%04d-%02u-%02u",
+                      static_cast<int>(dia.year()), static_cast<unsigned>(dia.month()), static_cast<unsigned>(dia.day()));
+        r.data = dataFormatada;
         r.unidadeId = "AT01";
         r.cidade = "Recife";
         r.prazoHoras = (r.prioridade == "EMERGENCIA" ? 2 : (r.prioridade == "URGENTE" ? 12 : 72));

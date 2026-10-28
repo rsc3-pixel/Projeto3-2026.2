@@ -3,9 +3,19 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <sstream>
 #include <ctime>
 
 using json = nlohmann::ordered_json;
+
+namespace {
+// Formata uma probabilidade em [0, 1] como percentual com uma casa decimal (ex: "38.4%").
+std::string formatarPercentual(double probabilidade) {
+    std::ostringstream saida;
+    saida << std::fixed << std::setprecision(1) << (probabilidade * 100.0) << "%";
+    return saida.str();
+}
+}
 
 PainelConsolidado::PainelConsolidado(
     const AcumuladorEstoque& est,
@@ -26,7 +36,7 @@ void PainelConsolidado::imprimirCabecalho(const std::string& titulo) const {
 
 void PainelConsolidado::exibirRelatorioTerminal() const {
     std::cout << "\n";
-    imprimirCabecalho("ROTA VITAL - PAINEL CONSOLIDADO DE MODELAGEM E DESABASTECIMENTO (PI3-32)");
+    imprimirCabecalho("ROTA VITAL - PROBABILIDADE DE DESABASTECIMENTO POR TIPO (PI3-102 -> PAINEL PI3-32)");
     std::cout << " FASE 4 (CRISP-DM) - MODELAGEM ESTOCASTICA EM C++ (GCC 15 / C++20)\n";
     std::cout << " Disciplinas Integradas: POO (Dados Acumulados) & AED (Pipeline Entrada -> Processamento -> Saida)\n";
     imprimirLinhaDivisoria();
@@ -64,32 +74,34 @@ void PainelConsolidado::exibirRelatorioTerminal() const {
     auto relTipos = calculador.avaliarPorTipoSanguineo();
     std::cout << "\n[3] PROBABILIDADE DE DESABASTECIMENTO POR TIPO SANGUINEO (ORDEM DE CRITICIDADE)\n";
     imprimirLinhaDivisoria();
-    std::cout << std::left 
-              << std::setw(6)  << "TIPO"
+    std::cout << std::left
+              << std::setw(8)  << "TIPO"
               << std::setw(12) << "DISPONIVEL"
-              << std::setw(12) << "DEMANDADO"
+              << std::setw(11) << "DEMANDADO"
               << std::setw(11) << "COBERTURA"
               << std::setw(9)  << "DEFICIT"
-              << std::setw(14) << "P(POISSON)"
-              << std::setw(13) << "P(M.CARLO)"
-              << std::setw(11) << "RISCO"
-              << "STATUS OPERACIONAL\n";
-    std::string(95, '-');
+              << std::setw(11) << "VAR/MEDIA"
+              << std::setw(12) << "P(BIN.NEG)"
+              << std::setw(12) << "P(POISSON)"
+              << std::setw(12) << "P(BOOTSTR)"
+              << "RISCO\n";
     std::cout << std::string(95, '-') << "\n";
 
     for (const auto& r : relTipos) {
-        std::cout << std::left 
-                  << std::setw(6)  << r.chave
+        std::cout << std::left
+                  << std::setw(8)  << r.chave
                   << std::setw(12) << r.estoqueValido
-                  << std::setw(12) << r.demandaEsperada
-                  << std::setw(10) << (std::to_string(static_cast<int>(r.coberturaPontualPct)) + "%")
+                  << std::setw(11) << r.demandaEsperada
+                  << std::setw(11) << (std::to_string(static_cast<int>(r.coberturaPontualPct)) + "%")
                   << std::setw(9)  << r.deficitPontual
-                  << std::setw(14) << (std::to_string(r.probDesabastecimentoPoisson * 100.0).substr(0, 5) + "%")
-                  << std::setw(13) << (std::to_string(r.probDesabastecimentoMonteCarlo * 100.0).substr(0, 5) + "%")
-                  << std::setw(11) << r.nivelRisco
-                  << (r.nivelRisco == "CRITICO" ? "<-- CRITICO" : (r.nivelRisco == "BAIXO" ? "Superavit" : "Alerta"))
+                  << std::setw(11) << std::fixed << std::setprecision(2) << r.indiceDispersao
+                  << std::setw(12) << formatarPercentual(r.probDesabastecimento)
+                  << std::setw(12) << formatarPercentual(r.probDesabastecimentoPoisson)
+                  << std::setw(12) << formatarPercentual(r.probDesabastecimentoMonteCarlo)
+                  << r.nivelRisco
                   << "\n";
     }
+    std::cout << " P(BIN.NEG) e a probabilidade adotada; P(POISSON) supoe variancia = media e e mostrada como referencia.\n";
     imprimirLinhaDivisoria();
 
     // 4. Avaliação por Hemocomponente
@@ -114,7 +126,7 @@ void PainelConsolidado::exibirRelatorioTerminal() const {
                   << std::setw(10) << r.estoqueVencido
                   << std::setw(10) << (std::to_string(static_cast<int>(r.taxaDescartePct)) + "%")
                   << std::setw(11) << r.demandaEsperada
-                  << std::setw(14) << (std::to_string(r.probDesabastecimentoPoisson * 100.0).substr(0, 5) + "%")
+                  << std::setw(14) << formatarPercentual(r.probDesabastecimento)
                   << std::setw(10) << r.nivelRisco
                   << (r.chave == "CONCENTRADO_PLAQUETAS" ? "Perda por validade 5d (FEFO)" : "Abastecimento normal")
                   << "\n";
@@ -125,7 +137,7 @@ void PainelConsolidado::exibirRelatorioTerminal() const {
     std::cout << "\n[5] CONCEITO PEDAGOGICO: SAIDAS NA DISCIPLINA ALGORITMOS E ESTRUTURA DE DADOS\n";
     std::cout << " * Pense assim: o programa recebe dados (2000 bolsas e 300 requisicoes),\n";
     std::cout << "   processa esses dados (classes acumuladoras, mapas hash, calculo probabilistico)\n";
-    std::cout << "   e apresenta um resultado (este relatorio no terminal e o JSON consolidado PI3-32).\n";
+    std::cout << "   e apresenta um resultado (este relatorio no terminal e o JSON consumido pelo painel PI3-32).\n";
     std::cout << " * As saidas transformam dados brutos em informacao acionavel para gestao hemoterapica.\n";
     imprimirLinhaDivisoria();
     std::cout << "\n";
@@ -137,7 +149,7 @@ bool PainelConsolidado::exportarJsonPainel(const std::string& caminhoArquivo) co
 
         // Metadados
         root["meta"]["projeto"] = "Rota Vital";
-        root["meta"]["modulo"] = "PI3-32 - Painel Consolidado de Modelagem e Desabastecimento";
+        root["meta"]["modulo"] = "PI3-102 - Probabilidade de desabastecimento por tipo (consumido pelo painel PI3-32)";
         root["meta"]["linguagem"] = "C++20";
         root["meta"]["fase_crisp_dm"] = "Fase 4 - Modelagem";
         root["meta"]["data_execucao"] = "2026-10-26T16:50:00-03:00";
@@ -155,9 +167,10 @@ bool PainelConsolidado::exportarJsonPainel(const std::string& caminhoArquivo) co
         root["modelagem_estatistica"]["distribuicao_escolhida"] = modelo.getNomeDistribuicao();
         root["modelagem_estatistica"]["justificativa"] = modelo.getJustificativaModelo();
         root["modelagem_estatistica"]["metodologias_calculo"] = {
-            "Poisson Exato (Processo pontual discreto com Poisson Thinning)",
-            "Aproximacao Normal via Teorema Central do Limite com correcao de continuidade de Yates",
-            "Simulacao Estocastica de Monte Carlo com 100.000 iteracoes reproduziveis"
+            "Binomial Negativa parametrizada pela media e pela variancia da serie diaria (probabilidade adotada)",
+            "Poisson (referencia: supoe variancia igual a media)",
+            "Aproximacao Normal via Teorema Central do Limite com a variancia real e correcao de continuidade",
+            "Monte Carlo por bootstrap dos dias observados, 100.000 iteracoes com semente 2026"
         };
 
         // Totais Acumulados
@@ -189,9 +202,12 @@ bool PainelConsolidado::exportarJsonPainel(const std::string& caminhoArquivo) co
             item["estoque_total"] = r.estoqueTotal;
             item["estoque_valido_disponivel"] = r.estoqueValido;
             item["estoque_vencido"] = r.estoqueVencido;
-            item["demanda_esperada_lambda"] = r.demandaEsperada;
+            item["demanda_esperada"] = r.demandaEsperada;
+            item["variancia_demanda"] = r.varianciaDemanda;
+            item["indice_dispersao"] = r.indiceDispersao;
             item["cobertura_pontual_pct"] = r.coberturaPontualPct;
             item["deficit_unidades"] = r.deficitPontual;
+            item["probabilidade_desabastecimento"] = r.probDesabastecimento;
             item["probabilidade_desabastecimento_poisson"] = r.probDesabastecimentoPoisson;
             item["probabilidade_desabastecimento_normal_tcl"] = r.probDesabastecimentoNormal;
             item["probabilidade_desabastecimento_monte_carlo"] = r.probDesabastecimentoMonteCarlo;
@@ -210,9 +226,12 @@ bool PainelConsolidado::exportarJsonPainel(const std::string& caminhoArquivo) co
             item["estoque_valido_disponivel"] = r.estoqueValido;
             item["estoque_vencido"] = r.estoqueVencido;
             item["taxa_descarte_pct"] = r.taxaDescartePct;
-            item["demanda_esperada_lambda"] = r.demandaEsperada;
+            item["demanda_esperada"] = r.demandaEsperada;
+            item["variancia_demanda"] = r.varianciaDemanda;
+            item["indice_dispersao"] = r.indiceDispersao;
             item["cobertura_pontual_pct"] = r.coberturaPontualPct;
             item["deficit_unidades"] = r.deficitPontual;
+            item["probabilidade_desabastecimento"] = r.probDesabastecimento;
             item["probabilidade_desabastecimento_poisson"] = r.probDesabastecimentoPoisson;
             item["probabilidade_desabastecimento_monte_carlo"] = r.probDesabastecimentoMonteCarlo;
             item["nivel_risco"] = r.nivelRisco;
@@ -230,7 +249,7 @@ bool PainelConsolidado::exportarJsonPainel(const std::string& caminhoArquivo) co
             item["estoque_valido"] = r.estoqueValido;
             item["demanda_esperada"] = r.demandaEsperada;
             item["cobertura_pct"] = r.coberturaPontualPct;
-            item["probabilidade_desabastecimento"] = r.probDesabastecimentoPoisson;
+            item["probabilidade_desabastecimento"] = r.probDesabastecimento;
             item["nivel_risco"] = r.nivelRisco;
             root["painel_consolidado"]["top_riscos_cruzados"].push_back(item);
         }

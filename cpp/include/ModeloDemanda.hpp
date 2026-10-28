@@ -30,24 +30,24 @@ struct ParametrosDemanda {
  *    discreta não-negativa (D in {0, 1, 2, ...}) decorrente de processos 
  *    independentes de internação, cirurgias de emergência e rotina clínica.
  * 
- * 2. DISTRIBUIÇÃO ESCOLHIDA: DISTRIBUIÇÃO DE POISSON D ~ Poisson(lambda)
- *    E APROXIMAÇÃO NORMAL D ~ N(mu, sigma^2) PELO TEOREMA CENTRAL DO LIMITE (TCL).
- * 
+ * 2. DISTRIBUIÇÃO ESCOLHIDA: BINOMIAL NEGATIVA D ~ BN(mu, sigma^2),
+ *    COM A POISSON COMO REFERÊNCIA E A NORMAL (TCL) COMO APROXIMAÇÃO.
+ *
  * 3. JUSTIFICATIVA ESTATÍSTICA E OPERACIONAL:
- *    a) Natureza dos eventos de saúde: As requisições hospitalares chegam como um 
- *       Processo Pontual de Poisson homogêneo com taxa constante lambda_req.
- *    b) Princípio de Poisson Thinning (Desmembramento): Ao subdividir as requisições 
- *       por tipo sanguíneo (com probabilidade p_i baseada na prevalência populacional) 
- *       ou por hemocomponente, a teoria das probabilidades garante que cada fluxo 
- *       individual de demanda D_i também segue rigorosamente uma Distribuição de Poisson:
- *           D_i ~ Poisson(lambda_i), com lambda_i = E[D_i].
- *    c) Teorema Central do Limite (TCL): Para tipos de grande circulação (A+ e O+ com 
- *       mais de 500 bolsas acumuladas), a soma de múltiplas variáveis aleatórias 
- *       independentes converge para a Normal N(lambda, lambda), permitindo o cálculo 
- *       contínuo com correção de continuidade de Yates de forma extremamente veloz e estável.
- *    d) Validação via Simulação de Monte Carlo: O modelo contrasta as soluções analíticas 
- *       (Poisson e Normal) com simulações estocásticas empíricas (100.000 iterações), 
- *       assegurando reprodutibilidade e fidelidade ao protocolo CRISP-DM (Fase 4 - Modelagem).
+ *    a) As requisições chegam de forma independente, o que sugere Poisson para a
+ *       contagem de PEDIDOS. Mas a demanda é medida em BOLSAS, e cada item de pedido
+ *       traz de 1 a 4 bolsas: a soma vira uma Poisson composta, cuja variância é
+ *       maior que a média (sobredispersão).
+ *    b) Nos dados sintéticos, a variância da demanda diária fica entre 2 e 4 vezes a
+ *       média em todos os tipos. A Poisson impõe variância = média e, por isso,
+ *       subestima o risco justamente nos tipos com estoque próximo da demanda.
+ *    c) A Binomial Negativa é a distribuição discreta padrão para contagens
+ *       sobredispersas: é parametrizada pela média e pela variância observadas na
+ *       série diária e se reduz à Poisson quando variância = média.
+ *    d) Teorema Central do Limite (TCL): a demanda do horizonte é a soma de N dias
+ *       independentes, logo D ~ N(N*mu_dia, N*sigma²_dia), usando a variância real.
+ *    e) Validação por Monte Carlo (bootstrap): reamostra os dias observados com
+ *       reposição, sem supor distribuição alguma, e confere as soluções analíticas.
  * ==============================================================================
  */
 class ModeloDemanda {
@@ -90,11 +90,33 @@ public:
     double calcularProbabilidadeExcedenteNormal(double media, double desvio, int estoqueDisponivel) const;
 
     /**
-     * @brief Simula estocasticamente a demanda via Monte Carlo determinístico (semente reproduzível)
-     * e retorna a probabilidade empírica de desabastecimento: P_hat(D > S).
+     * @brief CDF da Binomial Negativa parametrizada por média e variância.
+     * Com variância <= média não há sobredispersão e o cálculo cai na Poisson.
+     */
+    static double binomialNegativaCDF(double media, double variancia, int k);
+    double calcularProbabilidadeExcedenteBinomialNegativa(double media, double variancia, int estoqueDisponivel) const;
+
+    /**
+     * @brief Variância da demanda total no horizonte: N * s² da série diária
+     * (soma de N dias independentes). Retorna -1 quando a série tem menos de 2 dias.
+     */
+    static double varianciaDoHorizonte(const std::vector<long>& serieDiaria);
+
+    /**
+     * @brief Monte Carlo com distribuição de Poisson (semente reproduzível): P_hat(D > S).
+     * Usado apenas quando não há série diária para reamostrar.
      */
     double simularProbabilidadeDesabastecimentoMonteCarlo(
         double lambda, int estoqueDisponivel, int numSimulacoes = 100000, unsigned int semente = 2026
+    ) const;
+
+    /**
+     * @brief Monte Carlo por bootstrap: cada simulação sorteia N dias da série
+     * observada, com reposição, e soma a demanda. Não supõe distribuição teórica.
+     */
+    double simularProbabilidadeDesabastecimentoBootstrap(
+        const std::vector<long>& serieDiaria, int estoqueDisponivel,
+        int numSimulacoes = 100000, unsigned int semente = 2026
     ) const;
 
     // Getters de documentação e parâmetros

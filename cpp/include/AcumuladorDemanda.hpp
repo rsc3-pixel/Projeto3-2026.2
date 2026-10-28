@@ -51,6 +51,13 @@ private:
     // Histórico de volumes por requisição para cálculo de variância amostral
     std::vector<int> volumesPorRequisicao;
 
+    // Demanda acumulada por dia (dia ordinal -> (Componente, Tipo) -> bolsas).
+    // Base da série diária usada para medir a variância real da demanda.
+    std::map<long, std::map<std::pair<TipoHemocomponente, TipoSanguineo>, long>> demandaDiaria;
+
+    template <typename Filtro>
+    std::vector<long> montarSerieDiaria(Filtro filtro) const;
+
 public:
     AcumuladorDemanda();
 
@@ -87,6 +94,14 @@ public:
     // Medidas estatísticas sobre os dados acumulados
     double getMediaBolsasPorRequisicao() const;
     double getDesvioPadraoBolsasPorRequisicao() const;
+
+    /**
+     * @brief Série diária de bolsas demandadas, do primeiro ao último dia com pedido.
+     * Dias sem pedido entram com zero. Vazia quando as requisições não têm data.
+     */
+    std::vector<long> getSerieDiaria(TipoSanguineo tipo) const;
+    std::vector<long> getSerieDiaria(TipoHemocomponente comp) const;
+    std::vector<long> getSerieDiaria(TipoHemocomponente comp, TipoSanguineo tipo) const;
 
     void reiniciar();
 };

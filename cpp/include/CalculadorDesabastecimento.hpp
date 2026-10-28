@@ -18,12 +18,15 @@ struct RelatorioDesabastecimento {
     long estoqueValido;                      // Apenas bolsas válidas (disponíveis)
     long estoqueVencido;                     // Bolsas descartadas
     double taxaDescartePct;                  // % vencidas / total
-    long demandaEsperada;                    // E[D] = lambda observado
+    long demandaEsperada;                    // E[D] = demanda total observada no horizonte
+    double varianciaDemanda;                 // Var[D] = N * s² da série diária (= E[D] sem série)
+    double indiceDispersao;                  // Var[D] / E[D]; > 1 indica sobredispersão
     double coberturaPontualPct;              // (EstoqueValido / Demanda) * 100
     long deficitPontual;                     // max(0, Demanda - EstoqueValido)
-    double probDesabastecimentoPoisson;      // P(D > S) calculada por Poisson
-    double probDesabastecimentoNormal;       // P(D > S) calculada pela Normal (TCL)
-    double probDesabastecimentoMonteCarlo;   // P_hat(D > S) via Monte Carlo (100k sim)
+    double probDesabastecimento;             // P(D > S) adotada: Binomial Negativa
+    double probDesabastecimentoPoisson;      // P(D > S) por Poisson (referência, supõe Var = média)
+    double probDesabastecimentoNormal;       // P(D > S) pela Normal (TCL) com a variância real
+    double probDesabastecimentoMonteCarlo;   // P_hat(D > S) via bootstrap dos dias observados
     std::string nivelRisco;                  // "CRITICO", "ALTO", "MODERADO", "BAIXO"
     std::string recomendacaoAcao;            // Decisão recomendada para a operação
 };
@@ -74,10 +77,16 @@ public:
     std::vector<RelatorioDesabastecimento> avaliarMatrizCruzada() const;
 
 private:
+    /**
+     * @brief Preenche variância, dispersão e as quatro estimativas de P(D > S)
+     * a partir da demanda esperada, do estoque válido e da série diária.
+     */
+    void calcularProbabilidades(
+        RelatorioDesabastecimento& rel, const std::vector<long>& serieDiaria, int numSimulacoes
+    ) const;
+
     static std::string classificarRisco(double probDesabastecimento, double cobertura);
-    static std::string gerarRecomendacao(
-        const std::string& identificador, double probDesabastecimento, double cobertura, double taxaDescarte
-    );
+    static std::string gerarRecomendacao(double probDesabastecimento, double cobertura, double taxaDescarte);
 };
 
 #endif // CALCULADOR_DESABASTECIMENTO_HPP

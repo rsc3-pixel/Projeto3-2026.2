@@ -1,5 +1,5 @@
 Write-Host "==============================================================================" -ForegroundColor Cyan
-Write-Host "Compilando Sistema Rota Vital: Modelagem e Desabastecimento C++ (PI3-32)" -ForegroundColor Cyan
+Write-Host "Compilando Sistema Rota Vital: Probabilidade de Desabastecimento C++ (PI3-102)" -ForegroundColor Cyan
 Write-Host "==============================================================================" -ForegroundColor Cyan
 
 if (!(Test-Path "bin")) {

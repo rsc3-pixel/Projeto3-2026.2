@@ -1,6 +1,6 @@
 @echo off
 echo ==============================================================================
-echo Compilando Sistema Rota Vital: Modelagem e Desabastecimento C++ (PI3-32)
+echo Compilando Sistema Rota Vital: Probabilidade de Desabastecimento C++ (PI3-102)
 echo ==============================================================================
 
 if not exist bin mkdir bin

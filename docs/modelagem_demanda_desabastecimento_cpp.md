@@ -1,21 +1,22 @@
-# Modelagem Estocástica de Demanda e Risco de Desabastecimento em C++ (PI3-32)
+# Modelagem Estocástica de Demanda e Risco de Desabastecimento em C++ (PI3-102)
 
 > **Projeto Integrador 3 (Rota Vital - 2026.2)**  
 > **Fase 4 (CRISP-DM) — Modelagem**  
 > **Linguagem:** C++ (GCC 15.2 / Padrão C++20)  
-> **Integração de Disciplinas:** Programação Orientada a Objetos (POO), Algoritmos e Estrutura de Dados (AED), Estatística / Ciência de Dados.
+> **Integração de Disciplinas:** Programação Orientada a Objetos (POO), Algoritmos e Estrutura de Dados (AED), Estatística / Ciência de Dados.  
+> **Ticket:** PI3-102 — Probabilidade de desabastecimento por tipo (EST). O resultado alimenta o painel consolidado **PI3-32**.
 
 ---
 
 ## 1. Visão Geral e Contexto de Engenharia
 
-No planejamento do ciclo CRISP-DM do **Rota Vital**, a **Fase 4 (Modelagem)** estava prevista para a semana 12 sob o ticket **PI3-32**. Conforme estabelecido no briefing do projeto (`dados/crisp-dm-briefing.md`), treinar modelos de *Machine Learning* preditivo sobre bases sintéticas seria redundante e contraproducente: o algoritmo apenas aprenderia de volta as premissas paramétricas declaradas em `premissas.py`.
+No planejamento do ciclo CRISP-DM do **Rota Vital**, a **Fase 4 (Modelagem)** está prevista para a semana 12. Conforme o briefing do projeto (`dados/crisp-dm-briefing.md`), treinar modelos de *Machine Learning* preditivo sobre bases sintéticas seria redundante: o algoritmo apenas aprenderia de volta as premissas paramétricas declaradas em `premissas.py`.
 
-A verdadeira modelagem estocástica com valor de negócio para a hemorrede consiste em:
+A modelagem com valor de negócio para a hemorrede, e que este documento cobre, consiste em:
 1. **Modelar a demanda por tipo de hemocomponente e grupo sanguíneo como variável aleatória** a partir dos dados acumulados do projeto;
-2. **Calcular a probabilidade analítica e simulada de desabastecimento (*stockout risk*)**, confrontando a distribuição de demanda com a disponibilidade física de bolsas válidas;
-3. **Registrar formalmente a distribuição estatística escolhida e sua justificativa clínica/operacional**;
-4. **Disponibilizar os resultados para o painel consolidado de indicadores (PI3-32)**, integrando os fundamentos conceituais de **Dados Acumulados (POO)** e **Saídas (AED)**.
+2. **Calcular a probabilidade de desabastecimento (*stockout risk*)**, confrontando a distribuição de demanda com a disponibilidade física de bolsas válidas;
+3. **Registrar a distribuição estatística escolhida e sua justificativa**, verificada contra os próprios dados;
+4. **Disponibilizar os resultados para o painel consolidado de indicadores (PI3-32)**, integrando os conceitos de **Dados Acumulados (POO)** e **Saídas (AED)**.
 
 ---
 
@@ -34,6 +35,7 @@ No sistema desenvolvido em C++, implementamos duas classes com o padrão de proj
 - **`AcumuladorEstoque`:** A cada bolsa física inspecionada (código, grupo ABO/Rh, hemocomponente, dias até vencer e status de vencimento), os acumuladores privados são incrementados (`totalBolsas++`, `totalValidas++`, contadores em mapas associativos `std::map`).
 - **`AcumuladorDemanda`:** A cada requisição emitida por uma unidade hospitalar e a cada item de transfusão requisitado, o volume solicitado é somado dinamicamente:
   $$\text{TotalDemandado} \leftarrow \text{TotalDemandado} + Q_{\text{item}}$$
+  Além do total, a classe acumula a demanda **por dia** (data da requisição), o que permite reconstruir a série diária de cada tipo e medir a variância real da demanda (seção 3).
 - **Sobrecarga de Operadores em POO:** As classes implementam `operator+=`, permitindo acumulação idiomática e segura:
   ```cpp
   acumuladorDemanda += requisicao; // Adiciona o lote ao total acumulado
@@ -60,15 +62,16 @@ No sistema desenvolvido em C++, implementamos duas classes com o padrão de proj
                  │
                  ▼
 ┌─────────────────────────────────┐
-│     2. PROCESSAMENTO            │  • Acumulação linear O(N) nas classes POO
+│     2. PROCESSAMENTO            │  • Acumulação linear O(N) nas classes POO (totais e série diária)
 │     (Estruturas & Algoritmos)   │  • Estruturas de busca rápida: std::map, std::vector, std::pair
-│                                 │  • Algoritmos probabilísticos: Poisson, Normal (TCL) e Monte Carlo
+│                                 │  • Algoritmos probabilísticos: Binomial Negativa, Poisson,
+│                                 │    Normal (TCL) e Monte Carlo por bootstrap
 └────────────────┬────────────────┘
                  │
                  ▼
 ┌─────────────────────────────────┐
-│     3. SAÍDA DE DADOS           │  • Saída 1: Relatório Tabular Rico no Terminal (std::cout formatado)
-│     (Output / Painel PI3-32)    │  • Saída 2: Arquivo JSON Consolidado (painel_consolidado_pi3_32.json)
+│     3. SAÍDA DE DADOS           │  • Saída 1: Relatório tabular no terminal (std::cout formatado)
+│     (Output / Painel PI3-32)    │  • Saída 2: dados/painel_consolidado_pi3_32.json
 └─────────────────────────────────┘
 ```
 
@@ -77,154 +80,176 @@ No sistema desenvolvido em C++, implementamos duas classes com o padrão de proj
 ## 3. Modelagem Estatística: Demanda como Variável Aleatória
 
 ### 3.1. Definição da Variável Aleatória de Demanda ($D$)
-A demanda hospitalar por bolsas de sangue não é um valor estático determinístico. Em qualquer intervalo de tempo, o número de pacientes admitidos que requerem transfusões varia de forma estocástica.
+A demanda hospitalar por bolsas de sangue não é um valor determinístico. Em qualquer intervalo de tempo, o número de pacientes que requerem transfusões varia de forma estocástica.
 
-Definimos a demanda total por um tipo sanguíneo $t$ em um horizonte $T$ como uma **variável aleatória discreta não-negativa**:
+Definimos a demanda total por um tipo sanguíneo $t$ no horizonte observado como uma **variável aleatória discreta não-negativa**:
 $$D_t = \sum_{j=1}^{N_{\text{req}}} Q_{j, t}, \quad D_t \in \{0, 1, 2, 3, \dots\}$$
-onde $N_{\text{req}}$ é a variável aleatória que conta o número de requisições hospitalares recebidas, e $Q_{j, t}$ é a quantidade de bolsas do tipo $t$ solicitadas na $j$-ésima requisição.
+onde $N_{\text{req}}$ é o número de requisições recebidas e $Q_{j, t}$ é a quantidade de bolsas do tipo $t$ na $j$-ésima requisição.
+
+O horizonte é o período coberto pelas requisições sintéticas: **61 dias, de 19/07/2026 a 17/09/2026**. O estoque $S_t$ é a fotografia das bolsas válidas na data de referência da base. A pergunta respondida é: *com o estoque válido de hoje, qual a probabilidade de não atender uma demanda do tamanho da observada no horizonte?*
 
 ---
 
-### 3.2. Distribuição Escolhida: Distribuição de Poisson $D_t \sim \text{Poisson}(\lambda_t)$ e Aproximação Normal $\mathcal{N}(\mu_t, \sigma_t^2)$
+### 3.2. Por que não basta a Poisson: o teste nos dados
 
-#### 1. Distribuição Primária: Poisson
-Para variáveis de contagem de eventos independentes em intervalos de tempo, a distribuição padrão é a **Distribuição de Poisson**:
-$$P(D_t = k) = \frac{e^{-\lambda_t} \lambda_t^k}{k!}$$
-onde $\lambda_t = \mathbb{E}[D_t]$ é a demanda média esperada acumulada no período.
+O ponto de partida natural é a Poisson: as requisições chegam de forma independente, e o número de **pedidos** num intervalo é bem descrito por um processo de Poisson. O problema é que a demanda é medida em **bolsas**, e cada item de requisição traz **de 1 a 4 bolsas**. A soma de um número Poisson de lotes de tamanho variável é uma **Poisson composta**, cuja variância é maior que a média:
+$$\text{Var}[D] = \lambda \cdot \mathbb{E}[Q^2] > \lambda \cdot \mathbb{E}[Q] = \mathbb{E}[D]$$
 
-#### 2. Justificativa Teórica e Matemática:
-1. **Natureza Discreta e Contagem Não-Negativa:** Não existem frações nem valores negativos de bolsas transfundidas ($k \in \mathbb{N}$).
-2. **Independência dos Eventos:** Requisições provenientes de diferentes hospitais (emergências cirúrgicas, UTIs e transfusões programadas) originam-se de causas clínicas independentes.
-3. **Teorema do Desmembramento de Poisson (*Poisson Thinning*):** Se a chegada total de requisições hospitalares ocorre segundo um Processo de Poisson com taxa $\lambda_{\text{global}}$ e cada bolsa solicitada tem probabilidade $p_t$ de pertencer ao tipo sanguíneo $t$ (baseada nas frequências genéticas populacionais), a teoria das probabilidades demonstra que o fluxo individual de cada tipo $t$ é **também estritamente um Processo de Poisson**:
-   $$D_t \sim \text{Poisson}(\lambda_t), \quad \text{com } \lambda_t = \lambda_{\text{global}} \cdot p_t$$
-4. **Literatura Científica Especializada:** Modelos estocásticos de bancos de sangue (e.g., *Prastacos, 1984*; *Pierskalla, 2004*; *Beliën & Forcé, 2012*) estabelecem a distribuição de Poisson como a referência canônica para dimensionamento de estoque hemoterápico.
+A Poisson impõe $\text{Var}[D] = \mathbb{E}[D]$. Para verificar se essa hipótese se sustenta, medimos o **índice de dispersão** (variância / média) da série diária de cada tipo:
 
-#### 3. Teorema Central do Limite (TCL) e Aproximação Normal:
-Para grupos sanguíneos de alta prevalência (como $\text{A+}$ onde $\lambda = 549$ bolsas, e $\text{O+}$ onde $\lambda = 518$ bolsas), $\lambda > 30$. Pelo Teorema Central do Limite, a soma de múltiplas requisições independentes converge para a **Distribuição Normal**:
-$$D_t \approx \mathcal{N}(\mu_t, \sigma_t^2), \quad \text{onde } \mu_t = \lambda_t \text{ e } \sigma_t = \sqrt{\lambda_t}$$
-Para o cálculo contínuo, aplica-se a **Correção de Continuidade de Yates**:
-$$P(D_t > S_t) = P\left(Z > \frac{S_t + 0.5 - \mu_t}{\sigma_t}\right) = \frac{1}{2} \text{erfc}\left(\frac{S_t + 0.5 - \mu_t}{\sigma_t \sqrt{2}}\right)$$
-onde $\text{erfc}$ é a função erro complementar de precisão dupla (`double`) da biblioteca padrão `<cmath>` de C++.
+| Tipo | Média diária | Variância diária | Índice de dispersão |
+|:---:|:---:|:---:|:---:|
+| A+ | 9,00 | 18,52 | 2,06 |
+| A- | 2,00 | 6,07 | 3,03 |
+| B+ | 1,93 | 6,29 | 3,25 |
+| O- | 1,59 | 5,26 | 3,31 |
+| AB- | 0,16 | 0,56 | 3,44 |
+| B- | 0,48 | 1,69 | 3,56 |
+| O+ | 8,49 | 31,82 | 3,75 |
+| AB+ | 0,72 | 2,79 | 3,87 |
 
-#### 4. Validação por Simulação de Monte Carlo:
-Para testar o comportamento empírico do modelo em condições reais de loteamento de pedidos (onde requisições podem solicitar entre 1 e 4 bolsas por item), o módulo C++ executa **$100.000$ iterações de Monte Carlo com semente pseudoaleatória determinística (`2026`)**, permitindo checagem cruzada das probabilidades analíticas.
+Em todos os tipos a variância é **2 a 4 vezes a média**. A Poisson, portanto, subestima a incerteza da demanda e, com ela, o risco de desabastecimento justamente nos tipos com estoque próximo da demanda.
+
+---
+
+### 3.3. Distribuição Escolhida: Binomial Negativa $D_t \sim \text{BN}(\mu_t, \sigma_t^2)$
+
+A **Binomial Negativa** é a distribuição discreta padrão para contagens sobredispersas. Ela é parametrizada pela média e pela variância observadas:
+$$r = \frac{\mu^2}{\sigma^2 - \mu}, \qquad p = \frac{r}{r + \mu}, \qquad P(D = k) = \frac{\Gamma(k + r)}{\Gamma(r)\, k!}\, p^r (1-p)^k$$
+
+com:
+- $\mu_t$ = demanda total observada do tipo $t$ no horizonte;
+- $\sigma_t^2 = N \cdot s_t^2$, onde $s_t^2$ é a variância amostral da série diária e $N = 61$ dias (a demanda do horizonte é a soma de $N$ dias independentes).
+
+#### Justificativa:
+1. **Natureza discreta e não-negativa:** não existem frações nem valores negativos de bolsas.
+2. **Aderência aos dados:** a variância medida é 2 a 4 vezes a média (seção 3.2); a Binomial Negativa acomoda isso, a Poisson não.
+3. **Generaliza a Poisson:** quando $\sigma^2 = \mu$, a Binomial Negativa se reduz à Poisson. O código usa essa redução quando não há série diária disponível (requisições sem data).
+4. **Literatura especializada:** modelos de estoque hemoterápico (*Prastacos, 1984*; *Pierskalla, 2004*; *Beliën & Forcé, 2012*) usam a Poisson como referência e a Binomial Negativa quando a demanda apresenta sobredispersão.
+
+A CDF é calculada termo a termo em espaço logarítmico (`std::lgamma`), o que evita *underflow* mesmo para médias altas como a de concentrado de hemácias ($\mu = 807$).
+
+---
+
+### 3.4. Métodos de Comparação
+
+O programa calcula $P(D > S)$ por quatro caminhos:
+
+| Método | Hipótese | Papel |
+|---|---|---|
+| **Binomial Negativa** | Média e variância medidas na série diária | **Probabilidade adotada** (risco e recomendação) |
+| **Poisson** | Variância = média | Referência, para mostrar quanto a hipótese simplificada subestima o risco |
+| **Normal (TCL)** | Soma de 61 dias independentes: $\mathcal{N}(\mu, N s^2)$, com correção de continuidade | Aproximação contínua com a variância real |
+| **Monte Carlo por bootstrap** | Nenhuma distribuição teórica | Validação independente |
+
+#### Teorema Central do Limite (TCL)
+A demanda do horizonte é a soma de 61 demandas diárias independentes; pelo TCL ela se aproxima de uma Normal com a **variância real** do horizonte:
+$$P(D_t > S_t) \approx 1 - \Phi\left(\frac{S_t + 0.5 - \mu_t}{\sqrt{N s_t^2}}\right)$$
+
+#### Validação por Monte Carlo (bootstrap)
+Cada uma das **100.000 simulações** (semente `2026`) sorteia 61 dias da série observada **com reposição** e soma a demanda. A fração de simulações em que a soma supera $S_t$ estima $P(D_t > S_t)$ **sem supor distribuição alguma**. Se a Binomial Negativa estiver bem ajustada, as duas estimativas devem concordar, e é isso que se observa (seção 5).
 
 ---
 
 ## 4. Cálculo da Probabilidade de Desabastecimento (*Stockout Risk*)
 
 ### 4.1. Regra Fundamental de Negócio: Estoque Físico Válido ($S$)
-No gerenciamento de sangue, **bolsas vencidas não constituem estoque útil**. Elas representam descarte biológico obrigatório.  
-Portanto, a variável de disponibilidade física $S_t$ considera **exclusivamente as bolsas válidas**:
+**Bolsas vencidas não constituem estoque útil**: representam descarte biológico obrigatório. A disponibilidade $S_t$ considera **exclusivamente as bolsas válidas**:
 $$S_t = N_{\text{total}}(t) - N_{\text{vencidas}}(t)$$
 
 ### 4.2. Formulação Probabilística
-O evento de **desabastecimento** ocorre quando a demanda estocástica $D_t$ é estritamente maior que o estoque disponível $S_t$:
-$$\text{Desabastecimento} = \{ D_t > S_t \}$$
-$$\mathbb{P}(\text{Desabastecimento}_t) = 1 - \mathbb{P}(D_t \le S_t) = 1 - F_{D_t}(S_t)$$
+O evento de **desabastecimento** ocorre quando a demanda $D_t$ é estritamente maior que o estoque disponível $S_t$:
+$$\mathbb{P}(\text{Desabastecimento}_t) = \mathbb{P}(D_t > S_t) = 1 - F_{D_t}(S_t)$$
 
-- **Via Poisson:**
-  $$\mathbb{P}(\text{Desabastecimento}_t) = 1 - \sum_{k=0}^{S_t} \frac{e^{-\lambda_t} \lambda_t^k}{k!}$$
-- **Via Normal (TCL):**
-  $$\mathbb{P}(\text{Desabastecimento}_t) = 1 - \Phi\left(\frac{S_t + 0.5 - \mu_t}{\sigma_t}\right)$$
-- **Via Monte Carlo:**
-  $$\hat{\mathbb{P}}(\text{Desabastecimento}_t) = \frac{1}{N_{\text{sim}}} \sum_{m=1}^{N_{\text{sim}}} \mathbb{I}\left(D_t^{(m)} > S_t\right)$$
+- **Via Binomial Negativa (adotada):** $1 - \sum_{k=0}^{S_t} P_{\text{BN}}(D_t = k)$
+- **Via Poisson (referência):** $1 - \sum_{k=0}^{S_t} \frac{e^{-\mu_t} \mu_t^k}{k!}$
+- **Via Monte Carlo (bootstrap):** $\hat{\mathbb{P}} = \frac{1}{M} \sum_{m=1}^{M} \mathbb{I}\left(D_t^{(m)} > S_t\right)$, com $M = 100.000$
 
 ---
 
-## 5. Resultados Consolidados sobre os Dados Sintéticos Oficiais
+## 5. Resultados sobre os Dados Sintéticos Oficiais
 
-A execução do modelo em C++ sobre a base sintética reproduzível do Rota Vital (**2.000 bolsas coletadas em 60 dias e 300 requisições hospitalares totalizando 1.487 bolsas solicitadas**) produziu os seguintes resultados:
+Base: `dados/dados_sinteticos.json` — **2.000 bolsas e 300 requisições hospitalares (1.487 bolsas solicitadas em 61 dias)**. Os totais conferem com a análise descritiva oficial (`dados/resultados.json`, gerado por `dados/analise.py`).
 
-### 5.1. Tabela de Desabastecimento por Tipo Sanguíneo
+### 5.1. Desabastecimento por Tipo Sanguíneo
 
-| Tipo | Estoque Válido ($S$) | Demanda Média ($\lambda$) | Cobertura Pontual | Déficit Pontual | $\mathbb{P}(\text{Poisson})$ | $\mathbb{P}(\text{Normal})$ | $\mathbb{P}(\text{M. Carlo})$ | Nível de Risco | Diretriz de Ação |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|---|
-| **A+** | 454 | 549 | 82,7% | 95 un | **100,0%** | **100,0%** | **100,0%** | **CRÍTICO** | Déficit massivo de 95 bolsas. Requer convocação de doadores e uso de O+. |
-| **AB-** | 5 | 10 | 50,0% | 5 un | **93,3%** | **92,3%** | **93,2%** | **CRÍTICO** | Menor cobertura da rede (50%). Raridade biológica extrema. |
-| **B+** | 105 | 118 | 89,0% | 13 un | **88,4%** | **88,7%** | **88,5%** | **CRÍTICO** | Risco de ruptura elevado; demanda supera estoque com frequência. |
-| **AB+** | 30 | 44 | 68,2% | 14 un | **98,3%** | **98,1%** | **98,4%** | **CRÍTICO** | Cobertura de apenas 68%. Necessidade de remanejamento regional. |
-| **O+** | 492 | 518 | 95,0% | 26 un | **87,1%** | **86,6%** | **87,0%** | **ALTO** | Maior volume da rede; déficit de 26 bolsas ameaça cirurgias gerais. |
-| **A-** | 110 | 122 | 90,2% | 12 un | **86,4%** | **85,8%** | **86,3%** | **ALTO** | Tipo negativo escasso; requer monitoramento de requisições de urgência. |
-| **B-** | 30 | 29 | 103,4% | 0 un | **38,4%** | **39,1%** | **38,6%** | **MODERADO** | **Atenção:** Cobertura > 100%, mas ainda há 38% de chance de desabastecimento! |
-| **O-** | 119 | 97 | 122,7% | 0 un | **1,5%** | **1,4%** | **1,6%** | **BAIXO** | Superávit de 22 bolsas; atua como "pulmão" estratégico universal. |
+| Tipo | Estoque Válido ($S$) | Demanda ($\mu$) | Var/média | Cobertura | Déficit | **P (Bin. Neg.)** | P (Poisson) | P (Normal) | P (Bootstrap) | Risco |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **A+** | 454 | 549 | 2,09 | 82,7% | 95 | **99,8%** | 100,0% | 99,7% | 99,8% | **CRÍTICO** |
+| **AB+** | 30 | 44 | 3,93 | 68,2% | 14 | **85,2%** | 98,3% | 84,8% | 85,1% | **CRÍTICO** |
+| **AB-** | 5 | 10 | 3,49 | 50,0% | 5 | **76,2%** | 93,3% | 77,7% | 78,4% | **CRÍTICO** |
+| **B+** | 105 | 118 | 3,31 | 89,0% | 13 | **72,7%** | 87,5% | 73,7% | 73,3% | **ALTO** |
+| **A-** | 110 | 122 | 3,08 | 90,2% | 12 | **71,4%** | 85,1% | 72,3% | 71,8% | **ALTO** |
+| **O+** | 492 | 518 | 3,81 | 95,0% | 26 | **71,1%** | 86,9% | 71,7% | 71,6% | **ALTO** |
+| **B-** | 30 | 29 | 3,62 | 103,4% | 0 | **40,3%** | 37,9% | 44,2% | 41,8% | **MODERADO** |
+| **O-** | 119 | 97 | 3,36 | 122,7% | 0 | **11,0%** | 1,1% | 10,6% | 10,9% | **BAIXO** |
+
+O bootstrap, que não depende de nenhuma distribuição teórica, concorda com a Binomial Negativa em todos os tipos (diferença máxima de cerca de 2 pontos percentuais). A Poisson se afasta nos dois sentidos:
+- **Tipos com déficit** (AB+, AB-, B+, A-, O+): a Poisson concentra demais a demanda em torno da média e **exagera a certeza** do desabastecimento.
+- **Tipos com superávit** (O-): a Poisson **subestima o risco em dez vezes** (1,1% contra 11,0%). Um gestor que confiasse nela trataria o O-, o doador universal, como estoque folgado.
 
 ---
 
-### 5.2. A Grande Lição Estatística: Cobertura vs. Probabilidade de Desabastecimento
+### 5.2. A Lição Estatística: Cobertura vs. Probabilidade de Desabastecimento
 
-Observe atentamente o comportamento do grupo **B-**:
-- **Cobertura pontual:** $\frac{30}{29} \times 100\% = 103,4\%$ (aparenta estar plenamente abastecido, com déficit zero).
-- **Probabilidade de Desabastecimento:** **38,4%**!
+Observe os grupos **B-** e **O-**:
+- **B-:** cobertura de $\frac{30}{29} = 103,4\%$, déficit zero, e ainda assim **40,3%** de probabilidade de desabastecimento.
+- **O-:** cobertura de 122,7%, superávit de 22 bolsas, e **11,0%** de probabilidade de faltar.
 
 > [!IMPORTANT]
-> **Por que um estoque com cobertura maior que 100% ainda tem 38% de risco de faltar sangue?**  
-> Porque a demanda é uma **variável aleatória estocástica**, não um número fixo. Como a média esperada é $\lambda = 29$, existe uma probabilidade de aproximadamente 38,4% de que, devido a flutuações amostrais e picos de demanda hospitalar, o hospital solicite 31, 32 ou mais bolsas.  
-> Essa constatação científica justifica plenamente por que a gestão moderna de hemorredes **não pode confiar apenas na taxa de cobertura estática**, sendo imperativo calcular a probabilidade estocástica de desabastecimento.
+> **Por que um estoque com cobertura acima de 100% ainda corre risco de faltar sangue?**  
+> Porque a demanda é uma **variável aleatória**, não um número fixo. A cobertura compara o estoque com a demanda média; o risco depende também da variabilidade em torno dessa média. Com pedidos de vários lotes, a demanda oscila muito mais do que a Poisson supõe, e um estoque "suficiente na média" ainda é ultrapassado com frequência.  
+> Por isso a gestão da hemorrede **não pode confiar apenas na taxa de cobertura estática**, e a probabilidade de desabastecimento precisa ser calculada com a variância real da demanda.
 
 ---
 
-### 5.3. Tabela de Desabastecimento por Hemocomponente
+### 5.3. Desabastecimento por Hemocomponente
 
-| Hemocomponente | Total Coletado | Bolsas Válidas | Bolsas Vencidas | Taxa de Descarte | Demanda $\lambda$ | $\mathbb{P}(\text{Desabastecimento})$ | Diagnóstico Operacional |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|---|
-| **Concentrado de Plaquetas** | 407 | 40 | 367 | **90,2%** | 298 | **100,0%** | **Catástrofe de Validade (5 dias):** 90% venceu antes do uso; desabastecimento certo sem algoritmo FEFO. |
-| **Concentrado de Hemácias** | 1.128 | 840 | 288 | **25,5%** | 818 | **22,8%** | **Equilíbrio Operacional:** Descarte moderado (42 dias de validade); estoque cobre a maior parte da demanda. |
-| **Plasma Fresco Congelado** | 369 | 369 | 0 | **0,0%** | 298 | **0,002%** | **Segurança Total (365 dias):** Validade longa impede perdas; abastecimento estável. |
-| **Crioprecipitado** | 96 | 96 | 0 | **0,0%** | 73 | **0,4%** | **Abastecido (365 dias):** Demanda pequena e validade longa garantem abastecimento seguro. |
+| Hemocomponente | Total Coletado | Válidas | Vencidas | Taxa de Descarte | Demanda ($\mu$) | Var/média | **P (Bin. Neg.)** | P (Poisson) | Risco |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Concentrado de Plaquetas** | 407 | 40 | 367 | **90,2%** | 257 | 2,95 | **100,0%** | 100,0% | **CRÍTICO** |
+| **Concentrado de Hemácias** | 1.128 | 840 | 288 | **25,5%** | 807 | 4,60 | **28,6%** | 11,9% | **MODERADO** |
+| **Plasma Fresco Congelado** | 369 | 369 | 0 | **0,0%** | 344 | 3,09 | **21,4%** | 8,5% | **MODERADO** |
+| **Crioprecipitado** | 96 | 96 | 0 | **0,0%** | 79 | 2,48 | **10,9%** | 2,7% | **BAIXO** |
+
+- **Plaquetas:** validade de 5 dias; 90% do coletado venceu antes do uso. O desabastecimento é praticamente certo sem uma política FEFO rigorosa.
+- **Hemácias e plasma:** a Poisson indicaria risco baixo (11,9% e 8,5%), mas com a variância real o risco é **mais que o dobro** e os dois passam a MODERADO.
+- A taxa de descarte por hemocomponente também é exportada no JSON e serve de insumo para o **PI3-103** (taxa de descarte por vencimento).
 
 ---
 
-## 6. Estrutura do Arquivo de Saída JSON (`painel_consolidado_pi3_32.json`)
+## 6. Estrutura do Arquivo de Saída JSON (`dados/painel_consolidado_pi3_32.json`)
 
-O executável C++ exporta automaticamente todos os indicadores calculados para o arquivo `dados/painel_consolidado_pi3_32.json`, viabilizando o consumo pela API Java Spring Boot e a renderização nos painéis do frontend React:
+O executável grava o JSON **na mesma pasta do arquivo de entrada** (`dados/`), seja executado a partir da raiz do repositório ou da pasta `cpp/`. Cada tipo sanguíneo traz:
 
 ```json
 {
-  "meta": {
-    "projeto": "Rota Vital",
-    "modulo": "PI3-32 - Painel Consolidado de Modelagem e Desabastecimento",
-    "linguagem": "C++20",
-    "fase_crisp_dm": "Fase 4 - Modelagem",
-    "data_execucao": "2026-10-26T16:50:00-03:00",
-    "reprodutibilidade_semente": 2026
-  },
-  "fundamentos_disciplinas": {
-    "dados_acumulados_poo": "Dados acumulativos sao valores que vao sendo somados ou atualizados ao longo da execucao do programa, conforme novas informacoes sao recebidas. Exemplo: caixa de loja que adiciona o preco de cada produto ao total.",
-    "saidas_algoritmos_estrutura_dados": "As saidas sao as informacoes que o programa apresenta ao usuario depois de executar uma instrucao ou processar dados. Pipeline: Entrada -> Processamento (Estruturas de Dados) -> Saida."
-  },
-  "modelagem_estatistica": {
-    "distribuicao_escolhida": "DISTRIBUICAO_DE_POISSON (com extensao Normal via TCL e validacao por Monte Carlo)",
-    "justificativa": "A demanda hospitalar por hemocomponentes constitui um processo estocastico pontual de contagem...",
-    "metodologias_calculo": [
-      "Poisson Exato (Processo pontual discreto com Poisson Thinning)",
-      "Aproximacao Normal via Teorema Central do Limite com correcao de continuidade de Yates",
-      "Simulacao Estocastica de Monte Carlo com 100.000 iteracoes reproduziveis"
-    ]
-  },
-  "painel_consolidado": {
-    "desabastecimento_por_tipo": [
-      {
-        "tipo_sanguineo": "A_POS",
-        "nome_exibicao": "A+",
-        "estoque_valido_disponivel": 454,
-        "demanda_esperada_lambda": 549,
-        "cobertura_pontual_pct": 82.7,
-        "deficit_unidades": 95,
-        "probabilidade_desabastecimento_poisson": 1.0,
-        "nivel_risco": "CRITICO",
-        "recomendacao_operacional": "EMERGENCIA DE SUPRIMENTO: Deficit severo. Convocar doadores compativeis ou alocar O-."
-      }
-    ]
-  }
+  "tipo_sanguineo": "O_NEG",
+  "nome_exibicao": "O-",
+  "estoque_total": 184,
+  "estoque_valido_disponivel": 119,
+  "estoque_vencido": 65,
+  "demanda_esperada": 97,
+  "variancia_demanda": 326.1,
+  "indice_dispersao": 3.36,
+  "cobertura_pontual_pct": 122.7,
+  "deficit_unidades": 0,
+  "probabilidade_desabastecimento": 0.110,
+  "probabilidade_desabastecimento_poisson": 0.011,
+  "probabilidade_desabastecimento_normal_tcl": 0.106,
+  "probabilidade_desabastecimento_monte_carlo": 0.109,
+  "nivel_risco": "BAIXO",
+  "recomendacao_operacional": "ESTOQUE SEGURO: Superavit registrado. Pode servir como retaguarda estrategica regional."
 }
 ```
+
+O campo que o painel PI3-32 deve exibir é **`probabilidade_desabastecimento`** (Binomial Negativa). Os demais ficam disponíveis para comparação. Os valores acima estão arredondados; o arquivo traz a precisão completa.
 
 ---
 
 ## 7. Como Compilar e Reproduzir em C++
 
-A arquitetura foi desenvolvida em C++ padrão (C++20) sem dependências externas obrigatórias além do compilador `g++`:
+A arquitetura usa C++ padrão (C++20). A única dependência externa é a biblioteca de cabeçalho único `nlohmann/json`, já incluída em `cpp/include/`. Os executáveis em `cpp/bin/` são gerados localmente e não são versionados.
 
 ### 7.1. Compilação e Execução via PowerShell:
 ```powershell
@@ -240,10 +265,11 @@ build.bat
 
 ### 7.3. Compilação Manual via g++:
 ```bash
+cd cpp
 # Compilar aplicacao principal
 g++ -std=c++20 -O3 -I include src/*.cpp -o bin/rota_vital_modelagem.exe
 
-# Executar
+# Executar (le ../dados/dados_sinteticos.json e grava ../dados/painel_consolidado_pi3_32.json)
 bin/rota_vital_modelagem.exe
 
 # Compilar e rodar testes unitarios
@@ -251,13 +277,18 @@ g++ -std=c++20 -O3 -I include src/Dominio.cpp src/AcumuladorEstoque.cpp src/Acum
 bin/testes_modelagem.exe
 ```
 
+A suíte tem **8 testes**, cobrindo os acumuladores, a série diária, Poisson, Binomial Negativa (incluindo valores de referência calculados à mão), o bootstrap e o calculador de desabastecimento.
+
+### 7.4. Reprodutibilidade
+Com a mesma base e a semente `2026`, duas execuções produzem o mesmo JSON, byte a byte. O campo `meta.data_execucao` é fixo justamente para preservar essa propriedade.
+
 ---
 
 ## 8. Conclusão
 
-A modelagem estocástica desenvolvida em C++ cumpre com exatidão todos os critérios de aceite da história **PI3-32**:
-1. **Modelagem Matemática Sólida:** Poisson e Normal (TCL) devidamente justificadas para a natureza discreta e assíncrona das requisições hospitalares;
-2. **Avaliação Fiel Demanda vs. Estoque:** Exclusão sistemática de bolsas vencidas no cálculo do estoque válido;
-3. **Cálculo Preciso da Probabilidade de Desabastecimento:** Concordância entre soluções analíticas e empíricas (Monte Carlo);
-4. **Articulação Pedagógica:** Integração explícita dos conceitos de **Dados Acumulados (POO)** e **Saídas (AED)**;
-5. **Prontidão para o Painel Consolidado:** Exportação automatizada para o formato JSON consumível pelo ecossistema do Rota Vital.
+A modelagem atende aos critérios de aceite do **PI3-102**:
+1. **Demanda modelada como variável aleatória** por tipo sanguíneo, por hemocomponente e pela combinação dos dois;
+2. **Probabilidade de desabastecimento calculada** confrontando a demanda com o estoque válido, excluindo bolsas vencidas;
+3. **Distribuição registrada e justificada:** Binomial Negativa, escolhida porque os dados mostram variância 2 a 4 vezes a média, o que invalida a hipótese da Poisson;
+4. **Cálculo correto e reproduzível:** a solução analítica é confirmada por um Monte Carlo por bootstrap independente de distribuição, e a execução é determinística;
+5. **Resultado disponível para o painel PI3-32** em `dados/painel_consolidado_pi3_32.json`, no campo `probabilidade_desabastecimento`.

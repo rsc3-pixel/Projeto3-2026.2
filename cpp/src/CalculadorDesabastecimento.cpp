@@ -22,7 +22,7 @@ std::string CalculadorDesabastecimento::classificarRisco(double probDesabastecim
 }
 
 std::string CalculadorDesabastecimento::gerarRecomendacao(
-    const std::string& identificador, double probDesabastecimento, double cobertura, double taxaDescarte
+    double probDesabastecimento, double cobertura, double taxaDescarte
 ) {
     if (taxaDescarte >= 80.0) {
         return "FEFO IMEDIATO: Descarte critico detectado. Priorizar despacho prioritario em menos de 24h.";
@@ -37,6 +37,38 @@ std::string CalculadorDesabastecimento::gerarRecomendacao(
         return "ESTOQUE SEGURO: Superavit registrado. Pode servir como retaguarda estrategica regional.";
     }
     return "OPERACAO ESTAVEL: Manter monitoramento de rotina.";
+}
+
+void CalculadorDesabastecimento::calcularProbabilidades(
+    RelatorioDesabastecimento& rel, const std::vector<long>& serieDiaria, int numSimulacoes
+) const {
+    double media = static_cast<double>(rel.demandaEsperada);
+    int estoqueValido = static_cast<int>(rel.estoqueValido);
+
+    // Sem serie diaria (requisicoes sem data) nao ha como medir a variancia:
+    // assume-se variancia = media, o que equivale a hipotese de Poisson.
+    double variancia = ModeloDemanda::varianciaDoHorizonte(serieDiaria);
+    if (variancia < 0.0) variancia = media;
+
+    rel.varianciaDemanda = variancia;
+    rel.indiceDispersao = (media > 0.0) ? variancia / media : 1.0;
+
+    rel.probDesabastecimentoPoisson = modelo.calcularProbabilidadeExcedentePoisson(media, estoqueValido);
+    rel.probDesabastecimento = modelo.calcularProbabilidadeExcedenteBinomialNegativa(media, variancia, estoqueValido);
+    rel.probDesabastecimentoNormal = modelo.calcularProbabilidadeExcedenteNormal(
+        media, std::sqrt(variancia > 0.0 ? variancia : 1.0), estoqueValido);
+    rel.probDesabastecimentoMonteCarlo = (serieDiaria.size() >= 2)
+        ? modelo.simularProbabilidadeDesabastecimentoBootstrap(serieDiaria, estoqueValido, numSimulacoes)
+        : modelo.simularProbabilidadeDesabastecimentoMonteCarlo(media, estoqueValido, numSimulacoes);
+}
+
+namespace {
+void ordenarPorRisco(std::vector<RelatorioDesabastecimento>& relatorios) {
+    // Ordena decrescente pela probabilidade adotada (maior risco primeiro)
+    std::sort(relatorios.begin(), relatorios.end(), [](const RelatorioDesabastecimento& a, const RelatorioDesabastecimento& b) {
+        return a.probDesabastecimento > b.probDesabastecimento;
+    });
+}
 }
 
 std::vector<RelatorioDesabastecimento> CalculadorDesabastecimento::avaliarPorTipoSanguineo() const {
@@ -63,22 +95,15 @@ std::vector<RelatorioDesabastecimento> CalculadorDesabastecimento::avaliarPorTip
             : 0.0;
         rel.deficitPontual = std::max(0L, rel.demandaEsperada - rel.estoqueValido);
 
-        double lambda = static_cast<double>(rel.demandaEsperada);
-        rel.probDesabastecimentoPoisson = modelo.calcularProbabilidadeExcedentePoisson(lambda, static_cast<int>(rel.estoqueValido));
-        rel.probDesabastecimentoNormal = modelo.calcularProbabilidadeExcedenteNormal(lambda, std::sqrt(lambda > 0 ? lambda : 1.0), static_cast<int>(rel.estoqueValido));
-        rel.probDesabastecimentoMonteCarlo = modelo.simularProbabilidadeDesabastecimentoMonteCarlo(lambda, static_cast<int>(rel.estoqueValido));
+        calcularProbabilidades(rel, demanda.getSerieDiaria(tipo), 100000);
 
-        rel.nivelRisco = classificarRisco(rel.probDesabastecimentoPoisson, rel.coberturaPontualPct);
-        rel.recomendacaoAcao = gerarRecomendacao(rel.chave, rel.probDesabastecimentoPoisson, rel.coberturaPontualPct, rel.taxaDescartePct);
+        rel.nivelRisco = classificarRisco(rel.probDesabastecimento, rel.coberturaPontualPct);
+        rel.recomendacaoAcao = gerarRecomendacao(rel.probDesabastecimento, rel.coberturaPontualPct, rel.taxaDescartePct);
 
         relatorios.push_back(rel);
     }
 
-    // Ordena decrescente por probabilidade de desabastecimento (maior risco primeiro)
-    std::sort(relatorios.begin(), relatorios.end(), [](const RelatorioDesabastecimento& a, const RelatorioDesabastecimento& b) {
-        return a.probDesabastecimentoPoisson > b.probDesabastecimentoPoisson;
-    });
-
+    ordenarPorRisco(relatorios);
     return relatorios;
 }
 
@@ -106,21 +131,15 @@ std::vector<RelatorioDesabastecimento> CalculadorDesabastecimento::avaliarPorHem
             : 0.0;
         rel.deficitPontual = std::max(0L, rel.demandaEsperada - rel.estoqueValido);
 
-        double lambda = static_cast<double>(rel.demandaEsperada);
-        rel.probDesabastecimentoPoisson = modelo.calcularProbabilidadeExcedentePoisson(lambda, static_cast<int>(rel.estoqueValido));
-        rel.probDesabastecimentoNormal = modelo.calcularProbabilidadeExcedenteNormal(lambda, std::sqrt(lambda > 0 ? lambda : 1.0), static_cast<int>(rel.estoqueValido));
-        rel.probDesabastecimentoMonteCarlo = modelo.simularProbabilidadeDesabastecimentoMonteCarlo(lambda, static_cast<int>(rel.estoqueValido));
+        calcularProbabilidades(rel, demanda.getSerieDiaria(comp), 100000);
 
-        rel.nivelRisco = classificarRisco(rel.probDesabastecimentoPoisson, rel.coberturaPontualPct);
-        rel.recomendacaoAcao = gerarRecomendacao(rel.chave, rel.probDesabastecimentoPoisson, rel.coberturaPontualPct, rel.taxaDescartePct);
+        rel.nivelRisco = classificarRisco(rel.probDesabastecimento, rel.coberturaPontualPct);
+        rel.recomendacaoAcao = gerarRecomendacao(rel.probDesabastecimento, rel.coberturaPontualPct, rel.taxaDescartePct);
 
         relatorios.push_back(rel);
     }
 
-    std::sort(relatorios.begin(), relatorios.end(), [](const RelatorioDesabastecimento& a, const RelatorioDesabastecimento& b) {
-        return a.probDesabastecimentoPoisson > b.probDesabastecimentoPoisson;
-    });
-
+    ordenarPorRisco(relatorios);
     return relatorios;
 }
 
@@ -153,21 +172,15 @@ std::vector<RelatorioDesabastecimento> CalculadorDesabastecimento::avaliarMatriz
                 : 100.0;
             rel.deficitPontual = std::max(0L, rel.demandaEsperada - rel.estoqueValido);
 
-            double lambda = static_cast<double>(rel.demandaEsperada);
-            rel.probDesabastecimentoPoisson = modelo.calcularProbabilidadeExcedentePoisson(lambda, static_cast<int>(rel.estoqueValido));
-            rel.probDesabastecimentoNormal = modelo.calcularProbabilidadeExcedenteNormal(lambda, std::sqrt(lambda > 0 ? lambda : 1.0), static_cast<int>(rel.estoqueValido));
-            rel.probDesabastecimentoMonteCarlo = modelo.simularProbabilidadeDesabastecimentoMonteCarlo(lambda, static_cast<int>(rel.estoqueValido), 20000);
+            calcularProbabilidades(rel, demanda.getSerieDiaria(comp, tipo), 20000);
 
-            rel.nivelRisco = classificarRisco(rel.probDesabastecimentoPoisson, rel.coberturaPontualPct);
-            rel.recomendacaoAcao = gerarRecomendacao(rel.chave, rel.probDesabastecimentoPoisson, rel.coberturaPontualPct, 0.0);
+            rel.nivelRisco = classificarRisco(rel.probDesabastecimento, rel.coberturaPontualPct);
+            rel.recomendacaoAcao = gerarRecomendacao(rel.probDesabastecimento, rel.coberturaPontualPct, 0.0);
 
             relatorios.push_back(rel);
         }
     }
 
-    std::sort(relatorios.begin(), relatorios.end(), [](const RelatorioDesabastecimento& a, const RelatorioDesabastecimento& b) {
-        return a.probDesabastecimentoPoisson > b.probDesabastecimentoPoisson;
-    });
-
+    ordenarPorRisco(relatorios);
     return relatorios;
 }

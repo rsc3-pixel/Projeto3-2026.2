@@ -1,6 +1,8 @@
-# Módulo C++: Modelagem Estocástica de Demanda e Desabastecimento (PI3-32)
+# Módulo C++: Modelagem Estocástica de Demanda e Desabastecimento (PI3-102)
 
-Este módulo implementa na **linguagem C++ (padrão C++20)** a modelagem estocástica da demanda hospitalar por hemocomponentes e o cálculo probabilístico de desabastecimento (*stockout risk*) para o projeto **Rota Vital**.
+Este módulo implementa na **linguagem C++ (padrão C++20)** a modelagem estocástica da demanda hospitalar por hemocomponentes e o cálculo probabilístico de desabastecimento (*stockout risk*) para o projeto **Rota Vital** (ticket **PI3-102**). O resultado alimenta o painel consolidado **PI3-32**.
+
+A demanda é modelada pela **Binomial Negativa**, porque nos dados a variância da demanda diária é 2 a 4 vezes a média; a Poisson é calculada como referência e um Monte Carlo por bootstrap valida o resultado.
 
 ---
 
@@ -27,9 +29,9 @@ cpp/
 │   ├── Dominio.hpp                   # Enums TipoSanguineo, TipoHemocomponente, structs Bolsa, Requisicao
 │   ├── AcumuladorEstoque.hpp         # POO: Acumulador de bolsas de sangue (válidas, vencidas)
 │   ├── AcumuladorDemanda.hpp         # POO: Acumulador de requisições hospitalares (Analogia da Loja)
-│   ├── ModeloDemanda.hpp             # Variável aleatória: Poisson, Normal (TCL), Monte Carlo
+│   ├── ModeloDemanda.hpp             # Variável aleatória: Binomial Negativa, Poisson, Normal (TCL), bootstrap
 │   ├── CalculadorDesabastecimento.hpp# Comparação demanda vs estoque válido e probabilidades
-│   ├── PainelConsolidado.hpp         # AED: Saídas no terminal e exportação JSON (PI3-32)
+│   ├── PainelConsolidado.hpp         # AED: Saídas no terminal e exportação JSON (painel PI3-32)
 │   ├── LeitorDadosSinteticos.hpp     # AED: Entrada de dados (JSON ou gerador nativo estocástico)
 │   └── nlohmann/json.hpp             # Biblioteca padrão para serialização JSON
 ├── src/
@@ -70,7 +72,7 @@ build.bat
 # Compilar aplicacao principal:
 g++ -std=c++20 -O3 -I include src/*.cpp -o bin/rota_vital_modelagem.exe
 
-# Executar aplicacao:
+# Executar aplicacao (le ../dados/dados_sinteticos.json e grava ../dados/painel_consolidado_pi3_32.json):
 bin/rota_vital_modelagem.exe
 
 # Compilar e executar testes unitarios:

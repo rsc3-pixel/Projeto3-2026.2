@@ -29,3 +29,6 @@ desktop.ini
 # Python
 __pycache__/
 *.py[cod]
+
+# Binarios do modulo C++ (gerados por build.bat, compile.ps1 ou make)
+cpp/bin/

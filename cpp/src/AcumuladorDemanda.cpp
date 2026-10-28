@@ -1,5 +1,24 @@
 #include "AcumuladorDemanda.hpp"
+#include <chrono>
 #include <cmath>
+
+namespace {
+// Converte "AAAA-MM-DD" em dia ordinal (dias desde 1970-01-01); -1 se invalida.
+long diaOrdinal(const std::string& data) {
+    if (data.size() < 10) return -1;
+    try {
+        std::chrono::year_month_day ymd{
+            std::chrono::year{std::stoi(data.substr(0, 4))},
+            std::chrono::month{static_cast<unsigned>(std::stoi(data.substr(5, 2)))},
+            std::chrono::day{static_cast<unsigned>(std::stoi(data.substr(8, 2)))}
+        };
+        if (!ymd.ok()) return -1;
+        return std::chrono::sys_days{ymd}.time_since_epoch().count();
+    } catch (const std::exception&) {
+        return -1;
+    }
+}
+}
 
 AcumuladorDemanda::AcumuladorDemanda() {
     reiniciar();
@@ -13,6 +32,7 @@ void AcumuladorDemanda::reiniciar() {
     demandaCruzada.clear();
     requisicoesPorPrioridade.clear();
     volumesPorRequisicao.clear();
+    demandaDiaria.clear();
 
     std::vector<TipoSanguineo> tipos = {
         TipoSanguineo::O_POS, TipoSanguineo::A_POS, TipoSanguineo::B_POS, TipoSanguineo::O_NEG,
@@ -51,12 +71,44 @@ void AcumuladorDemanda::acumularRequisicao(const Requisicao& req) {
     totalRequisicoes++;
     requisicoesPorPrioridade[req.prioridade]++;
 
+    long dia = diaOrdinal(req.data);
     int somaReq = 0;
     for (const auto& item : req.itens) {
         acumularItem(item);
         somaReq += item.quantidade;
+        if (dia >= 0) {
+            demandaDiaria[dia][{item.componente, item.tipoSanguineo}] += item.quantidade;
+        }
     }
     volumesPorRequisicao.push_back(somaReq);
+}
+
+template <typename Filtro>
+std::vector<long> AcumuladorDemanda::montarSerieDiaria(Filtro filtro) const {
+    if (demandaDiaria.empty()) return {};
+    long primeiro = demandaDiaria.begin()->first;
+    long ultimo = demandaDiaria.rbegin()->first;
+    std::vector<long> serie(static_cast<size_t>(ultimo - primeiro + 1), 0);
+    for (const auto& [dia, porChave] : demandaDiaria) {
+        for (const auto& [chave, qtd] : porChave) {
+            if (filtro(chave.first, chave.second)) {
+                serie[static_cast<size_t>(dia - primeiro)] += qtd;
+            }
+        }
+    }
+    return serie;
+}
+
+std::vector<long> AcumuladorDemanda::getSerieDiaria(TipoSanguineo tipo) const {
+    return montarSerieDiaria([tipo](TipoHemocomponente, TipoSanguineo t) { return t == tipo; });
+}
+
+std::vector<long> AcumuladorDemanda::getSerieDiaria(TipoHemocomponente comp) const {
+    return montarSerieDiaria([comp](TipoHemocomponente c, TipoSanguineo) { return c == comp; });
+}
+
+std::vector<long> AcumuladorDemanda::getSerieDiaria(TipoHemocomponente comp, TipoSanguineo tipo) const {
+    return montarSerieDiaria([comp, tipo](TipoHemocomponente c, TipoSanguineo t) { return c == comp && t == tipo; });
 }
 
 AcumuladorDemanda& AcumuladorDemanda::operator+=(const ItemRequisicao& item) {

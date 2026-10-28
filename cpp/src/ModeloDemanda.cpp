@@ -5,17 +5,17 @@
 #include <iomanip>
 
 ModeloDemanda::ModeloDemanda() {
-    nomeDistribuicao = "DISTRIBUICAO_DE_POISSON (com extensao Normal via TCL e validacao por Monte Carlo)";
-    justificativaModelo = 
-        "A demanda hospitalar por hemocomponentes constitui um processo estocastico pontual de contagem. "
-        "Como as requisicoes dos leitos cirurgicos e de urgencia ocorrem de forma assincrona e independente "
-        "ao longo do horizonte operacional, o numero de pedidos e de bolsas demandadas e tradicionalmente e "
-        "teoricamente modelado como um Processo de Poisson. Pelo Teorema do Desmembramento de Poisson "
-        "(Poisson Thinning), a demanda segmentada por tipo sanguineo ou por componente preserva essa distribuicao, "
-        "com parametro lambda_i correspondente a demanda esperada no periodo. Para subtipos de alto volume "
-        "(lambda > 30, como O+ e A+), o Teorema Central do Limite (TCL) assegura a convergencia assintotica "
-        "para a Distribuicao Normal N(lambda, lambda). O calculo e complementado por simulacoes estocasticas de "
-        "Monte Carlo com 100.000 iteracoes e semente reproduzivel, garantindo conformidade com a Fase 4 do CRISP-DM.";
+    nomeDistribuicao = "BINOMIAL_NEGATIVA (Poisson como referencia, Normal via TCL e validacao por Monte Carlo bootstrap)";
+    justificativaModelo =
+        "A demanda hospitalar e uma contagem discreta e nao negativa de bolsas. As requisicoes chegam de forma "
+        "independente, o que sugere Poisson para o numero de pedidos; mas cada item de pedido traz de 1 a 4 bolsas, "
+        "e a soma resultante (Poisson composta) tem variancia maior que a media. Nos dados sinteticos a variancia "
+        "da demanda diaria fica entre 2 e 4 vezes a media em todos os tipos sanguineos, e a Poisson, que impoe "
+        "variancia igual a media, subestimaria o risco justamente nos tipos com estoque proximo da demanda. "
+        "Por isso a distribuicao escolhida e a Binomial Negativa, parametrizada pela media e pela variancia "
+        "observadas na serie diaria; ela se reduz a Poisson quando nao ha sobredispersao. A Normal (TCL) usa a "
+        "mesma variancia real, e o Monte Carlo reamostra os dias observados (bootstrap, 100.000 iteracoes, "
+        "semente 2026) sem supor distribuicao alguma, servindo de validacao independente.";
 }
 
 void ModeloDemanda::calibrarComDadosAcumulados(
@@ -151,6 +151,74 @@ double ModeloDemanda::simularProbabilidadeDesabastecimentoMonteCarlo(
     long contagemDesabastecimento = 0;
     for (int i = 0; i < numSimulacoes; ++i) {
         int demandaSimulada = dist(rng);
+        if (demandaSimulada > estoqueDisponivel) {
+            contagemDesabastecimento++;
+        }
+    }
+
+    return static_cast<double>(contagemDesabastecimento) / static_cast<double>(numSimulacoes);
+}
+
+double ModeloDemanda::binomialNegativaCDF(double media, double variancia, int k) {
+    if (k < 0) return 0.0;
+    if (media <= 0.0) return 1.0;
+    if (variancia <= media) return poissonCDF(media, k);
+
+    // Parametrizacao por media e variancia: r = mu^2 / (sigma^2 - mu), p = r / (r + mu).
+    // Cada termo e calculado em espaco logaritmico para evitar underflow em medias altas.
+    double r = (media * media) / (variancia - media);
+    double p = r / (r + media);
+    double logP = std::log(p);
+    double log1mP = std::log1p(-p);
+    double lgammaR = std::lgamma(r);
+
+    double cdf = 0.0;
+    for (int i = 0; i <= k; ++i) {
+        double logPmf = std::lgamma(i + r) - lgammaR - std::lgamma(i + 1.0) + r * logP + i * log1mP;
+        cdf += std::exp(logPmf);
+    }
+    return (cdf > 1.0) ? 1.0 : cdf;
+}
+
+double ModeloDemanda::calcularProbabilidadeExcedenteBinomialNegativa(
+    double media, double variancia, int estoqueDisponivel
+) const {
+    if (estoqueDisponivel < 0) return 1.0;
+    double excedente = 1.0 - binomialNegativaCDF(media, variancia, estoqueDisponivel);
+    if (excedente < 0.0) excedente = 0.0;
+    if (excedente > 1.0) excedente = 1.0;
+    return excedente;
+}
+
+double ModeloDemanda::varianciaDoHorizonte(const std::vector<long>& serieDiaria) {
+    size_t n = serieDiaria.size();
+    if (n < 2) return -1.0;
+    double soma = 0.0;
+    for (long v : serieDiaria) soma += static_cast<double>(v);
+    double mediaDia = soma / static_cast<double>(n);
+    double somaQuadrados = 0.0;
+    for (long v : serieDiaria) {
+        double diff = static_cast<double>(v) - mediaDia;
+        somaQuadrados += diff * diff;
+    }
+    double varianciaDia = somaQuadrados / static_cast<double>(n - 1);
+    return static_cast<double>(n) * varianciaDia;
+}
+
+double ModeloDemanda::simularProbabilidadeDesabastecimentoBootstrap(
+    const std::vector<long>& serieDiaria, int estoqueDisponivel, int numSimulacoes, unsigned int semente
+) const {
+    if (serieDiaria.empty()) return (estoqueDisponivel < 0) ? 1.0 : 0.0;
+
+    std::mt19937_64 rng(semente);
+    std::uniform_int_distribution<size_t> sorteioDia(0, serieDiaria.size() - 1);
+
+    long contagemDesabastecimento = 0;
+    for (int i = 0; i < numSimulacoes; ++i) {
+        long demandaSimulada = 0;
+        for (size_t d = 0; d < serieDiaria.size(); ++d) {
+            demandaSimulada += serieDiaria[sorteioDia(rng)];
+        }
         if (demandaSimulada > estoqueDisponivel) {
             contagemDesabastecimento++;
         }

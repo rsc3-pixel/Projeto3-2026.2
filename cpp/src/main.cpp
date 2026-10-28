@@ -11,7 +11,7 @@
 
 namespace fs = std::filesystem;
 
-int main(int argc, char* argv[]) {
+int main() {
     std::cout << "==============================================================================\n";
     std::cout << " INICIANDO SISTEMA ROTA VITAL: MODELAGEM ESTOCASTICA & DESABASTECIMENTO C++\n";
     std::cout << "==============================================================================\n";
@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
     }
 
     // 3. MODELAGEM ESTATÍSTICA: VARIÁVEL ALEATÓRIA E CALIBRAÇÃO DO MODELO
-    std::cout << "[ESTATISTICA] Calibrando modelo de demanda Poisson / TCL com dados acumulados...\n";
+    std::cout << "[ESTATISTICA] Calibrando modelo de demanda (Binomial Negativa, Poisson e TCL) com dados acumulados...\n";
     ModeloDemanda modeloDemanda;
     modeloDemanda.calibrarComDadosAcumulados(
         acumuladorDemanda.getDemandaPorTipo(),
@@ -83,26 +83,21 @@ int main(int argc, char* argv[]) {
     // 5.1. Saída Visual no Terminal (Console Output)
     painel.exibirRelatorioTerminal();
 
-    // 5.2. Saída Estruturada em JSON para o Painel Consolidado (PI3-32)
-    std::string arquivoSaida = "dados/painel_consolidado_pi3_32.json";
-    if (!fs::exists("dados")) {
-        arquivoSaida = "painel_consolidado_pi3_32.json";
-    }
+    // 5.2. Saída Estruturada em JSON para o Painel Consolidado (PI3-32).
+    // Grava ao lado do arquivo de entrada, para que rodar a partir da raiz ou de cpp/ dê o mesmo resultado.
+    fs::path arquivoSaida = carregou
+        ? fs::path(caminhoEncontrado).parent_path() / "painel_consolidado_pi3_32.json"
+        : fs::path("painel_consolidado_pi3_32.json");
 
-    std::cout << "[AED - SAIDA] Exportando arquivo consolidado para PI3-32 em: " << arquivoSaida << " ...\n";
-    if (painel.exportarJsonPainel(arquivoSaida)) {
-        std::cout << "[AED - SAIDA] Exportacao concluida com sucesso! Arquivo pronto para consumo da API/Frontend.\n";
-    } else {
+    std::cout << "[AED - SAIDA] Exportando resultado para o painel PI3-32 em: " << arquivoSaida.string() << " ...\n";
+    if (!painel.exportarJsonPainel(arquivoSaida.string())) {
         std::cerr << "[AED - SAIDA] Falha na geracao do arquivo JSON.\n";
+        return 1;
     }
-
-    // Exporta também uma cópia na raiz para fácil inspeção
-    if (arquivoSaida != "painel_consolidado_pi3_32.json") {
-        painel.exportarJsonPainel("painel_consolidado_pi3_32.json");
-    }
+    std::cout << "[AED - SAIDA] Exportacao concluida com sucesso! Arquivo pronto para consumo pelo painel.\n";
 
     std::cout << "\n==============================================================================\n";
-    std::cout << " EXECUCAO CONCLUIDA COM SUCESSO - CRITERIOS PI3-32 ATENDIDOS\n";
+    std::cout << " EXECUCAO CONCLUIDA COM SUCESSO (PI3-102)\n";
     std::cout << "==============================================================================\n";
     return 0;
 }
