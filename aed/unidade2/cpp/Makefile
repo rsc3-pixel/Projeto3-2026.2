@@ -1,10 +1,11 @@
 # Rota Vital - AED Unidade 2
-# Compilacao da fila FEFO por insercao ordenada em C++.
+# Compilacao da fila FEFO por insercao ordenada (W10) e da roteirizacao
+# por vizinho mais proximo (W12), em C++.
 
 CXX      = g++
 CXXFLAGS = -Wall -Wextra -std=c++17
 ALVO     = rota_vital_u2
-OBJETOS  = main.o fila_fefo.o
+OBJETOS  = main.o fila_fefo.o grafo.o dijkstra.o vizinho_mais_proximo.o
 
 # Alvo padrao: e o primeiro do arquivo, entao "make" sozinho gera o executavel.
 all: $(ALVO)
@@ -19,8 +20,11 @@ $(ALVO): $(OBJETOS)
 # Dependencias de cabecalho: sem estas linhas, alterar um .hpp nao
 # recompilaria os .cpp que o incluem, e o executavel ficaria com codigo
 # desatualizado.
-main.o:      main.cpp fila_fefo.hpp dominio.hpp
-fila_fefo.o: fila_fefo.cpp fila_fefo.hpp dominio.hpp
+main.o:                  main.cpp fila_fefo.hpp dominio.hpp grafo.hpp dijkstra.hpp vizinho_mais_proximo.hpp
+fila_fefo.o:             fila_fefo.cpp fila_fefo.hpp dominio.hpp
+grafo.o:                 grafo.cpp grafo.hpp dominio.hpp
+dijkstra.o:              dijkstra.cpp dijkstra.hpp grafo.hpp dominio.hpp
+vizinho_mais_proximo.o:  vizinho_mais_proximo.cpp vizinho_mais_proximo.hpp dijkstra.hpp grafo.hpp dominio.hpp
 
 # Remove os objetos e o executavel, deixando so os fontes.
 clean:
