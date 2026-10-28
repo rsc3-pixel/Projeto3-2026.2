@@ -69,7 +69,7 @@ void etapa(const std::string& titulo) {
  * calculo geografico nao faz parte desta entrega: o que se quer demonstrar e
  * a estrutura e o roteiro.
  *
- * Para que a desatualizacao nao passe em silencio, a etapa 11 compara a malha
+ * Para que a desatualizacao nao passe em silencio, a etapa 10 compara a malha
  * construida aqui com os valores de referencia registrados em
  * docs/premissas-malha-rede.md e imprime CONFERE ou DIVERGE em cada linha.
  *
@@ -333,7 +333,7 @@ int main() {
               << "\n  custo do roteiro parcial: " << std::fixed << std::setprecision(1)
               << comIsolado.custoTotalMinutos << " min\n";
 
-    etapa("11. Conferencia com docs/premissas-malha-rede.md");
+    etapa("10. Conferencia com docs/premissas-malha-rede.md");
     /*
      * Os pesos da tabela acima sao uma fotografia do que o Java calcula. Se
      * alguem mudar uma premissa no Java e esquecer de regerar a tabela, esta
@@ -404,7 +404,7 @@ int main() {
               + std::to_string(divergencias) + " ponto(s)")
               << '\n';
 
-    etapa("12. Liberacao da memoria do grafo");
+    etapa("11. Liberacao da memoria do grafo");
     /*
      * DIFERENCA PARA A VERSAO EM JAVA: la nao ha nada a fazer, o coletor de
      * lixo recolhe os mapas. Aqui o destrutor do Grafo percorre as duas
