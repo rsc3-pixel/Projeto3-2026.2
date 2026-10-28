@@ -9,13 +9,18 @@ import java.util.List;
  * Resultado de uma leitura de temperatura, ja avaliada contra a faixa de cada
  * componente embarcado.
  *
- * @param alertas componentes cuja faixa foi violada; lista vazia significa
- *                leitura dentro da faixa de todos
+ * @param latitude  posicao do veiculo na leitura (GPS simulado); nula se o
+ *                  sensor nao informou
+ * @param longitude idem
+ * @param alertas   componentes cuja faixa foi violada; lista vazia significa
+ *                  leitura dentro da faixa de todos
  */
 public record LeituraTemperaturaResponse(
         String id,
         String rotaId,
         double temperaturaCelsius,
+        Double latitude,
+        Double longitude,
         LocalDateTime dataHora,
         boolean dentroDaFaixa,
         List<AlertaCadeiaFria> alertas) {

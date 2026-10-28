@@ -1,0 +1,55 @@
+# Simulador de telemetria do Rota Vital como servico da VM (OPCIONAL).
+#
+# Hoje o simulador roda no GitHub Actions (.github/workflows/telemetria-simulada.yml).
+# Este arquivo existe para quem tiver acesso a VM e quiser hospeda-lo la, no
+# ar 24 h. A telemetria continua SIMULADA.
+#
+# INSTALACAO (na VM, uma vez):
+#
+#   sudo useradd --system --no-create-home --shell /usr/sbin/nologin rotavital-sensor
+#   sudo mkdir -p /opt/rota-vital-sensor
+#   sudo cp telemetria/simulador.py /opt/rota-vital-sensor/
+#   sudo cp telemetria/rota-vital-sensor.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now rota-vital-sensor
+#   sudo journalctl -u rota-vital-sensor -f       # acompanhar
+#
+# Desative o workflow do Actions ao ligar este servico: dois simuladores
+# dobrariam os veiculos.
+#
+# PARA DESFAZER:
+#   sudo systemctl disable --now rota-vital-sensor
+#   sudo rm /etc/systemd/system/rota-vital-sensor.service
+#   sudo rm -rf /opt/rota-vital-sensor && sudo userdel rotavital-sensor
+
+[Unit]
+Description=Rota Vital - simulador de telemetria (SIMULADA) - PI3-112
+# So faz sentido com a API no ar, mas nao depende dela para subir: o
+# simulador ja espera e tenta de novo quando a API esta reiniciando.
+After=network-online.target rota-vital.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rotavital-sensor
+# Envia pelo dominio publico, nao por 127.0.0.1:8081: assim a leitura passa
+# pelo Nginx e pelo TLS, o mesmo caminho de um sensor externo.
+ExecStart=/usr/bin/python3 /opt/rota-vital-sensor/simulador.py --base-url https://rsc3-rotavital.duckdns.org
+Restart=always
+RestartSec=30
+
+# A VM e compartilhada (Flux + Rota Vital). Estes tetos garantem que o
+# simulador nunca dispute recursos com as aplicacoes de verdade: o processo
+# usa ~15 MB e quase nenhuma CPU.
+MemoryMax=64M
+CPUQuota=10%
+Nice=10
+
+# Mesmo endurecimento do servico da API.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -159,7 +159,7 @@
 | GET | `/api/v1/rotas/{id}/bolsas` | path: `id` | — | `List<BolsaResumo>` | 200, 404 |
 | POST | `/api/v1/rotas/{id}/bolsas` | path: `id` | `{ "bolsaId": "..." }` | `BolsaResumo` | 201, 400, 404, 409 |
 | DELETE | `/api/v1/rotas/{id}/bolsas/{bolsaId}` | path: `id`, `bolsaId` | — | — | 204, 404, 409 |
-| POST | `/api/v1/rotas/{id}/temperaturas` | path: `id` | `{ "temperaturaCelsius": 4.0 }` | `LeituraTemperatura` | 201, 400, 404, 409 |
+| POST | `/api/v1/rotas/{id}/temperaturas` | path: `id` | `{ "temperaturaCelsius": 4.0, "latitude"?: -8.05, "longitude"?: -34.90 }` | `LeituraTemperatura` | 201, 400, 404, 409 |
 | GET | `/api/v1/rotas/{id}/temperaturas` | path: `id` | — | `List<LeituraTemperatura>` | 200, 404 |
 
 ### 2.6 Indicadores — `/api/v1/indicadores`
@@ -376,7 +376,13 @@ A compatibilidade implementada é didática e não substitui protocolo clínico.
 ### 3.4 `POST /api/v1/rotas/{id}/temperaturas` — sensor reporta leitura da remessa
 
 **A telemetria é simulada nesta fase do projeto.** O endpoint recebe o que um
-sensor reportaria; não há integração com hardware.
+sensor reportaria; não há integração com hardware. Quem envia as leituras hoje
+é o simulador da PI3-112 (`telemetria/simulador.py`, ver
+[`telemetria-simulada.md`](telemetria-simulada.md)).
+
+`latitude` e `longitude` são **opcionais** (GPS simulado, PI3-112). Quando
+enviadas, vão as duas. Leituras só com temperatura continuam válidas, como
+antes da PI3-112.
 
 **Request**
 
@@ -385,7 +391,9 @@ POST /api/v1/rotas/5a6b7c8d-9e0f-1a2b-3c4d-5e6f7a8b9c0d/temperaturas HTTP/1.1
 Content-Type: application/json
 
 {
-  "temperaturaCelsius": 5.0
+  "temperaturaCelsius": 5.0,
+  "latitude": -8.061230,
+  "longitude": -34.893410
 }
 ```
 
@@ -396,6 +404,8 @@ Content-Type: application/json
   "id": "e1f2a3b4-c5d6-7890-1234-56789abcdef0",
   "rotaId": "5a6b7c8d-9e0f-1a2b-3c4d-5e6f7a8b9c0d",
   "temperaturaCelsius": 5.0,
+  "latitude": -8.06123,
+  "longitude": -34.89341,
   "dataHora": "2026-10-14T16:42:11",
   "dentroDaFaixa": false,
   "alertas": [
@@ -431,6 +441,7 @@ Os limites são inclusivos: 1,0 °C e 6,0 °C são aceitos para hemácias.
 | Código | Quando |
 |---|---|
 | `400` | temperatura fora do intervalo plausível para um sensor (−80 a 60 °C), o que indica defeito do equipamento e não excursão |
+| `400` | só uma das coordenadas enviada, ou latitude fora de −90 a 90 / longitude fora de −180 a 180 |
 | `404` | rota inexistente |
 | `409` | rota não está `EM_TRANSITO` |
 
