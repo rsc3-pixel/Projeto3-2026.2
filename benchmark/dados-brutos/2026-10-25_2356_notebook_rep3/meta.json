@@ -1,0 +1,29 @@
+{
+  "historia": "PI3-31",
+  "origem": "notebook",
+  "repeticao": 3,
+  "inicio_utc": "2026-10-25T23:56:34+00:00",
+  "inicio_local": "2026-10-25T20:56:34-03:00",
+  "base_url": "https://rsc3-rotavital.duckdns.org",
+  "canario_url": "https://rsc3-flux.duckdns.org/",
+  "host": "rsc3-rotavital.duckdns.org",
+  "porta_sonda": 443,
+  "parametros": {
+    "taxa1_rps": 5.0,
+    "taxa2_rps": 10.0,
+    "aquecimento_s": 120,
+    "etapa_s": 300,
+    "repouso_s": 60,
+    "sonda_repouso_s": 60,
+    "telemetria": false
+  },
+  "ferramentas": {
+    "k6": "k6.exe v2.2.0 (commit/00a9a1b7f5, go1.26.5, windows/amd64)",
+    "python": "3.12.10",
+    "so": "Windows-11-10.0.26200-SP0"
+  },
+  "observacao": "Dados sinteticos. Telemetria de temperatura simulada.",
+  "fim_utc": "2026-10-26T00:10:36+00:00",
+  "k6_codigo_saida": 0,
+  "abortada_por_threshold": false
+}
