@@ -115,4 +115,36 @@ class PerfilProducaoTest {
             }
         }
     }
+
+    /**
+     * O timeout do proxy precisa caber o tempo de subida da aplicacao.
+     *
+     * <p>A JVM leva de 21 a 23 segundos para subir na VM, medido em outubro de
+     * 2026. Com o timeout em 30s a margem sumia sob carga, e o Nginx devolvia
+     * 504 antes de a aplicacao responder (issue #58). Nao era a aplicacao
+     * falhando, era o proxy cortando.
+     *
+     * <p>Este teste trava a regressao: baixar o valor de novo quebra aqui, e
+     * nao em producao numa segunda-feira.
+     */
+    @Test
+    @DisplayName("O timeout do proxy comporta o tempo de subida da aplicacao")
+    void timeoutDoProxyComportaOColdStart() throws java.io.IOException {
+        String proxy = java.nio.file.Files.readString(
+                java.nio.file.Path.of("infra/nginx-rota-vital.conf"));
+
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("proxy_read_timeout\\s+(\\d+)s")
+                .matcher(proxy);
+
+        assertThat(m.find())
+                .as("o proxy precisa declarar proxy_read_timeout")
+                .isTrue();
+
+        int segundos = Integer.parseInt(m.group(1));
+        assertThat(segundos)
+                .as("a JVM leva ate 23s para subir; abaixo de 60s a margem some "
+                        + "quando a VM esta sob carga e o Nginx devolve 504")
+                .isGreaterThanOrEqualTo(60);
+    }
 }
