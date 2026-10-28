@@ -21,6 +21,11 @@ import java.util.Objects;
  * levar hemacias e plaquetas juntas, e a mesma leitura de 5 graus C esta
  * correta para as hemacias e e excursao para as plaquetas. Por isso o alerta
  * e avaliado por componente embarcado, nao por um valor unico de remessa.</p>
+ *
+ * <p>A posicao (latitude/longitude) e opcional e tambem simulada (PI3-112):
+ * o mesmo pacote do sensor reporta onde o veiculo estava no momento da
+ * leitura. Opcional porque um sensor sem GPS continua sendo valido, e as
+ * leituras anteriores a PI3-112 nao tem posicao.</p>
  */
 @Entity
 public class LeituraTemperatura {
@@ -34,6 +39,10 @@ public class LeituraTemperatura {
 
     private double temperaturaCelsius;
 
+    /** Posicao do veiculo na leitura (GPS simulado). Nula quando nao informada. */
+    private Double latitude;
+    private Double longitude;
+
     private LocalDateTime dataHora;
 
     protected LeituraTemperatura() {
@@ -42,15 +51,24 @@ public class LeituraTemperatura {
 
     public LeituraTemperatura(String id, Rota rota, double temperaturaCelsius,
                               LocalDateTime dataHora) {
+        this(id, rota, temperaturaCelsius, null, null, dataHora);
+    }
+
+    public LeituraTemperatura(String id, Rota rota, double temperaturaCelsius,
+                              Double latitude, Double longitude, LocalDateTime dataHora) {
         this.id = id;
         this.rota = rota;
         this.temperaturaCelsius = temperaturaCelsius;
+        this.latitude = latitude;
+        this.longitude = longitude;
         this.dataHora = dataHora;
     }
 
     public String getId()                  { return id; }
     public Rota getRota()                  { return rota; }
     public double getTemperaturaCelsius()  { return temperaturaCelsius; }
+    public Double getLatitude()            { return latitude; }
+    public Double getLongitude()           { return longitude; }
     public LocalDateTime getDataHora()     { return dataHora; }
 
     @Override

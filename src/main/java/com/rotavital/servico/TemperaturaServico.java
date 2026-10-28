@@ -69,7 +69,8 @@ public class TemperaturaServico {
 
         LeituraTemperatura leitura = new LeituraTemperatura(
                 UUID.randomUUID().toString(), rota,
-                dados.temperaturaCelsius(), LocalDateTime.now());
+                dados.temperaturaCelsius(), dados.latitude(), dados.longitude(),
+                LocalDateTime.now());
 
         leituras.save(leitura);
 
@@ -122,6 +123,8 @@ public class TemperaturaServico {
                 leitura.getId(),
                 rota.getId(),
                 temperatura,
+                leitura.getLatitude(),
+                leitura.getLongitude(),
                 leitura.getDataHora(),
                 alertas.isEmpty(),
                 alertas);

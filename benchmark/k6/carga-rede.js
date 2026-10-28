@@ -48,7 +48,8 @@ const S_ETAPA = Number(__ENV.DUR_ETAPA_S || 300);
 const S_REPOUSO = Number(__ENV.DUR_REPOUSO_S || 60);
 const S_TOTAL = S_AQUEC + 2 * S_ETAPA + S_REPOUSO;
 
-// Telemetria simulada: desligada ate o simulador da PI3-112 existir.
+// Telemetria simulada: desligada por padrao. Ligue com TELEMETRIA=1 para medir
+// o endpoint de telemetria sob carga (canal da PI3-112, docs/telemetria-simulada.md).
 const TELEMETRIA = __ENV.TELEMETRIA === '1';
 const TAXA_TELEMETRIA = Number(__ENV.TAXA_TELEMETRIA || 1); // leituras/s
 

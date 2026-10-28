@@ -127,8 +127,14 @@ número: é o sinal de saturação.
 ### Telemetria simulada
 
 O cenário `telemetria` (`TELEMETRIA=1`) envia leituras de temperatura
-**simuladas** para `POST /api/v1/rotas/{id}/temperaturas`. Ele fica
-**desligado** até o simulador da PI3-112 existir; o script já está pronto.
+**simuladas** para `POST /api/v1/rotas/{id}/temperaturas`. Vem desligado
+por padrão. Com o canal de telemetria da PI3-112 no ar
+([telemetria-simulada.md](telemetria-simulada.md)), pode ser ligado para
+medir o endpoint de telemetria sob carga.
+
+O simulador da PI3-112 gera ~0,1 req/s de tráfego de fundo. Para uma rodada
+sem nenhum ruído, desative o workflow "Telemetria simulada" durante a
+medição e registre isso no relatório.
 
 A API só aceita leitura de rota `EM_TRANSITO`, e só bolsa `RESERVADA`
 embarca. Por isso o `setup()` monta, a cada rodada, uma requisição
