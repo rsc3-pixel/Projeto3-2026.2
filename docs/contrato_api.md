@@ -145,6 +145,7 @@
 | DELETE | `/api/v1/requisicoes/{id}/itens/{itemId}` | path: `id`, `itemId` | — | — | 204, 404, 409 |
 | GET | `/api/v1/requisicoes/{id}/itens/{itemId}/alocacoes` | path: `id`, `itemId` | — | `List<AlocacaoDetalhe>` | 200, 404 |
 | POST | `/api/v1/requisicoes/{id}/itens/{itemId}/alocacoes` | path: `id`, `itemId` | `{ "bolsaId": "..." }` | `AlocacaoDetalhe` | 201, 400, 404, 409 |
+| POST | `/api/v1/requisicoes/{id}/itens/{itemId}/alocacoes/automatica` | path: `id`, `itemId` | — | `AlocacaoDetalhe` | 201, 404, 409 |
 | DELETE | `/api/v1/requisicoes/{id}/itens/{itemId}/alocacoes/{alocacaoId}` | path: `id`, `itemId`, `alocacaoId` | — | — | 204, 404, 409 |
 
 ### 2.5 Rotas — `/api/v1/rotas`
@@ -158,6 +159,8 @@
 | GET | `/api/v1/rotas/{id}/bolsas` | path: `id` | — | `List<BolsaResumo>` | 200, 404 |
 | POST | `/api/v1/rotas/{id}/bolsas` | path: `id` | `{ "bolsaId": "..." }` | `BolsaResumo` | 201, 400, 404, 409 |
 | DELETE | `/api/v1/rotas/{id}/bolsas/{bolsaId}` | path: `id`, `bolsaId` | — | — | 204, 404, 409 |
+| POST | `/api/v1/rotas/{id}/temperaturas` | path: `id` | `{ "temperaturaCelsius": 4.0 }` | `LeituraTemperatura` | 201, 400, 404, 409 |
+| GET | `/api/v1/rotas/{id}/temperaturas` | path: `id` | — | `List<LeituraTemperatura>` | 200, 404 |
 
 ### 2.6 Indicadores — `/api/v1/indicadores`
 
@@ -304,5 +307,131 @@ Content-Type: application/json
 
 Efeito colateral que vale documentar para os testes: a bolsa referenciada passa de `status: "DISPONIVEL"` para
 `"ALOCADA"`, e o item de requisição passa a refletir `quantidadeAlocada: 1`, `status: "PARCIALMENTE_ALOCADO"`.
+
+### 3.4 `POST /api/v1/requisicoes/{id}/itens/{itemId}/alocacoes/automatica` — o sistema escolhe a bolsa
+
+Diferente do endpoint acima, aqui o cliente **não informa a bolsa**. O sistema consulta o índice de
+estoque por hash, que resolve em O(1) quais bolsas disponíveis existem de cada grupo compatível,
+filtra pela compatibilidade ABO/Rh da `MatrizCompatibilidade` e escolhe por FEFO a de validade mais
+próxima, com desempate determinístico por código de rastreio.
+
+```http
+POST /api/v1/requisicoes/7f8e9d0c-1b2a-3948-5766-7a8b9c0d1e2f/itens/aa11bb22-cc33-dd44-ee55-ff6677889900/alocacoes/automatica HTTP/1.1
+Host: api.rotavital.local
+```
+
+Sem corpo de requisição.
+
+```http
+HTTP/1.1 201 Created
+Location: /api/v1/requisicoes/7f8e9d0c.../itens/aa11bb22.../alocacoes/dd44ee55-ff66-7788-9900-112233445566
+Content-Type: application/json
+
+{
+  "id": "dd44ee55-ff66-7788-9900-112233445566",
+  "itemRequisicaoId": "aa11bb22-cc33-dd44-ee55-ff6677889900",
+  "bolsaId": "BS-2026-000314",
+  "alocadoEm": "2026-10-19T14:15:47Z"
+}
+```
+
+Quando não há bolsa disponível e compatível, a resposta é `409 Conflict` com a mensagem
+`Sem estoque disponivel para <grupo> <tipo>`, e a requisição permanece aberta para ser atendida
+quando chegar estoque.
+
+As demais regras são as mesmas do endpoint manual: a bolsa escolhida passa a `RESERVADA`, o item
+recalcula `quantidadeAlocada` e a requisição recalcula o seu `status`.
+
+**Compatibilidade ABO/Rh.** A bolsa não precisa ser do mesmo grupo sanguíneo do
+item: precisa ser **compatível**. Um item que pede `A_POS` aceita bolsa `O_NEG`,
+`O_POS`, `A_NEG` ou `A_POS`.
+
+A regra varia por hemocomponente, porque plasma e crioprecipitado carregam
+anticorpos em vez de antígenos e seguem tabela invertida:
+
+| | Doador universal | Receptor universal |
+|---|---|---|
+| Hemácias e plaquetas | `O_NEG` | `AB_POS` |
+| Plasma e crioprecipitado | `AB_POS` | `O_NEG` |
+
+A relação não é simétrica: `O_NEG` doa hemácias para `A_POS`, mas `A_POS` não
+doa para `O_NEG`.
+
+Bolsa incompatível devolve `409`, com a mensagem listando os grupos aceitos:
+
+```json
+{
+  "status": 409,
+  "title": "Operacao nao permitida",
+  "detail": "Grupo sanguineo incompativel: item pede O- e a bolsa e A+. Grupos aceitos para Concentrado de Hemacias: [O-]"
+}
+```
+
+A compatibilidade implementada é didática e não substitui protocolo clínico.
+
+*(Todos os dados dos exemplos acima são sintéticos, para fins didáticos.)*
+
+---
+
+### 3.4 `POST /api/v1/rotas/{id}/temperaturas` — sensor reporta leitura da remessa
+
+**A telemetria é simulada nesta fase do projeto.** O endpoint recebe o que um
+sensor reportaria; não há integração com hardware.
+
+**Request**
+
+```http
+POST /api/v1/rotas/5a6b7c8d-9e0f-1a2b-3c4d-5e6f7a8b9c0d/temperaturas HTTP/1.1
+Content-Type: application/json
+
+{
+  "temperaturaCelsius": 5.0
+}
+```
+
+**Response — `201 Created`**
+
+```json
+{
+  "id": "e1f2a3b4-c5d6-7890-1234-56789abcdef0",
+  "rotaId": "5a6b7c8d-9e0f-1a2b-3c4d-5e6f7a8b9c0d",
+  "temperaturaCelsius": 5.0,
+  "dataHora": "2026-10-14T16:42:11",
+  "dentroDaFaixa": false,
+  "alertas": [
+    {
+      "componente": "CONCENTRADO_PLAQUETAS",
+      "faixaMinima": 20.0,
+      "faixaMaxima": 24.0,
+      "bolsasAfetadas": 2
+    }
+  ]
+}
+```
+
+**A faixa aceitável é a do componente transportado, não um valor único:**
+
+| Componente | Faixa |
+|---|---|
+| Concentrado de hemácias | 1 a 6 °C |
+| Concentrado de plaquetas | 20 a 24 °C |
+| Plasma fresco congelado | −25 a −18 °C |
+| Crioprecipitado | −25 a −18 °C |
+
+Uma remessa pode levar componentes de faixas diferentes no mesmo
+compartimento. O exemplo acima mostra isso: 5 °C está correto para hemácias e
+é excursão para plaquetas, então o alerta sai apenas para as plaquetas. Por
+isso `alertas` é uma lista, e `dentroDaFaixa` só é `true` quando nenhum
+componente foi violado.
+
+Os limites são inclusivos: 1,0 °C e 6,0 °C são aceitos para hemácias.
+
+**Códigos de erro**
+
+| Código | Quando |
+|---|---|
+| `400` | temperatura fora do intervalo plausível para um sensor (−80 a 60 °C), o que indica defeito do equipamento e não excursão |
+| `404` | rota inexistente |
+| `409` | rota não está `EM_TRANSITO` |
 
 *(Todos os dados dos exemplos acima são sintéticos, para fins didáticos.)*

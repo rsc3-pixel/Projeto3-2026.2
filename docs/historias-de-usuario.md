@@ -347,11 +347,105 @@ Quando o sensor registrar 22°C
 Então um alerta de cadeia fria deve ser gerado
 ```
 
+### Cenário 4 — Remessa com componentes de faixas diferentes
+
+```gherkin
+Dado que uma remessa transporta hemácias e plaquetas juntas
+Quando o sensor registrar 5°C
+Então um alerta deve ser gerado para as plaquetas
+E nenhum alerta deve ser gerado para as hemácias
+```
+
 **Critérios de aceite**
 - [ ] A faixa aceita é a do componente transportado, não um valor único
 - [ ] Leitura fora da faixa gera alerta imediato
 - [ ] Histórico de leituras fica registrado por remessa
+- [ ] Remessa com componentes de faixas diferentes avalia cada um
 - [ ] A telemetria é simulada nesta fase do projeto
+
+**Faixas por componente**
+
+| Componente | Faixa aceita |
+|---|---|
+| Hemácias | 1 a 6 °C |
+| Plaquetas | 20 a 24 °C |
+| Plasma | −25 a −18 °C |
+
+> O cenário 4 é o caso que uma implementação apressada erra: a rota já carrega
+> `List<Bolsa>`, e cada bolsa tem seu componente. Uma única faixa por remessa
+> não resolve, porque 5 °C é correto para hemácias e excursão para plaquetas.
+
+---
+
+## HU-08 — Alocar respeitando compatibilidade ABO/Rh
+
+> **Como** técnico do hemocentro
+> **quero** que o sistema só me ofereça bolsas compatíveis com o grupo sanguíneo
+> do paciente
+> **para que** eu não dependa de consultar a tabela de compatibilidade de cabeça
+> a cada atendimento.
+
+**Valor de negócio:** hoje a alocação compara o grupo sanguíneo por igualdade, o
+que recusa doação válida. Um paciente A+ pode receber de O−, A−, O+ e A+, mas o
+sistema só oferece A+. Isso deixa estoque utilizável parado e faz o atendimento
+parecer impossível quando não é.
+
+A compatibilidade também não é simétrica: O− doa para todos, mas só recebe de
+O−. Tratar a relação como igualdade erra nos dois sentidos.
+
+### Cenário 1 — Doador universal é aceito
+
+```gherkin
+Dado que há uma requisição de hemácias para um paciente A+
+E o estoque tem apenas bolsas O− dentro da validade
+Quando eu solicitar a alocação
+Então a bolsa O− deve ser oferecida
+E a alocação deve ser registrada
+```
+
+### Cenário 2 — Bolsa incompatível nunca aparece
+
+```gherkin
+Dado que há uma requisição de hemácias para um paciente O−
+E o estoque tem apenas bolsas A+ dentro da validade
+Quando eu solicitar a alocação
+Então nenhuma bolsa deve ser oferecida
+E a requisição deve ser registrada como não atendida
+```
+
+### Cenário 3 — Compatibilidade antes da validade
+
+```gherkin
+Dado que há uma requisição de hemácias para um paciente B+
+E o estoque tem uma bolsa AB+ que vence amanhã
+E uma bolsa O− que vence em trinta dias
+Quando eu solicitar a alocação
+Então a bolsa O− deve ser oferecida
+E a bolsa AB+ não deve aparecer, por ser incompatível
+```
+
+### Cenário 4 — Entre compatíveis, vale o FEFO
+
+```gherkin
+Dado que há uma requisição de hemácias para um paciente AB+
+E o estoque tem uma bolsa A+ que vence em dez dias
+E uma bolsa B+ que vence em trinta dias
+Quando eu solicitar a alocação
+Então a bolsa A+ deve ser oferecida primeiro
+```
+
+**Critérios de aceite**
+- [ ] Bolsa compatível de grupo diferente é oferecida, não apenas a de grupo
+      idêntico
+- [ ] Bolsa incompatível nunca entra na seleção, mesmo sendo a única disponível
+- [ ] A compatibilidade é aplicada **antes** da ordenação por validade
+- [ ] Entre bolsas compatíveis, a regra FEFO continua valendo
+- [ ] A relação não é tratada como simétrica
+- [ ] A compatibilidade é didática e não substitui protocolo clínico
+
+> O terceiro critério importa pelo mesmo motivo que o filtro de vencidas vem
+> antes da ordenação em `SelecaoFefo`: o FEFO põe no topo quem vence primeiro, e
+> uma bolsa incompatível que vença logo ocuparia o topo de toda seleção.
 
 ---
 
@@ -365,7 +459,8 @@ Então um alerta de cadeia fria deve ser gerado
 | HU-04 | PI3-19, PI3-20 | `GET /api/v1/bolsas?sort=dataValidade,asc` |
 | HU-05 | PI3-13, PI3-17, PI3-19 | `POST /api/v1/rotas` |
 | HU-06 | PI3-20, PI3-32 | `GET /api/v1/indicadores/*` |
-| HU-07 | PI3-16, PI3-30 | telemetria (contrato a definir) |
+| HU-07 | PI3-16, PI3-30, PI3-84 | telemetria (contrato a definir) |
+| HU-08 | PI3-29, PI3-84 | `POST /requisicoes/{id}/itens/{itemId}/alocacoes` |
 
 ---
 

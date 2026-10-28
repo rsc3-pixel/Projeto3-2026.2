@@ -50,10 +50,42 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
+		<!--
+			Thymeleaf: o front-end renderizado pelo servidor (PI3-133). As telas
+			sao HTML montado aqui dentro, a partir dos mesmos servicos que a API
+			REST usa, entao nao existe logica de negocio duplicada entre os dois.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
+		<!--
+			Layout Dialect: permite que as telas herdem um layout comum em vez de
+			repetir cabecalho, rodape e <head> em cada arquivo. O Thymeleaf sozinho
+			so faz inclusao de fragmento, que obrigaria cada tela a remontar a
+			pagina inteira.
+		-->
+		<dependency>
+			<groupId>nz.net.ultraq.thymeleaf</groupId>
+			<artifactId>thymeleaf-layout-dialect</artifactId>
+			<version>3.4.0</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<!--
+			PostgreSQL para o ambiente em container. O H2 continua para
+			desenvolvimento local e para os testes: ele sobe junto com a
+			aplicacao e nao exige nada instalado na maquina. O Postgres entra
+			onde os dados precisam sobreviver ao desligamento, que e o que o
+			H2 em memoria nao faz.
+		-->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>

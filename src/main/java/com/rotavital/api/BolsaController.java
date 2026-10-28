@@ -8,8 +8,10 @@ import com.rotavital.dominio.enums.GrupoSanguineo;
 import com.rotavital.dominio.enums.StatusBolsa;
 import com.rotavital.dominio.enums.TipoHemocomponente;
 import com.rotavital.servico.BolsaServico;
+import com.rotavital.servico.IngestaoConcorrenteServico;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +27,7 @@ import java.net.URI;
 import java.util.List;
 
 /**
- * Endpoints de bolsa, conforme a secao 2.3 do contrato_api.md.
+ * Endpoints de bolsa, conforme a secao 2.3 do docs/contrato_api.md.
  *
  * <p>Nao ha PUT: bolsa nao se edita por inteiro. O que muda ao longo da vida
  * dela e o status, e para isso existe o PATCH.</p>
@@ -37,8 +39,13 @@ public class BolsaController {
 
     private final BolsaServico bolsas;
 
-    public BolsaController(BolsaServico bolsas) {
+    /** Entrada em lote, processada em paralelo (PI3-30). */
+    private final IngestaoConcorrenteServico ingestao;
+
+    public BolsaController(BolsaServico bolsas,
+                           IngestaoConcorrenteServico ingestao) {
         this.bolsas = bolsas;
+        this.ingestao = ingestao;
     }
 
     @GetMapping
@@ -75,5 +82,28 @@ public class BolsaController {
     public ResponseEntity<Void> remover(@PathVariable String id) {
         bolsas.remover(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Cadastra um lote de bolsas de uma vez, processando em paralelo (PI3-30).
+     *
+     * <p>Uma coleta traz dezenas de bolsas, e uma chamada por bolsa desperdica
+     * o tempo de ida e volta ao banco. Cada bolsa entra na propria transacao,
+     * entao uma recusada nao desfaz as outras.
+     *
+     * <p>Devolve 207 quando parte do lote foi recusada: o cliente precisa saber
+     * que nem tudo entrou, e um 200 esconderia isso.
+     */
+    @PostMapping("/lote")
+    public ResponseEntity<IngestaoConcorrenteServico.ResultadoIngestao> ingerirLote(
+            @Valid @RequestBody List<BolsaRequest> lote) {
+
+        IngestaoConcorrenteServico.ResultadoIngestao resultado = ingestao.ingerir(lote);
+
+        HttpStatus status = resultado.recusadas().isEmpty()
+                ? HttpStatus.CREATED
+                : HttpStatus.MULTI_STATUS;
+
+        return ResponseEntity.status(status).body(resultado);
     }
 }

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<!--
+  Pedidos dos hospitais e quanto de cada item ja foi atendido (PI3-140).
+
+  O atendimento parcial e o caso comum, nao a excecao: um pedido de dez bolsas
+  com seis alocadas esta andando, nao travado. A tela mostra os dois numeros
+  para que a diferenca fique visivel.
+-->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}"
+      lang="pt-BR">
+<head>
+    <title>Pedidos</title>
+    <th:block layout:fragment="estilos">
+        <style>
+            .area { padding: 16px 24px; }
+            .pedido {
+                margin-bottom: 14px;
+            }
+            .pedido > header {
+                display: flex;
+                gap: 20px;
+                align-items: baseline;
+                flex-wrap: wrap;
+                padding-bottom: 10px;
+                margin-bottom: 10px;
+                border-bottom: 1px solid var(--grade);
+            }
+            .pedido h3 {
+                font-size: 15px;
+                margin: 0;
+                color: var(--texto);
+            }
+            .quando { color: var(--texto-fraco); font-size: 18px; }
+            .vazio { color: var(--texto-fraco); }
+        </style>
+    </th:block>
+</head>
+<body>
+<div layout:fragment="conteudo">
+    <section class="area">
+        <h2>PEDIDOS DOS HOSPITAIS</h2>
+
+        <div class="painel pedido" th:each="r : ${requisicoes}">
+            <header>
+                <h3 th:text="${r.hospitalId()}">HO01</h3>
+
+                <!-- Prioridade e status em palavra, nao so em cor. -->
+                <span class="etiqueta"
+                      th:classappend="${r.prioridade().name() == 'EMERGENCIA'} ? 'critico'
+                                     : (${r.prioridade().name() == 'URGENTE'} ? 'alerta' : '')"
+                      th:text="${r.prioridade()}">ROTINA</span>
+
+                <span class="etiqueta"
+                      th:classappend="${r.status().name() == 'ATENDIDA'} ? 'ok'
+                                     : (${r.status().name() == 'PENDENTE'} ? 'alerta' : '')"
+                      th:text="${#strings.replace(r.status(), '_', ' ')}">PENDENTE</span>
+
+                <span class="quando"
+                      th:text="'criado ' + ${#temporals.format(r.dataHoraCriacao(), 'dd/MM HH:mm')}">
+                    criado
+                </span>
+            </header>
+
+            <table>
+                <thead>
+                <tr>
+                    <th>componente</th>
+                    <th>tipo</th>
+                    <th>pedido</th>
+                    <th>atendido</th>
+                    <th>falta</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="i : ${r.itens()}"
+                    th:with="falta=${i.quantidadeSolicitada() - i.quantidadeAlocada()}">
+                    <td th:text="${#strings.replace(i.tipoHemocomponente(), '_', ' ')}">HEMACIAS</td>
+                    <td th:text="${i.grupoSanguineo()}">O-</td>
+                    <td th:text="${i.quantidadeSolicitada()}">10</td>
+                    <td th:text="${i.quantidadeAlocada()}">6</td>
+                    <td>
+                        <span th:if="${falta > 0}" class="etiqueta alerta"
+                              th:text="${falta}">4</span>
+                        <span th:if="${falta <= 0}" class="etiqueta ok">completo</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p class="vazio" th:if="${requisicoes.isEmpty()}">
+            nenhum pedido registrado
+        </p>
+    </section>
+</div>
+</body>
+</html>

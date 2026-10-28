@@ -1,0 +1,25 @@
+cenario,item,quantidade,unidade,tarifa_usd,custo_usd,custo_sem_arredondar_usd,fonte
+baixo,VM e2-micro (host integral),730,VM-hora,0.008376428,6.11,6.114792440,https://cloud.google.com/products/compute/pricing/general-purpose?hl=en
+baixo,Disco pd-standard,14600,GiB-hora,0.000054795,0.80,0.800007000,https://cloud.google.com/compute/disks-image-pricing?hl=en
+baixo,IPv4 público em uso,730,IP-hora,0.005,3.65,3.650,https://cloud.google.com/vpc/network-pricing
+baixo,Saída Premium para América do Sul,11,GiB,por faixas,2.09,2.09,https://cloud.google.com/vpc/network-pricing
+moderado,CPU aplicação e banco (e2-custom-2-4096),1460,vCPU-hora,0.02290217,33.44,33.43716820,https://cloud.google.com/products/compute/pricing/general-purpose?hl=en
+moderado,RAM aplicação e banco (e2-custom-2-4096),2920,GiB-hora,0.003069707,8.96,8.963544440,https://cloud.google.com/products/compute/pricing/general-purpose?hl=en
+moderado,Disco pd-balanced,29200,GiB-hora,0.000136986,4.00,3.999991200,https://cloud.google.com/compute/disks-image-pricing?hl=en
+moderado,IPv4 público em uso,730,IP-hora,0.005,3.65,3.650,https://cloud.google.com/vpc/network-pricing
+moderado,Backup: cópias ativas,10950,GiB-hora,0.000027397,0.30,0.299997150,https://cloud.google.com/storage/pricing?hl=en
+moderado,Backup: cópias em soft delete,25550,GiB-hora,0.000027397,0.70,0.699993350,https://cloud.google.com/storage/pricing?hl=en
+moderado,Backup: operações classe A,10,1000 operações,0.005,0.05,0.050,https://cloud.google.com/storage/pricing?hl=en
+moderado,Backup: operações classe B,10,1000 operações,0.0004,0.00,0.0040,https://cloud.google.com/storage/pricing?hl=en
+moderado,Saída Premium para América do Sul,63,GiB,por faixas,11.97,11.97,https://cloud.google.com/vpc/network-pricing
+alto,CPU aplicação (e2-custom-4-8192),2920,vCPU-hora,0.02290217,66.87,66.87433640,https://cloud.google.com/products/compute/pricing/general-purpose?hl=en
+alto,RAM aplicação (e2-custom-4-8192),5840,GiB-hora,0.003069707,17.93,17.927088880,https://cloud.google.com/products/compute/pricing/general-purpose?hl=en
+alto,CPU banco privado (e2-custom-2-4096),1460,vCPU-hora,0.02290217,33.44,33.43716820,https://cloud.google.com/products/compute/pricing/general-purpose?hl=en
+alto,RAM banco privado (e2-custom-2-4096),2920,GiB-hora,0.003069707,8.96,8.963544440,https://cloud.google.com/products/compute/pricing/general-purpose?hl=en
+alto,Disco pd-balanced,116800,GiB-hora,0.000136986,16.00,15.999964800,https://cloud.google.com/compute/disks-image-pricing?hl=en
+alto,IPv4 público em uso,730,IP-hora,0.005,3.65,3.650,https://cloud.google.com/vpc/network-pricing
+alto,Backup: cópias ativas,131400,GiB-hora,0.000027397,3.60,3.599965800,https://cloud.google.com/storage/pricing?hl=en
+alto,Backup: cópias em soft delete,306600,GiB-hora,0.000027397,8.40,8.399920200,https://cloud.google.com/storage/pricing?hl=en
+alto,Backup: operações classe A,10,1000 operações,0.005,0.05,0.050,https://cloud.google.com/storage/pricing?hl=en
+alto,Backup: operações classe B,10,1000 operações,0.0004,0.00,0.0040,https://cloud.google.com/storage/pricing?hl=en
+alto,Saída Premium para América do Sul,396,GiB,por faixas,75.24,75.24,https://cloud.google.com/vpc/network-pricing

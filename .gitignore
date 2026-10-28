@@ -30,5 +30,10 @@ desktop.ini
 __pycache__/
 *.py[cod]
 
+# Front-end
+node_modules/
+frontend/angular/dist/
+frontend/angular/.angular/
+
 # Binarios do modulo C++ (gerados por build.bat, compile.ps1 ou make)
 cpp/bin/

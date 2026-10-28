@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rota Vital — Painel de Indicadores</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:     #c0392b;
+      --red-dk:  #922b21;
+      --bg:      #f5f5f5;
+      --card:    #ffffff;
+      --border:  #e0e0e0;
+      --text:    #212121;
+      --muted:   #757575;
+      --ok:      #27ae60;
+      --warn:    #e67e22;
+      --err:     #c0392b;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--red);
+      color: #fff;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    header svg { flex-shrink: 0; }
+    header h1 { font-size: 1.2rem; font-weight: 600; }
+    header p  { font-size: 0.8rem; opacity: 0.85; }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.25rem 1rem;
+    }
+    .card-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+    }
+    .card-value {
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--red);
+    }
+    .card-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+    }
+
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 1.5rem 0 0.75rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 0.85rem;
+    }
+    th {
+      background: #fafafa;
+      text-align: left;
+      padding: 0.6rem 0.9rem;
+      font-weight: 600;
+      font-size: 0.75rem;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 0.55rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+
+    .badge {
+      display: inline-block;
+      padding: 0.18rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .badge-ok   { background: #d5f5e3; color: #1e8449; }
+    .badge-warn { background: #fef9e7; color: #9a7d0a; }
+    .badge-err  { background: #fadbd8; color: #922b21; }
+
+    .bar-wrap { background: #eee; border-radius: 4px; height: 8px; }
+    .bar-fill  { height: 8px; border-radius: 4px; background: var(--red); transition: width 0.4s; }
+
+    .loading { color: var(--muted); font-size: 0.85rem; padding: 0.5rem 0; }
+    .error   { color: var(--err);   font-size: 0.85rem; padding: 0.5rem 0; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+    footer {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      padding: 1rem 0;
+      margin-top: 2rem;
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--red); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+  </svg>
+  <div>
+    <h1>Rota Vital — Painel de Indicadores</h1>
+    <p>Estoque, validade e cobertura de hemocomponentes em tempo real</p>
+  </div>
+</header>
+
+<main>
+
+  <!-- KPIs resumo -->
+  <div class="grid" id="kpis">
+    <div class="card">
+      <div class="card-title">Total em estoque</div>
+      <div class="card-value" id="kpi-total">—</div>
+      <div class="card-sub">bolsas válidas</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Bolsas críticas (≤ 7 dias)</div>
+      <div class="card-value" id="kpi-criticas" style="color:var(--err)">—</div>
+      <div class="card-sub" id="kpi-criticas-sub">vencimento iminente</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Validade média</div>
+      <div class="card-value" id="kpi-media">—</div>
+      <div class="card-sub">dias restantes (média)</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Mediana de validade</div>
+      <div class="card-value" id="kpi-mediana">—</div>
+      <div class="card-sub">dias (desvio-padrão: <span id="kpi-dp">—</span>)</div>
+    </div>
+  </div>
+
+  <!-- Estoque + cobertura -->
+  <div class="two-col">
+
+    <div>
+      <div class="section-title">Estoque por tipo sanguíneo</div>
+      <table>
+        <thead><tr><th>Tipo</th><th>Bolsas</th><th>%</th><th></th></tr></thead>
+        <tbody id="tab-tipo"><tr><td colspan="4" class="loading">Carregando...</td></tr></tbody>
+      </table>
+    </div>
+
+    <div>
+      <div class="section-title">Cobertura de demanda</div>
+      <table>
+        <thead><tr><th>Tipo</th><th>Estoque</th><th>Demanda</th><th>Cobertura</th></tr></thead>
+        <tbody id="tab-cobertura"><tr><td colspan="4" class="loading">Carregando...</td></tr></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- Por hemocomponente -->
+  <div class="section-title">Estoque por hemocomponente</div>
+  <table>
+    <thead><tr><th>Componente</th><th>Bolsas</th><th>%</th><th></th></tr></thead>
+    <tbody id="tab-componente"><tr><td colspan="4" class="loading">Carregando...</td></tr></tbody>
+  </table>
+
+  <!-- Taxa de descarte -->
+  <div class="section-title">Taxa de descarte por hemocomponente</div>
+  <table>
+    <thead><tr><th>Componente</th><th>Total</th><th>Vencidas</th><th>Taxa</th><th>Status</th></tr></thead>
+    <tbody id="tab-descarte"><tr><td colspan="5" class="loading">Carregando...</td></tr></tbody>
+  </table>
+
+  <!-- Bolsas críticas -->
+  <div class="section-title">Bolsas críticas (vencimento em até 7 dias)</div>
+  <div id="criticas-wrap">
+    <p class="loading">Carregando...</p>
+  </div>
+
+</main>
+
+<footer>
+  Dados carregados de <code>/api/v1/indicadores</code> &nbsp;|&nbsp;
+  <a href="/docs" target="_blank">API Reference</a> &nbsp;|&nbsp;
+  <a href="/swagger-ui.html" target="_blank">Swagger UI</a>
+</footer>
+
+<script>
+  const BASE = '/api/v1/indicadores';
+
+  function fmt(n, dec = 1) {
+    if (n == null) return '—';
+    return Number(n).toLocaleString('pt-BR', { maximumFractionDigits: dec });
+  }
+
+  function badge(pct) {
+    if (pct >= 80) return `<span class="badge badge-ok">${fmt(pct)}%</span>`;
+    if (pct >= 40) return `<span class="badge badge-warn">${fmt(pct)}%</span>`;
+    return `<span class="badge badge-err">${fmt(pct)}%</span>`;
+  }
+
+  function bar(pct) {
+    const w = Math.min(100, Math.max(0, pct));
+    return `<div class="bar-wrap"><div class="bar-fill" style="width:${w}%"></div></div>`;
+  }
+
+  async function fetchJson(path) {
+    const r = await fetch(BASE + path);
+    if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+    return r.json();
+  }
+
+  async function carregarTipo() {
+    const rows = await fetchJson('/estoque-por-tipo');
+    const total = rows.reduce((s, r) => s + (r.quantidade || 0), 0);
+    document.getElementById('kpi-total').textContent = total.toLocaleString('pt-BR');
+    const tb = document.getElementById('tab-tipo');
+    tb.innerHTML = rows.map(r => {
+      const pct = total > 0 ? (r.quantidade / total * 100) : 0;
+      return `<tr>
+        <td><strong>${r.grupoSanguineo ?? r.tipo ?? '—'}</strong></td>
+        <td>${(r.quantidade || 0).toLocaleString('pt-BR')}</td>
+        <td>${fmt(pct)}%</td>
+        <td style="width:80px">${bar(pct)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function carregarComponente() {
+    const rows = await fetchJson('/estoque-por-componente');
+    const total = rows.reduce((s, r) => s + (r.quantidade || 0), 0);
+    const tb = document.getElementById('tab-componente');
+    tb.innerHTML = rows.map(r => {
+      const pct = total > 0 ? (r.quantidade / total * 100) : 0;
+      return `<tr>
+        <td><strong>${r.tipoHemocomponente ?? r.componente ?? '—'}</strong></td>
+        <td>${(r.quantidade || 0).toLocaleString('pt-BR')}</td>
+        <td>${fmt(pct)}%</td>
+        <td style="width:80px">${bar(pct)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function carregarValidade() {
+    const v = await fetchJson('/validade');
+    const g = v.geral ?? v;
+    document.getElementById('kpi-media').textContent   = fmt(g.media ?? g.mediaGeral, 1);
+    document.getElementById('kpi-mediana').textContent = fmt(g.mediana ?? g.medianaGeral, 1);
+    document.getElementById('kpi-dp').textContent      = fmt(g.desvioPadrao ?? g.desvioPadraoGeral, 1) + ' dias';
+  }
+
+  async function carregarDescarte() {
+    const rows = await fetchJson('/descarte');
+    const tb = document.getElementById('tab-descarte');
+    tb.innerHTML = rows.map(r => {
+      const taxa = r.taxaDescarte ?? r.taxa ?? 0;
+      return `<tr>
+        <td><strong>${r.tipoHemocomponente ?? r.componente ?? '—'}</strong></td>
+        <td>${(r.totalBolsas ?? r.total ?? 0).toLocaleString('pt-BR')}</td>
+        <td>${(r.bolsasVencidas ?? r.vencidas ?? 0).toLocaleString('pt-BR')}</td>
+        <td>${fmt(taxa * 100)}%</td>
+        <td>${badge(100 - taxa * 100)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function carregarCobertura() {
+    const rows = await fetchJson('/cobertura');
+    const tb = document.getElementById('tab-cobertura');
+    tb.innerHTML = rows.map(r => {
+      const pct = r.percentualCobertura ?? r.cobertura ?? 0;
+      return `<tr>
+        <td><strong>${r.grupoSanguineo ?? r.tipo ?? '—'}</strong></td>
+        <td>${(r.estoqueValido ?? r.estoque ?? 0).toLocaleString('pt-BR')}</td>
+        <td>${(r.totalSolicitado ?? r.demanda ?? 0).toLocaleString('pt-BR')}</td>
+        <td>${badge(pct)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function carregarCriticas() {
+    const data = await fetchJson('/criticas');
+    const total  = data.totalCriticas ?? data.total ?? 0;
+    const bolsas = data.bolsas ?? [];
+    document.getElementById('kpi-criticas').textContent    = total.toLocaleString('pt-BR');
+    document.getElementById('kpi-criticas-sub').textContent = `de ${(data.totalValidas ?? '—')} bolsas válidas`;
+
+    const wrap = document.getElementById('criticas-wrap');
+    if (total === 0) {
+      wrap.innerHTML = '<p style="color:var(--ok);font-size:0.85rem">Nenhuma bolsa com vencimento crítico.</p>';
+      return;
+    }
+    wrap.innerHTML = `
+      <table>
+        <thead><tr><th>Código</th><th>Tipo</th><th>Componente</th><th>Validade</th><th>Dias</th></tr></thead>
+        <tbody>${bolsas.slice(0, 20).map(b => `<tr>
+          <td><code>${b.codigoRastreio ?? b.codigo ?? '—'}</code></td>
+          <td>${b.grupoSanguineo ?? b.tipo ?? '—'}</td>
+          <td>${b.tipoHemocomponente ?? b.componente ?? '—'}</td>
+          <td>${b.dataValidade ?? '—'}</td>
+          <td><span class="badge badge-err">${b.diasRestantes ?? '—'}</span></td>
+        </tr>`).join('')}
+        ${bolsas.length > 20 ? `<tr><td colspan="5" style="color:var(--muted);font-size:0.8rem">… e mais ${bolsas.length - 20} bolsas</td></tr>` : ''}
+        </tbody>
+      </table>`;
+  }
+
+  function errRow(id, cols, msg) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = `<tr><td colspan="${cols}" class="error">Erro ao carregar: ${msg}</td></tr>`;
+  }
+
+  Promise.all([
+    carregarTipo().catch(e => errRow('tab-tipo', 4, e.message)),
+    carregarComponente().catch(e => errRow('tab-componente', 4, e.message)),
+    carregarValidade().catch(() => {}),
+    carregarDescarte().catch(e => errRow('tab-descarte', 5, e.message)),
+    carregarCobertura().catch(e => errRow('tab-cobertura', 4, e.message)),
+    carregarCriticas().catch(e => {
+      document.getElementById('criticas-wrap').innerHTML =
+        `<p class="error">Erro ao carregar: ${e.message}</p>`;
+    }),
+  ]);
+</script>
+</body>
+</html>

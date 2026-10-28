@@ -5,6 +5,8 @@ import com.rotavital.servico.excecao.RecursoNaoEncontradoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -37,6 +39,25 @@ public class ManipuladorDeErros {
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(
                 HttpStatus.CONFLICT, e.getMessage());
         problema.setTitle("Operacao nao permitida");
+        return problema;
+    }
+
+    /**
+     * Duas operacoes simultaneas mexeram no mesmo registro e a segunda perdeu
+     * (PI3-108).
+     *
+     * <p>Devolve 409 com uma mensagem que diz o que fazer, em vez de vazar
+     * excecao de banco. Quem perdeu nao errou nada: alguem chegou antes, e
+     * repetir a operacao normalmente resolve.
+     */
+    @ExceptionHandler({OptimisticLockingFailureException.class,
+                       DataIntegrityViolationException.class})
+    public ProblemDetail conflitoDeConcorrencia(Exception e) {
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                "Outra operacao alterou estes dados enquanto esta era processada. "
+                        + "Recarregue a tela e tente de novo.");
+        problema.setTitle("Conflito de concorrencia");
         return problema;
     }
 

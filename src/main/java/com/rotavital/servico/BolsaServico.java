@@ -8,8 +8,11 @@ import com.rotavital.dominio.enums.StatusBolsa;
 import com.rotavital.dominio.enums.TipoHemocomponente;
 import com.rotavital.repositorio.AlocacaoRepository;
 import com.rotavital.repositorio.BolsaRepository;
+import com.rotavital.servico.evento.BolsaAlterada;
+import com.rotavital.servico.evento.BolsaRemovida;
 import com.rotavital.servico.excecao.OperacaoInvalidaException;
 import com.rotavital.servico.excecao.RecursoNaoEncontradoException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,13 +44,16 @@ public class BolsaServico {
     private final BolsaRepository bolsas;
     private final AlocacaoRepository alocacoes;
     private final HemocentroServico hemocentroServico;
+    private final ApplicationEventPublisher eventos;
 
     public BolsaServico(BolsaRepository bolsas,
                         AlocacaoRepository alocacoes,
-                        HemocentroServico hemocentroServico) {
+                        HemocentroServico hemocentroServico,
+                        ApplicationEventPublisher eventos) {
         this.bolsas = bolsas;
         this.alocacoes = alocacoes;
         this.hemocentroServico = hemocentroServico;
+        this.eventos = eventos;
     }
 
     @Transactional(readOnly = true)
@@ -97,7 +103,10 @@ public class BolsaServico {
                     + " dias a partir de " + dados.dataColeta());
         }
 
-        return bolsas.save(bolsa);
+        Bolsa salva = bolsas.save(bolsa);
+        // O indice de estoque so e atualizado depois do commit.
+        eventos.publishEvent(new BolsaAlterada(salva));
+        return salva;
     }
 
     @Transactional
@@ -114,7 +123,9 @@ public class BolsaServico {
         }
 
         bolsa.setStatus(novoStatus);
-        return bolsas.save(bolsa);
+        Bolsa salva = bolsas.save(bolsa);
+        eventos.publishEvent(new BolsaAlterada(salva));
+        return salva;
     }
 
     @Transactional
@@ -132,5 +143,6 @@ public class BolsaServico {
                     + bolsa.getStatus());
         }
         bolsas.delete(bolsa);
+        eventos.publishEvent(new BolsaRemovida(bolsa));
     }
 }
