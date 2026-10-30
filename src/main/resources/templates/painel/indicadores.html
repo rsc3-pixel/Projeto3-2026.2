@@ -21,10 +21,15 @@
         <style>
             .grade-painel {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
                 gap: 16px;
                 padding: 16px 24px;
             }
+            /* tabelas de seis colunas nao cabem numa coluna da grade com a fonte arcade */
+            @media (min-width: 900px) {
+                .painel.larga { grid-column: span 2; }
+            }
+            .etiqueta, td.num, th.num { white-space: nowrap; }
             .resumo {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -184,7 +189,7 @@
         </section>
 
         <!-- === risco de desabastecimento: a demanda como variavel aleatoria (PI3-102) === -->
-        <section class="painel">
+        <section class="painel larga">
             <h2>RISCO DE DESABASTECIMENTO</h2>
             <p class="legenda">
                 <b>unidade:</b> % de chance de a demanda superar o estoque valido ·
@@ -241,7 +246,7 @@
         </section>
 
         <!-- === descarte por componente e relacao com a FEFO (PI3-103) === -->
-        <section class="painel">
+        <section class="painel larga">
             <h2>DESCARTE POR COMPONENTE</h2>
             <p class="legenda">
                 <b>unidade:</b> % das bolsas coletadas que venceram sem uso ·
@@ -291,7 +296,8 @@
             <p class="legenda">
                 <b>unidade:</b> bolsas coletadas na semana e % delas vencidas ate
                 <span th:text="${#temporals.format(hoje, 'dd/MM/yyyy')}">hoje</span> ·
-                <b>periodo:</b> semanas ISO (segunda a domingo) pela data de coleta ·
+                <b>periodo:</b> semanas ISO (segunda a domingo) pela data de coleta, as 12 mais recentes
+                (a serie completa esta em /api/v1/indicadores/descarte/por-periodo) ·
                 <b>alerta:</b> descarte >= <span th:text="${limiarDescarte}">50</span>%
             </p>
             <table>
@@ -304,7 +310,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="linha : ${descartePorSemana}"
+                <tr th:each="linha : ${descartePorSemana.size() > 12 ? descartePorSemana.subList(descartePorSemana.size() - 12, descartePorSemana.size()) : descartePorSemana}"
                     th:classappend="${linha.taxaDescarte() >= limiarDescarte} ? 'abaixo' : ''">
                     <td>
                         <span th:text="${linha.periodo()}">2026-W33</span>
