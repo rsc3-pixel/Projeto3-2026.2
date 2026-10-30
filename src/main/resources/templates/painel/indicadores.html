@@ -2,8 +2,14 @@
 <!--
   Painel operacional: o estado do estoque para quem opera o hemocentro.
 
-  As tres metricas do topo respondem as perguntas que essa pessoa faz primeiro:
-  quanto tenho, quanto vence logo, e onde estou descoberto.
+  As quatro metricas do topo respondem as perguntas que essa pessoa faz primeiro:
+  quanto tenho, quanto vence logo, onde estou descoberto e onde e mais provavel faltar.
+
+  Painel consolidado (PI3-32): reune os indicadores da U1 (estoque, cobertura,
+  bolsas criticas) e os da U2 (risco de desabastecimento, descarte por componente
+  e por semana, descarte evitavel pela FEFO, dispersao da validade). Toda secao
+  declara a unidade e o periodo que considera, e todo alerta tem texto e simbolo
+  alem da cor, para continuar legivel em escala de cinza ou leitor de tela.
 -->
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
@@ -38,13 +44,37 @@
             }
             .barra.cheia > span { background: var(--ok); }
             .barra.baixa  > span { background: var(--ambar); }
+
+            /* unidade e periodo de cada secao: sem isso o numero nao se interpreta */
+            .legenda {
+                margin: -4px 0 10px;
+                font-size: 13px;
+                line-height: 1.45;
+                color: var(--texto-fraco);
+            }
+            .legenda b { color: var(--texto); font-weight: normal; }
+
+            /* o simbolo acompanha a cor: alerta continua visivel em escala de cinza */
+            .sinal { display: inline-block; width: 1.1em; }
+            tr.abaixo  td:first-child { border-left: 3px solid var(--critico); padding-left: 6px; }
+            tr.atencao td:first-child { border-left: 3px solid var(--alerta);  padding-left: 6px; }
+
+            .dispersao {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+                gap: 8px;
+                margin-bottom: 12px;
+            }
+            .dispersao .metrica .valor { font-size: 18px; }
+            td.num, th.num { text-align: right; }
+            .periodo-datas { color: var(--texto-fraco); font-size: 12px; }
         </style>
     </th:block>
 </head>
 <body>
 <div layout:fragment="conteudo">
 
-    <!-- === as tres perguntas de quem opera === -->
+    <!-- === as quatro perguntas de quem opera === -->
     <section class="resumo">
         <div class="painel metrica">
             <span class="valor" th:text="${#aggregates.sum(estoque.![quantidade])}">0</span>
@@ -64,6 +94,13 @@
             <span class="valor" th:text="${descobertos}">0</span>
             <span class="rotulo">tipos descobertos</span>
         </div>
+
+        <div class="painel metrica"
+             th:with="emRisco=${desabastecimento.porTipo().?[nivelRisco == 'CRITICO' or nivelRisco == 'ALTO'].size()}"
+             th:classappend="${emRisco > 0} ? 'critico' : ''">
+            <span class="valor" th:text="${emRisco}">0</span>
+            <span class="rotulo" th:text="|tipos com risco de falta >= ${limiarRisco}%|">tipos em risco</span>
+        </div>
     </section>
 
     <div class="grade-painel">
@@ -71,27 +108,31 @@
         <!-- === estoque por tipo sanguineo === -->
         <section class="painel">
             <h2>ESTOQUE POR TIPO</h2>
+            <p class="legenda">
+                <b>unidade:</b> bolsas e % do estoque ·
+                <b>periodo:</b> estoque cadastrado ate <span th:text="${#temporals.format(hoje, 'dd/MM/yyyy')}">hoje</span>
+            </p>
             <table>
                 <thead>
                 <tr>
                     <th>tipo</th>
-                    <th>bolsas</th>
+                    <th class="num">bolsas</th>
                     <th style="width:45%">proporcao</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="linha : ${estoque}">
                     <td th:text="${linha.grupoSanguineo()}">O-</td>
-                    <td th:text="${linha.quantidade()}">0</td>
+                    <td class="num" th:text="${linha.quantidade()}">0</td>
                     <td>
-                        <div class="barra">
+                        <div class="barra" th:title="|${linha.percentual()}% do estoque|">
                             <span th:style="|width: ${linha.percentual()}%|"></span>
                         </div>
                     </td>
                 </tr>
                 <tr th:if="${estoque.isEmpty()}">
                     <td colspan="3" style="color: var(--texto-fraco)">
-                        nenhuma bolsa valida no estoque
+                        nenhuma bolsa no estoque
                     </td>
                 </tr>
                 </tbody>
@@ -101,27 +142,241 @@
         <!-- === cobertura: onde falta sangue === -->
         <section class="painel">
             <h2>COBERTURA DA DEMANDA</h2>
+            <p class="legenda">
+                <b>unidade:</b> bolsas validas hoje ÷ bolsas pedidas ·
+                <b>periodo:</b> todas as requisicoes registradas
+                <th:block th:if="${desabastecimento.diasObservados() > 0}">
+                    (<span th:text="${#temporals.format(desabastecimento.inicioDemanda(), 'dd/MM')}">01/01</span>
+                    a <span th:text="${#temporals.format(desabastecimento.fimDemanda(), 'dd/MM')}">31/01</span>,
+                    <span th:text="${desabastecimento.diasObservados()}">0</span> dias)
+                </th:block>
+                · <b>alerta:</b> deficit maior que zero
+            </p>
             <table>
                 <thead>
                 <tr>
                     <th>tipo</th>
-                    <th>tem</th>
-                    <th>pedido</th>
+                    <th class="num">tem</th>
+                    <th class="num">pedido</th>
                     <th>situacao</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="linha : ${cobertura}">
+                <tr th:each="linha : ${cobertura}"
+                    th:classappend="${linha.deficit() > 0} ? 'abaixo' : ''">
                     <td th:text="${linha.grupoSanguineo()}">A+</td>
-                    <td th:text="${linha.disponivel()}">0</td>
-                    <td th:text="${linha.demandado()}">0</td>
+                    <td class="num" th:text="${linha.disponivel()}">0</td>
+                    <td class="num" th:text="${linha.demandado()}">0</td>
                     <td>
                         <span th:if="${linha.deficit() > 0}"
                               class="etiqueta critico"
-                              th:text="|faltam ${linha.deficit()}|">falta</span>
-                        <span th:unless="${linha.deficit() > 0}"
-                              class="etiqueta ok">coberto</span>
+                              th:title="|cobertura de ${linha.coberturaPercentual()}%: faltam ${linha.deficit()} bolsas|">
+                            <span class="sinal" aria-hidden="true">&#9660;</span>
+                            <span th:text="|faltam ${linha.deficit()}|">falta</span>
+                        </span>
+                        <span th:unless="${linha.deficit() > 0}" class="etiqueta ok" title="estoque cobre o pedido">
+                            <span class="sinal" aria-hidden="true">&#9679;</span> coberto
+                        </span>
                     </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- === risco de desabastecimento: a demanda como variavel aleatoria (PI3-102) === -->
+        <section class="painel">
+            <h2>RISCO DE DESABASTECIMENTO</h2>
+            <p class="legenda">
+                <b>unidade:</b> % de chance de a demanda superar o estoque valido ·
+                <b>periodo:</b> demanda das requisicoes de
+                <th:block th:if="${desabastecimento.diasObservados() > 0}">
+                    <span th:text="${#temporals.format(desabastecimento.inicioDemanda(), 'dd/MM')}">01/01</span>
+                    a <span th:text="${#temporals.format(desabastecimento.fimDemanda(), 'dd/MM')}">31/01</span>
+                    (<span th:text="${desabastecimento.diasObservados()}">0</span> dias)
+                </th:block>
+                <th:block th:unless="${desabastecimento.diasObservados() > 0}">(nenhuma requisicao datada)</th:block>
+                contra o estoque de hoje ·
+                <b>modelo:</b> Binomial Negativa; var/media acima de 1 e sobredispersao, e a Poisson subestimaria o risco ·
+                <b>alerta:</b> risco >= <span th:text="${limiarRisco}">50</span>%
+            </p>
+            <table>
+                <thead>
+                <tr>
+                    <th>tipo</th>
+                    <th class="num">tem</th>
+                    <th class="num">pedido</th>
+                    <th class="num" title="variancia dividida pela media da demanda">var/media</th>
+                    <th class="num" title="probabilidade pela Binomial Negativa (Poisson entre parenteses)">P(falta)</th>
+                    <th>risco</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="linha : ${desabastecimento.porTipo()}"
+                    th:classappend="${linha.nivelRisco() == 'CRITICO' or linha.nivelRisco() == 'ALTO'} ? 'abaixo' : (${linha.nivelRisco() == 'MODERADO'} ? 'atencao' : '')">
+                    <td th:text="${linha.grupoSanguineo()}">A+</td>
+                    <td class="num" th:text="${linha.estoqueValido()}">0</td>
+                    <td class="num" th:text="${linha.demandaEsperada()}">0</td>
+                    <td class="num" th:text="${#numbers.formatDecimal(linha.indiceDispersao(), 1, 2, 'COMMA')}">1,00</td>
+                    <td class="num"
+                        th:title="|Poisson: ${#numbers.formatDecimal(linha.probabilidadePoissonPercentual(), 1, 1, 'COMMA')}%|">
+                        <span th:text="|${#numbers.formatDecimal(linha.probabilidadePercentual(), 1, 1, 'COMMA')}%|">0,0%</span>
+                        <span class="periodo-datas"
+                              th:text="|(${#numbers.formatDecimal(linha.probabilidadePoissonPercentual(), 1, 1, 'COMMA')})|">(0,0)</span>
+                    </td>
+                    <td>
+                        <th:block th:switch="${linha.nivelRisco()}">
+                            <span th:case="'BAIXO'" class="etiqueta ok" title="risco baixo">
+                                <span class="sinal" aria-hidden="true">&#9679;</span> BAIXO</span>
+                            <span th:case="'MODERADO'" class="etiqueta alerta" title="risco moderado">
+                                <span class="sinal" aria-hidden="true">&#9670;</span> MODERADO</span>
+                            <span th:case="'ALTO'" class="etiqueta critico" title="risco alto: acima do limiar">
+                                <span class="sinal" aria-hidden="true">&#9650;</span> ALTO</span>
+                            <span th:case="*" class="etiqueta critico" title="risco critico: acima do limiar">
+                                <span class="sinal" aria-hidden="true">&#9650;</span> CRITICO</span>
+                        </th:block>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- === descarte por componente e relacao com a FEFO (PI3-103) === -->
+        <section class="painel">
+            <h2>DESCARTE POR COMPONENTE</h2>
+            <p class="legenda">
+                <b>unidade:</b> % das bolsas coletadas que venceram sem uso ·
+                <b>periodo:</b> todas as coletas, vencimento conferido em
+                <span th:text="${#temporals.format(hoje, 'dd/MM/yyyy')}">hoje</span> ·
+                <b>evitavel:</b> vencidas que tiveram pedido compativel dentro da validade; sob FEFO teriam saido antes ·
+                <b>alerta:</b> descarte >= <span th:text="${limiarDescarte}">50</span>%
+            </p>
+            <table>
+                <thead>
+                <tr>
+                    <th>componente</th>
+                    <th class="num">coletadas</th>
+                    <th class="num">vencidas</th>
+                    <th class="num">descarte</th>
+                    <th class="num" title="vencidas com pedido compativel dentro da validade">evitavel FEFO</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="linha : ${descarte}"
+                    th:classappend="${linha.taxaDescarte() >= limiarDescarte} ? 'abaixo' : ''">
+                    <td th:text="${linha.tipoHemocomponente().descricao}">Plaquetas</td>
+                    <td class="num" th:text="${linha.total()}">0</td>
+                    <td class="num" th:text="${linha.vencidas()}">0</td>
+                    <td class="num">
+                        <span th:if="${linha.taxaDescarte() >= limiarDescarte}" class="etiqueta critico"
+                              th:title="|descarte de ${linha.taxaDescarte()}%, acima do limiar de ${limiarDescarte}%|">
+                            <span class="sinal" aria-hidden="true">&#9650;</span>
+                            <span th:text="|${#numbers.formatDecimal(linha.taxaDescarte(), 1, 1, 'COMMA')}%|">0%</span>
+                        </span>
+                        <span th:unless="${linha.taxaDescarte() >= limiarDescarte}"
+                              th:text="|${#numbers.formatDecimal(linha.taxaDescarte(), 1, 1, 'COMMA')}%|">0%</span>
+                    </td>
+                    <td class="num">
+                        <span th:text="${linha.descarteEvitavelFefo()}">0</span>
+                        <span class="periodo-datas" th:if="${linha.vencidas() > 0}"
+                              th:text="|(${#numbers.formatDecimal(linha.percentualEvitavelFefo(), 1, 1, 'COMMA')}%)|">(0%)</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- === descarte por semana de coleta (PI3-103) === -->
+        <section class="painel">
+            <h2>DESCARTE POR SEMANA DE COLETA</h2>
+            <p class="legenda">
+                <b>unidade:</b> bolsas coletadas na semana e % delas vencidas ate
+                <span th:text="${#temporals.format(hoje, 'dd/MM/yyyy')}">hoje</span> ·
+                <b>periodo:</b> semanas ISO (segunda a domingo) pela data de coleta ·
+                <b>alerta:</b> descarte >= <span th:text="${limiarDescarte}">50</span>%
+            </p>
+            <table>
+                <thead>
+                <tr>
+                    <th>semana</th>
+                    <th class="num">coletadas</th>
+                    <th class="num">vencidas</th>
+                    <th style="width:40%">descarte</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="linha : ${descartePorSemana}"
+                    th:classappend="${linha.taxaDescarte() >= limiarDescarte} ? 'abaixo' : ''">
+                    <td>
+                        <span th:text="${linha.periodo()}">2026-W33</span>
+                        <span class="periodo-datas"
+                              th:text="|${#temporals.format(linha.inicio(), 'dd/MM')} a ${#temporals.format(linha.fim(), 'dd/MM')}|">01/01 a 07/01</span>
+                    </td>
+                    <td class="num" th:text="${linha.total()}">0</td>
+                    <td class="num" th:text="${linha.vencidas()}">0</td>
+                    <td>
+                        <span th:text="|${#numbers.formatDecimal(linha.taxaDescarte(), 1, 1, 'COMMA')}%|">0%</span>
+                        <span class="sinal" aria-hidden="true"
+                              th:if="${linha.taxaDescarte() >= limiarDescarte}">&#9650;</span>
+                        <div class="barra" th:classappend="${linha.taxaDescarte() < limiarDescarte} ? 'baixa' : ''">
+                            <span th:style="|width: ${linha.taxaDescarte()}%|"></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${descartePorSemana.isEmpty()}">
+                    <td colspan="4" style="color: var(--texto-fraco)">nenhuma bolsa com data de coleta</td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- === validade: media nao basta, a dispersao e que avisa === -->
+        <section class="painel">
+            <h2>VALIDADE DAS BOLSAS</h2>
+            <p class="legenda">
+                <b>unidade:</b> dias ate o vencimento ·
+                <b>periodo:</b> so bolsas validas em
+                <span th:text="${#temporals.format(hoje, 'dd/MM/yyyy')}">hoje</span>
+                (<span th:text="${validade.n()}">0</span> bolsas) ·
+                desvio-padrao amostral; a mediana baixa com media alta indica mistura de validades curtas e longas
+            </p>
+            <div class="dispersao">
+                <div class="metrica">
+                    <span class="valor" th:text="${#numbers.formatDecimal(validade.mediaDias(), 1, 1, 'COMMA')}">0</span>
+                    <span class="rotulo">media</span>
+                </div>
+                <div class="metrica">
+                    <span class="valor" th:text="${#numbers.formatDecimal(validade.medianaDias(), 1, 1, 'COMMA')}">0</span>
+                    <span class="rotulo">mediana</span>
+                </div>
+                <div class="metrica">
+                    <span class="valor" th:text="${#numbers.formatDecimal(validade.desvioPadraoDias(), 1, 1, 'COMMA')}">0</span>
+                    <span class="rotulo">desvio</span>
+                </div>
+                <div class="metrica">
+                    <span class="valor" th:text="|${validade.minimoDias()}-${validade.maximoDias()}|">0-0</span>
+                    <span class="rotulo">min-max</span>
+                </div>
+            </div>
+            <table>
+                <thead>
+                <tr>
+                    <th>componente</th>
+                    <th class="num">n</th>
+                    <th class="num">media</th>
+                    <th class="num">mediana</th>
+                    <th class="num">desvio</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="e : ${validade.porComponente()}">
+                    <td th:text="${e.key.descricao}">Plaquetas</td>
+                    <td class="num" th:text="${e.value.n()}">0</td>
+                    <td class="num" th:text="${#numbers.formatDecimal(e.value.mediaDias(), 1, 1, 'COMMA')}">0</td>
+                    <td class="num" th:text="${#numbers.formatDecimal(e.value.medianaDias(), 1, 1, 'COMMA')}">0</td>
+                    <td class="num" th:text="${#numbers.formatDecimal(e.value.desvioPadraoDias(), 1, 1, 'COMMA')}">0</td>
+                </tr>
+                <tr th:if="${validade.porComponente().isEmpty()}">
+                    <td colspan="5" style="color: var(--texto-fraco)">menos de duas bolsas validas por componente</td>
                 </tr>
                 </tbody>
             </table>
