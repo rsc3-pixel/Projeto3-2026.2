@@ -467,7 +467,7 @@ Material de apoio, não exigido pelas entregas:
 - Painel mostra medidas de dispersão, não só média
 - Cada indicador exibe a unidade e o período considerado
 
-**Implementação:** `IndicadorServico.java` · `IndicadorController.java` · endpoints `GET /api/v1/indicadores/*`
+**Implementação:** `IndicadorServico.java` · `IndicadorController.java` · endpoints `GET /api/v1/indicadores/*` · painel consolidado em `/painel/{id}` (U2: `/desabastecimento`, `/descarte/por-periodo` e o descarte evitável pela FEFO em `/descarte`; fórmulas em [`docs/interpretacao_indicadores.md`](docs/interpretacao_indicadores.md), evidências em [`docs/evidencias-pi3-103.md`](docs/evidencias-pi3-103.md) e [`docs/evidencias-pi3-32.md`](docs/evidencias-pi3-32.md))
 
 ---
 

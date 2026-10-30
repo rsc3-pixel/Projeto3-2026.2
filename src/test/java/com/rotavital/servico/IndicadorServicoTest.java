@@ -2,9 +2,13 @@ package com.rotavital.servico;
 
 import com.rotavital.api.dto.indicadores.BolsaCriticaResponse;
 import com.rotavital.api.dto.indicadores.CoberturaResponse;
+import com.rotavital.api.dto.indicadores.DesabastecimentoResponse;
+import com.rotavital.api.dto.indicadores.DesabastecimentoResponse.DesabastecimentoTipoDto;
 import com.rotavital.api.dto.indicadores.DescarteComponenteResponse;
+import com.rotavital.api.dto.indicadores.DescartePeriodoResponse;
 import com.rotavital.api.dto.indicadores.EstoquePorComponenteResponse;
 import com.rotavital.api.dto.indicadores.EstoquePorTipoResponse;
+import com.rotavital.api.dto.indicadores.PeriodoDescarte;
 import com.rotavital.api.dto.indicadores.ValidadeResponse;
 import com.rotavital.dominio.Bolsa;
 import com.rotavital.dominio.Hemocentro;
@@ -46,6 +50,178 @@ class IndicadorServicoTest {
     private IndicadorServico indicadorServico;
 
     private final LocalDate hoje = LocalDate.of(2026, 9, 17);
+
+    private Hemocentro hemocentro() {
+        return new Hemocentro("hem-1", "Hemocentro 1", "123", null, "11.111.111/0001-11");
+    }
+
+    /** Requisicao de um item, datada (ou sem data, quando {@code data} e nulo). */
+    private Requisicao requisicaoEm(LocalDate data, TipoHemocomponente tipo, GrupoSanguineo receptor, int quantidade) {
+        LocalDateTime criacao = data == null ? null : data.atTime(10, 0);
+        Requisicao r = new Requisicao("REQ-" + data + "-" + tipo + "-" + receptor,
+                new Hospital("hos-1", "Hospital 1", "123", null, "2400001"),
+                PrioridadeRequisicao.ROTINA, criacao, criacao == null ? null : criacao.plusHours(72));
+        r.adicionarItem(new ItemRequisicao(r.getId() + "-I1", tipo, receptor, quantidade));
+        return r;
+    }
+
+    private static DescarteComponenteResponse componente(List<DescarteComponenteResponse> lista, TipoHemocomponente tipo) {
+        return lista.stream().filter(c -> c.tipoHemocomponente() == tipo).findFirst().orElseThrow();
+    }
+
+    @Test
+    @DisplayName("Deve agrupar o descarte por semana ISO e por mes de coleta, em ordem cronologica")
+    void deveCalcularDescartePorPeriodo() {
+        Hemocentro h = hemocentro();
+        // Hemacias valem 42 dias: coletada em 30/07 venceu em 10/09; coletada em 10/08 vale ate 21/09.
+        Bolsa vencida = new Bolsa("B1", TipoHemocomponente.CONCENTRADO_HEMACIAS, GrupoSanguineo.O_POS, 450, LocalDate.of(2026, 7, 30), h);
+        Bolsa valida = new Bolsa("B2", TipoHemocomponente.CONCENTRADO_HEMACIAS, GrupoSanguineo.O_POS, 450, LocalDate.of(2026, 8, 10), h);
+        when(bolsaRepository.findAllComHemocentro()).thenReturn(List.of(valida, vencida));
+        when(requisicaoRepository.findAllComHospitalEItens()).thenReturn(List.of());
+
+        List<DescartePeriodoResponse> semanas = indicadorServico.taxaDescartePorPeriodo(hoje, PeriodoDescarte.SEMANA);
+
+        assertThat(semanas).extracting(DescartePeriodoResponse::periodo).containsExactly("2026-W31", "2026-W33");
+        DescartePeriodoResponse semana31 = semanas.get(0);
+        assertThat(semana31.inicio()).isEqualTo(LocalDate.of(2026, 7, 27)); // segunda-feira
+        assertThat(semana31.fim()).isEqualTo(LocalDate.of(2026, 8, 2));
+        assertThat(semana31.total()).isEqualTo(1);
+        assertThat(semana31.vencidas()).isEqualTo(1);
+        assertThat(semana31.taxaDescarte()).isEqualTo(100.0);
+        assertThat(semanas.get(1).taxaDescarte()).isZero();
+        assertThat(componente(semana31.porComponente(), TipoHemocomponente.CONCENTRADO_HEMACIAS).vencidas()).isEqualTo(1);
+
+        List<DescartePeriodoResponse> meses = indicadorServico.taxaDescartePorPeriodo(hoje, PeriodoDescarte.MES);
+
+        assertThat(meses).extracting(DescartePeriodoResponse::periodo).containsExactly("2026-07", "2026-08");
+        assertThat(meses.get(0).inicio()).isEqualTo(LocalDate.of(2026, 7, 1));
+        assertThat(meses.get(0).fim()).isEqualTo(LocalDate.of(2026, 7, 31));
+        assertThat(meses.get(0).taxaDescarte()).isEqualTo(100.0);
+        assertThat(meses.get(1).taxaDescarte()).isZero();
+    }
+
+    @Test
+    @DisplayName("Descarte evitavel pela FEFO: so a vencida que teve pedido compativel dentro da validade")
+    void deveContarDescarteEvitavelPelaFefo() {
+        Hemocentro h = hemocentro();
+        LocalDate coleta = LocalDate.of(2026, 7, 1); // hemacias vencem em 12/08, plaquetas em 06/07
+        Bolsa oNeg = new Bolsa("B1", TipoHemocomponente.CONCENTRADO_HEMACIAS, GrupoSanguineo.O_NEG, 450, coleta, h);
+        Bolsa bPos = new Bolsa("B2", TipoHemocomponente.CONCENTRADO_HEMACIAS, GrupoSanguineo.B_POS, 450, coleta, h);
+        Bolsa plaquetaCedo = new Bolsa("B3", TipoHemocomponente.CONCENTRADO_PLAQUETAS, GrupoSanguineo.O_NEG, 250, coleta, h);
+        // coletada em 15/07, vence exatamente em 20/07: o pedido desse dia ainda a alcanca
+        Bolsa plaquetaNoLimite = new Bolsa("B4", TipoHemocomponente.CONCENTRADO_PLAQUETAS, GrupoSanguineo.O_NEG, 250, LocalDate.of(2026, 7, 15), h);
+        when(bolsaRepository.findAllComHemocentro()).thenReturn(List.of(oNeg, bPos, plaquetaCedo, plaquetaNoLimite));
+        when(requisicaoRepository.findAllComHospitalEItens()).thenReturn(List.of(
+                requisicaoEm(LocalDate.of(2026, 7, 20), TipoHemocomponente.CONCENTRADO_HEMACIAS, GrupoSanguineo.A_POS, 2),
+                requisicaoEm(LocalDate.of(2026, 7, 20), TipoHemocomponente.CONCENTRADO_PLAQUETAS, GrupoSanguineo.A_POS, 1)));
+
+        List<DescarteComponenteResponse> resultado = indicadorServico.taxaDescartePorComponente(hoje);
+
+        // O- doa para A+ e estava na validade: evitavel. B+ nao doa para A+: a perda nao e da alocacao.
+        DescarteComponenteResponse hemacias = componente(resultado, TipoHemocomponente.CONCENTRADO_HEMACIAS);
+        assertThat(hemacias.vencidas()).isEqualTo(2);
+        assertThat(hemacias.descarteEvitavelFefo()).isEqualTo(1);
+        assertThat(hemacias.percentualEvitavelFefo()).isEqualTo(50.0);
+
+        // A primeira plaqueta ja tinha vencido quando o pedido chegou; a segunda vencia no proprio dia.
+        DescarteComponenteResponse plaquetas = componente(resultado, TipoHemocomponente.CONCENTRADO_PLAQUETAS);
+        assertThat(plaquetas.vencidas()).isEqualTo(2);
+        assertThat(plaquetas.descarteEvitavelFefo()).isEqualTo(1);
+        assertThat(plaquetas.percentualEvitavelFefo()).isEqualTo(50.0);
+
+        DescarteComponenteResponse plasma = componente(resultado, TipoHemocomponente.PLASMA_FRESCO_CONGELADO);
+        assertThat(plasma.vencidas()).isZero();
+        assertThat(plasma.percentualEvitavelFefo()).isZero();
+    }
+
+    @Test
+    @DisplayName("Probabilidade de desabastecimento mede a variancia na serie diaria e supera a Poisson com sobredispersao")
+    void deveCalcularProbabilidadeDesabastecimentoComSerieDiaria() {
+        Hemocentro h = hemocentro();
+        List<Bolsa> estoque = new ArrayList<>();
+        for (int i = 0; i < 12; i++) {
+            estoque.add(new Bolsa("B" + i, TipoHemocomponente.CONCENTRADO_HEMACIAS, GrupoSanguineo.O_NEG, 450, hoje, h));
+        }
+        when(bolsaRepository.findAllComHemocentro()).thenReturn(estoque);
+        // 11 bolsas pedidas em 5 dias, concentradas em picos: a variancia supera a media
+        when(requisicaoRepository.findAllComHospitalEItens()).thenReturn(List.of(
+                requisicaoEm(LocalDate.of(2026, 8, 1), TipoHemocomponente.CONCENTRADO_HEMACIAS, GrupoSanguineo.O_NEG, 4),
+                requisicaoEm(LocalDate.of(2026, 8, 3), TipoHemocomponente.CONCENTRADO_HEMACIAS, GrupoSanguineo.O_NEG, 6),
+                requisicaoEm(LocalDate.of(2026, 8, 5), TipoHemocomponente.CONCENTRADO_HEMACIAS, GrupoSanguineo.O_NEG, 1)));
+
+        DesabastecimentoResponse resultado = indicadorServico.probabilidadeDesabastecimento(hoje);
+
+        assertThat(resultado.dataReferencia()).isEqualTo(hoje);
+        assertThat(resultado.inicioDemanda()).isEqualTo(LocalDate.of(2026, 8, 1));
+        assertThat(resultado.fimDemanda()).isEqualTo(LocalDate.of(2026, 8, 5));
+        assertThat(resultado.diasObservados()).isEqualTo(5);
+        assertThat(resultado.porTipo()).hasSize(8);
+
+        // O- e o unico com demanda, entao e o primeiro da lista (maior risco)
+        DesabastecimentoTipoDto oNeg = resultado.porTipo().get(0);
+        assertThat(oNeg.grupoSanguineo()).isEqualTo(GrupoSanguineo.O_NEG);
+        assertThat(oNeg.estoqueValido()).isEqualTo(12);
+        assertThat(oNeg.demandaEsperada()).isEqualTo(11);
+        // serie {4, 0, 6, 0, 1}: s^2 = 7,2 e N = 5 -> variancia 36; indice 36 / 11
+        assertThat(oNeg.varianciaDemanda()).isEqualTo(36.0);
+        assertThat(oNeg.indiceDispersao()).isEqualTo(3.27);
+        assertThat(oNeg.coberturaPercentual()).isEqualTo(109.1);
+        assertThat(oNeg.deficit()).isZero();
+        // P(BN) = 34,7% contra 31,1% da Poisson, conferido em dados/validar_indicadores_u2.py
+        assertThat(oNeg.probabilidadePercentual()).isEqualTo(34.7);
+        assertThat(oNeg.probabilidadePoissonPercentual()).isEqualTo(31.1);
+        assertThat(oNeg.nivelRisco()).isEqualTo("MODERADO");
+
+        // quem nao teve pedido nao corre risco
+        DesabastecimentoTipoDto semDemanda = resultado.porTipo().get(7);
+        assertThat(semDemanda.demandaEsperada()).isZero();
+        assertThat(semDemanda.coberturaPercentual()).isNull();
+        assertThat(semDemanda.probabilidadePercentual()).isZero();
+        assertThat(semDemanda.nivelRisco()).isEqualTo("BAIXO");
+    }
+
+    @Test
+    @DisplayName("Sem data nas requisicoes nao ha serie diaria: o calculo assume variancia = media (Poisson)")
+    void deveCairNaPoissonSemDatas() {
+        Hemocentro h = hemocentro();
+        when(bolsaRepository.findAllComHemocentro()).thenReturn(List.of(
+                new Bolsa("B1", TipoHemocomponente.CONCENTRADO_HEMACIAS, GrupoSanguineo.AB_NEG, 450, hoje, h),
+                new Bolsa("B2", TipoHemocomponente.CONCENTRADO_HEMACIAS, GrupoSanguineo.AB_NEG, 450, hoje, h)));
+        when(requisicaoRepository.findAllComHospitalEItens()).thenReturn(List.of(
+                requisicaoEm(null, TipoHemocomponente.CONCENTRADO_HEMACIAS, GrupoSanguineo.AB_NEG, 10)));
+
+        DesabastecimentoResponse resultado = indicadorServico.probabilidadeDesabastecimento(hoje);
+
+        assertThat(resultado.diasObservados()).isZero();
+        assertThat(resultado.inicioDemanda()).isNull();
+        DesabastecimentoTipoDto abNeg = resultado.porTipo().get(0);
+        assertThat(abNeg.grupoSanguineo()).isEqualTo(GrupoSanguineo.AB_NEG);
+        assertThat(abNeg.indiceDispersao()).isEqualTo(1.0);
+        assertThat(abNeg.probabilidadePercentual()).isEqualTo(abNeg.probabilidadePoissonPercentual());
+        assertThat(abNeg.deficit()).isEqualTo(8);
+        assertThat(abNeg.nivelRisco()).isEqualTo("CRITICO");
+    }
+
+    @Test
+    @DisplayName("Sem bolsas nem requisicoes, os indicadores da U2 respondem vazios ou sem risco, nunca com erro")
+    void deveResponderSemDadosNaU2() {
+        when(bolsaRepository.findAllComHemocentro()).thenReturn(Collections.emptyList());
+        when(requisicaoRepository.findAllComHospitalEItens()).thenReturn(Collections.emptyList());
+
+        assertThat(indicadorServico.taxaDescartePorPeriodo(hoje, PeriodoDescarte.SEMANA)).isEmpty();
+        assertThat(indicadorServico.taxaDescartePorComponente(hoje))
+                .hasSize(4)
+                .allSatisfy(c -> assertThat(c.descarteEvitavelFefo()).isZero());
+
+        DesabastecimentoResponse resultado = indicadorServico.probabilidadeDesabastecimento(hoje);
+        assertThat(resultado.diasObservados()).isZero();
+        assertThat(resultado.porTipo())
+                .hasSize(8)
+                .allSatisfy(t -> {
+                    assertThat(t.probabilidadePercentual()).isZero();
+                    assertThat(t.nivelRisco()).isEqualTo("BAIXO");
+                });
+    }
 
     @Test
     @DisplayName("Deve calcular estoque por tipo sanguíneo e percentuais corretamente")

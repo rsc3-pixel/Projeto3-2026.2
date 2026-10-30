@@ -63,6 +63,33 @@ Todos os indicadores são computados dinamicamente a partir dos dados persistido
 
 ---
 
+### 2.6. Taxa de Descarte por Período de Coleta e Descarte Evitável pela FEFO (U2, PI3-103)
+
+* **Endpoints:** `GET /api/v1/indicadores/descarte/por-periodo?granularidade=SEMANA|MES` e os campos `descarteEvitavelFefo` e `percentualEvitavelFefo` em `GET /api/v1/indicadores/descarte`
+* **Unidade:** Taxa percentual ($\%$) e bolsas ($un$)
+* **Período:** bolsas agrupadas pela **data de coleta**, em semanas ISO (segunda a domingo, rótulo `2026-W33`) ou meses civis (`2026-08`); o vencimento é conferido na data de referência.
+* **Fórmulas:**
+  $$\text{TaxaDescarte}(p) = \frac{\text{Vencidas}(p)}{\text{Coletadas}(p)} \times 100$$
+  $$\text{Evitável}(comp) = \left|\left\{ b \text{ vencida} : \exists\, i \text{ item},\ \text{tipo}(i) = \text{tipo}(b),\ \text{compatível}(\text{grupo}(b) \to \text{grupo}(i)),\ \text{coleta}(b) \le \text{data}(i) \le \text{validade}(b) \right\}\right|$$
+  $$\text{\%Evitável}(comp) = \frac{\text{Evitável}(comp)}{\text{Vencidas}(comp)} \times 100$$
+  * A compatibilidade é a de `MatrizCompatibilidade` (hemácias e plaquetas pela tabela de hemácias; plasma e crioprecipitado pela tabela invertida do plasma).
+* **Relação com a política FEFO:** a FEFO despacha primeiro a bolsa que vence antes. Se, enquanto a bolsa ainda valia, chegou um pedido do mesmo componente que ela podia atender, a FEFO a teria colocado na frente da fila e ela não teria vencido na prateleira. O descarte **evitável** é, portanto, a parcela da perda atribuível à alocação; o restante é perda **estrutural**: a validade acabou sem que houvesse demanda compatível, o que só se resolve ajustando a coleta ao consumo. O indicador é um limite superior, porque confere a existência de demanda compatível, não a sua suficiência: dois pedidos no mesmo dia podem disputar a mesma bolsa.
+
+### 2.7. Probabilidade de Desabastecimento por Tipo Sanguíneo (U2, PI3-102 e PI3-32)
+
+* **Endpoint:** `GET /api/v1/indicadores/desabastecimento`
+* **Unidade:** Probabilidade percentual ($\%$); variância em $un^2$; índice de dispersão adimensional
+* **Período:** demanda das requisições entre a primeira e a última data registrada ($N$ dias), confrontada com o estoque válido na data de referência.
+* **Fórmulas:** a demanda do tipo $g$ no horizonte é a variável aleatória $D_g$, com média $\mu_g$ igual ao total pedido e variância medida na série diária $d_{g,1}, \dots, d_{g,N}$:
+  $$\mu_g = \sum_{t=1}^{N} d_{g,t}, \qquad \sigma_g^2 = N \cdot s_g^2 = N \cdot \frac{1}{N-1}\sum_{t=1}^{N}\left(d_{g,t} - \bar d_g\right)^2, \qquad \text{ID}_g = \frac{\sigma_g^2}{\mu_g}$$
+  Com $\text{ID}_g > 1$ há sobredispersão e a Poisson (que impõe $\sigma^2 = \mu$) não descreve a demanda. A distribuição adotada é a **Binomial Negativa** parametrizada por média e variância:
+  $$r = \frac{\mu^2}{\sigma^2 - \mu}, \quad p = \frac{r}{r + \mu}, \quad P(D = k) = \frac{\Gamma(k + r)}{\Gamma(r)\, k!}\, p^r (1 - p)^k, \qquad \mathbb{P}(\text{Desabastecimento}_g) = 1 - \sum_{k=0}^{S_g} P(D_g = k)$$
+  onde $S_g$ é o estoque válido. Quando $\sigma^2 \le \mu$ o cálculo cai na Poisson. A Poisson é devolvida ao lado, como referência.
+* **Nível de risco:** CRÍTICO se $P \ge 80\%$ ou cobertura $< 70\%$; ALTO se $P \ge 50\%$ ou cobertura $< 90\%$; MODERADO se $P \ge 20\%$ ou cobertura $< 100\%$; BAIXO nos demais casos.
+* **Implementação:** `ModeloDemanda.java`, porta do módulo C++ do PI3-102 (`cpp/`). As somas são feitas em espaço logarítmico, porque $e^{-\mu}$ é zero em ponto flutuante para demandas na casa das centenas.
+
+---
+
 ## 3. Apresentação e Interpretação dos Resultados
 
 ### 3.1. Distribuição de Estoque e Composição da Rede
@@ -157,6 +184,40 @@ Comparativo entre o estoque válido disponível ($1.345$ bolsas) e a demanda acu
    - O tipo **AB-** possui a menor cobertura percentual (50,0%), reflexo de sua raridade.
    - O tipo **A+** concentra o maior déficit em volume absoluto (**95 bolsas em falta**). Apesar de representar 32,6% das doações, a demanda hospitalar consumiu mais do que o estoque válido acumulado.
 3. **Papel Estratégico do O- (Doador Universal):** O tipo O- apresenta cobertura de **122,7%** (superávit de 22 bolsas). Na prática hemoterápica, esse excedente de O- é o recurso vital que o motor de alocação utilizará para mitigar os déficits dos tipos com cobertura abaixo de 100% (como A-, B- e até tipos positivos em emergências).
+
+---
+
+### 3.6. Descarte por Período de Coleta e Parcela Evitável pela FEFO (U2)
+
+Sobre os dados sintéticos (referência 17/09/2026), a taxa de descarte por semana de coleta cai de **86,2% (semana 29, 13 a 19/07)** para **0,0% (semana 38, 14 a 20/09)**, passando por 72,2%, 76,7%, 43,4%, 21,7%, 22,4%, 17,9%, 19,8% e 10,0%. Por mês: **76,6% em julho, 27,6% em agosto e 12,0% em setembro**. A leitura é a esperada: o descarte se concentra nos lotes antigos, e a curva por período é a estrutura etária do estoque.
+
+| Hemocomponente | Coletadas | Vencidas | Taxa | Evitável pela FEFO | % das vencidas |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Concentrado de Plaquetas | 407 | 367 | 90,2% | 332 | 90,5% |
+| Concentrado de Hemácias | 1.128 | 288 | 25,5% | 288 | 100,0% |
+| Plasma Fresco Congelado | 369 | 0 | 0,0% | 0 | – |
+| Crioprecipitado | 96 | 0 | 0,0% | 0 | – |
+
+1. **Hemácias:** todas as 288 bolsas vencidas tiveram pedido compatível dentro dos 42 dias de validade. A perda é inteiramente atribuível à alocação, e é exatamente o que a FEFO corrige.
+2. **Plaquetas:** 332 das 367 vencidas eram evitáveis; as outras 35 venceram em janelas de 5 dias sem nenhum pedido compatível. Essa fração (9,5%) é a perda estrutural: nenhuma ordem de fila a salva, só a calibração da coleta.
+3. **Plasma e crioprecipitado:** validade de 365 dias; não houve descarte no horizonte.
+
+### 3.7. Probabilidade de Desabastecimento (U2)
+
+| Tipo | Estoque válido | Demanda (61 dias) | Var/média | P(falta) Binomial Negativa | P(falta) Poisson | Risco |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| A+ | 454 | 549 | 2,09 | **99,8%** | 100,0% | CRÍTICO |
+| AB+ | 30 | 44 | 3,93 | **85,2%** | 98,3% | CRÍTICO |
+| AB- | 5 | 10 | 3,49 | **76,2%** | 93,3% | CRÍTICO |
+| B+ | 105 | 118 | 3,31 | **72,7%** | 87,6% | ALTO |
+| A- | 110 | 122 | 3,08 | **71,4%** | 85,1% | ALTO |
+| O+ | 492 | 518 | 3,81 | **71,1%** | 86,9% | ALTO |
+| B- | 30 | 29 | 3,62 | **40,3%** | 37,9% | MODERADO |
+| O- | 119 | 97 | 3,36 | **11,0%** | 1,3% | BAIXO |
+
+Em todos os tipos a variância é 2 a 4 vezes a média, porque cada item de pedido traz de 1 a 4 bolsas. A Poisson exagera a certeza nos tipos em déficit e **subestima o risco nos tipos em superávit**: o O-, doador universal, teria 1,3% de risco pela Poisson e tem 11,0% com a variância real. A cobertura sozinha também engana: o B- cobre 103% da demanda média e ainda assim tem 40% de chance de faltar.
+
+**Validação:** os números acima são os de `dados/validar_indicadores_u2.py` (Python, biblioteca padrão) e são reproduzidos pelo backend no teste `IndicadorServicoDadosSinteticosTest`, que carrega o mesmo dataset em `IndicadorServico` e compara campo a campo; a Binomial Negativa também confere com o módulo C++ do PI3-102 a uma casa decimal. O painel em produção calcula sobre o banco da aplicação (carga de `CargaInicial`, 100 bolsas), por isso exibe valores diferentes dos desta tabela: a regra é a mesma, os dados não.
 
 ---
 
