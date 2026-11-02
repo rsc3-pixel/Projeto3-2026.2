@@ -218,9 +218,9 @@ e estoca ao mesmo tempo. O domínio hoje tem apenas `HEMOCENTRO` (estoca) e
 
 ## Fase 4 — Modelagem
 
-**O que será modelado?**
-
-Esta fase ainda não foi executada. Está prevista para a semana 12 (PI3-32).
+**Status de Execução:** Executada e consolidada em C++ (semana 12 / PI3-32).
+Consulte a documentação completa em [`docs/modelagem_demanda_desabastecimento_cpp.md`](../docs/modelagem_demanda_desabastecimento_cpp.md)
+e o código-fonte em [`cpp/`](../cpp/).
 
 **Por que não é modelagem preditiva**
 
@@ -229,19 +229,13 @@ aprenderia de volta as premissas que nós mesmos declaramos. O resultado teria
 alta acurácia e nenhum valor: estaríamos medindo a capacidade do modelo de
 recuperar a distribuição que escrevemos em `premissas.py`.
 
-**O que faz sentido modelar**
+**O que foi modelado em C++ (Fase 4 - PI3-32)**
 
-Probabilidade e simulação, não predição:
-
-- **Probabilidade de desabastecimento por tipo sanguíneo**, dada a distribuição
-  de demanda observada
-- **Probabilidade de descarte** de uma bolsa em função do componente e dos dias
-  desde a coleta
-- **Efeito das regras de decisão**: comparar descarte e cobertura com e sem
-  FEFO, com e sem compatibilidade ABO/Rh
-
-O objeto de estudo não é um modelo estatístico treinado, são as regras de
-decisão do sistema avaliadas estatisticamente.
+Probabilidade e simulação estocástica:
+- **Distribuição de Poisson $D \sim \text{Poisson}(\lambda)$ com convergência Normal (TCL)** para a demanda por tipo sanguíneo e hemocomponente.
+- **Probabilidade de desabastecimento por tipo sanguíneo e hemocomponente**: $P(\text{Desabastecimento}) = 1 - F_D(S_{\text{válido}})$, confrontando a demanda contra bolsas físicas válidas (excluindo vencidas).
+- **Simulação de Monte Carlo ($100.000$ iterações)** validando os cálculos analíticos de Poisson e Normal.
+- **Exportação para o Painel Consolidado**: arquivo `dados/painel_consolidado_pi3_32.json` integrando os conceitos de **Dados Acumulados (POO)** e **Saídas (AED)**.
 
 ---
 
