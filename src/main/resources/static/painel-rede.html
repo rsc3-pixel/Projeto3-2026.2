@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rota Vital — Painel de Rede</title>
+  <!--
+    Painel de rede (PI3-31). Le rede/resumo-rede.json, gerado por
+    benchmark/analisar_rede.py --publicar. Nao consulta a API: mostra o
+    resultado das rodadas de benchmarking ja coletadas e guardadas no
+    repositorio (benchmark/dados-brutos/).
+  -->
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:     #c0392b;
+      --bg:      #f5f5f5;
+      --card:    #ffffff;
+      --border:  #e0e0e0;
+      --text:    #212121;
+      --muted:   #616161;
+      --head:    #fafafa;
+      --grid:    #ececec;
+      /* Percentis sao magnitude ordenada: uma rampa so, do claro ao escuro */
+      --p50: #86b6ef;
+      --p95: #2a78d6;
+      --p99: #184f95;
+      --ok:   #1e8449; --ok-bg:   #d5f5e3;
+      --warn: #9a7d0a; --warn-bg: #fef9e7;
+      --err:  #922b21; --err-bg:  #fadbd8;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d0d0d; --card: #1a1a19; --border: #333331; --text: #f0efec;
+        --muted: #b5b4ab; --head: #222220; --grid: #2c2c2a;
+        --p50: #6da7ec; --p95: #3987e5; --p99: #1c5cab;
+        --ok: #7fd8a4; --ok-bg: #173d27; --warn: #f2d36b; --warn-bg: #3d3412;
+        --err: #f1a39b; --err-bg: #4a1d19;
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+    }
+    header {
+      background: var(--red); color: #fff; padding: 1rem 1.5rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    header h1 { font-size: 1.2rem; font-weight: 600; }
+    header p  { font-size: 0.8rem; opacity: 0.9; }
+    header a  { color: #fff; margin-left: auto; font-size: 0.8rem; }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+
+    .aviso {
+      background: var(--warn-bg); color: var(--warn); border-radius: 8px;
+      padding: 0.6rem 0.9rem; font-size: 0.82rem; margin-bottom: 1rem;
+    }
+
+    .filtros {
+      display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: end; margin-bottom: 1rem;
+    }
+    .filtros label { font-size: 0.72rem; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.05em; display: grid; gap: 0.25rem; }
+    .filtros select {
+      font: inherit; font-size: 0.85rem; padding: 0.35rem 0.5rem; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--card); color: var(--text);
+    }
+    .filtros .meta { font-size: 0.8rem; color: var(--muted); }
+
+    .grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.75rem; margin-bottom: 1.25rem;
+    }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1rem 1rem 0.85rem;
+    }
+    .card-title {
+      font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.5rem;
+    }
+    .card-value { font-size: 1.7rem; font-weight: 700; line-height: 1; }
+    .card-value small { font-size: 0.8rem; font-weight: 500; color: var(--muted); margin-left: 0.2rem; }
+    .card-sub { font-size: 0.75rem; color: var(--muted); margin-top: 0.35rem; }
+
+    .section-title {
+      font-size: 0.85rem; font-weight: 600; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.06em; margin: 1.5rem 0 0.75rem;
+    }
+    .nota { font-size: 0.78rem; color: var(--muted); margin: -0.4rem 0 0.75rem; }
+
+    .grafico { position: relative; }
+    .legenda { display: flex; gap: 1rem; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.5rem; }
+    .legenda span { display: inline-flex; align-items: center; gap: 0.35rem; }
+    .legenda i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+    svg text { fill: var(--muted); font-size: 11px; }
+    svg .rotulo { fill: var(--text); font-size: 12px; }
+    svg .barra:hover, svg .barra:focus { opacity: 0.8; outline: none; }
+    .tooltip {
+      position: absolute; pointer-events: none; background: var(--card); color: var(--text);
+      border: 1px solid var(--border); border-radius: 6px; padding: 0.4rem 0.6rem;
+      font-size: 0.78rem; box-shadow: 0 2px 8px rgba(0,0,0,0.15); display: none; white-space: nowrap;
+    }
+    .tooltip strong { font-size: 0.9rem; display: block; }
+
+    table {
+      width: 100%; border-collapse: collapse; background: var(--card);
+      border: 1px solid var(--border); border-radius: 8px; overflow: hidden; font-size: 0.83rem;
+    }
+    th {
+      background: var(--head); text-align: left; padding: 0.55rem 0.8rem; font-weight: 600;
+      font-size: 0.72rem; color: var(--muted); border-bottom: 1px solid var(--border);
+    }
+    td { padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+    td.num, th.num { text-align: right; }
+    tr:last-child td { border-bottom: none; }
+    .tabela-rolavel { overflow-x: auto; }
+
+    .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; }
+    .badge-ok   { background: var(--ok-bg);   color: var(--ok); }
+    .badge-warn { background: var(--warn-bg); color: var(--warn); }
+    .badge-err  { background: var(--err-bg);  color: var(--err); }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
+
+    .vazio { padding: 2rem 1rem; text-align: center; color: var(--muted); }
+    footer {
+      text-align: center; font-size: 0.75rem; color: var(--muted); padding: 1rem 0;
+      margin-top: 2rem; border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--red); }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+    <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>
+  </svg>
+  <div>
+    <h1>Rota Vital — Painel de Rede</h1>
+    <p>Benchmarking da aplicação implantada: latência, vazão, perda, jitter e erros</p>
+  </div>
+  <a href="painel.html">Painel de indicadores →</a>
+</header>
+
+<main>
+  <div class="aviso" id="aviso">
+    Projeto acadêmico: dados sintéticos e telemetria de temperatura simulada. Medições feitas numa VM
+    compartilhada de pequeno porte; não representam um ambiente hospitalar real.
+  </div>
+
+  <div id="conteudo"><p class="vazio">Carregando resumo das rodadas...</p></div>
+</main>
+
+<footer>
+  Fonte: <code>rede/resumo-rede.json</code>, gerado por <code>benchmark/analisar_rede.py</code>
+  a partir dos dados brutos em <code>benchmark/dados-brutos/</code> &nbsp;|&nbsp;
+  Método em <code>docs/benchmark-rede.md</code>
+</footer>
+
+<div class="tooltip" id="tooltip" role="status"></div>
+
+<script>
+'use strict';
+
+// ---------------------------------------------------------------------------
+// Utilitarios. Todo texto vindo do JSON entra por textContent, nunca innerHTML.
+// ---------------------------------------------------------------------------
+function el(tag, attrs = {}, ...filhos) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') n.className = v; else n.setAttribute(k, v);
+  }
+  for (const f of filhos) n.append(f instanceof Node ? f : document.createTextNode(f ?? ''));
+  return n;
+}
+function svg(tag, attrs = {}) {
+  const n = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+  return n;
+}
+const fmt = (v, casas = 1) => v == null ? '—'
+  : Number(v).toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
+const get = (o, ...ks) => ks.reduce((a, k) => (a == null ? undefined : a[k]), o);
+
+const NOMES_FASE = { etapa1: 'Etapa 1', etapa2: 'Etapa 2', telemetria: 'Telemetria simulada' };
+
+// Faixas para os selos. Referencias didaticas para uma API web, nao SLA
+// contratado: a interpretacao fica para o relatorio (PI3-113).
+function selo(valor, bom, atencao) {
+  if (valor == null) return el('span', { class: 'badge badge-warn' }, 'sem dado');
+  if (valor <= bom) return el('span', { class: 'badge badge-ok' }, '✓ ok');
+  if (valor <= atencao) return el('span', { class: 'badge badge-warn' }, '! atenção');
+  return el('span', { class: 'badge badge-err' }, '✕ alto');
+}
+
+// ---------------------------------------------------------------------------
+// Estado e renderizacao
+// ---------------------------------------------------------------------------
+let RESUMO = null;
+const estado = { rodada: null, fase: 'etapa2' };
+
+function render() {
+  const raiz = document.getElementById('conteudo');
+  raiz.replaceChildren();
+  const rodadas = RESUMO.rodadas || [];
+  if (rodadas.length === 0) {
+    raiz.append(el('p', { class: 'vazio' }, 'Nenhuma rodada coletada ainda. Rode benchmark/coletar.sh e depois analisar_rede.py --publicar.'));
+    return;
+  }
+  const r = rodadas.find((x) => x.id === estado.rodada) || rodadas[rodadas.length - 1];
+  estado.rodada = r.id;
+  const fases = Object.keys(r.fases);
+  if (!fases.includes(estado.fase)) estado.fase = fases.includes('etapa2') ? 'etapa2' : fases[0];
+  const f = r.fases[estado.fase] || {};
+
+  // --- Filtros: uma linha, acima de tudo -----------------------------------
+  const selRodada = el('select', { id: 'sel-rodada' });
+  rodadas.forEach((x) => {
+    const o = el('option', { value: x.id }, `${x.origem} · rep ${x.repeticao} · ${(x.inicio_local || '').slice(0, 16).replace('T', ' ')}`);
+    if (x.id === r.id) o.selected = true;
+    selRodada.append(o);
+  });
+  selRodada.addEventListener('change', (e) => { estado.rodada = e.target.value; render(); });
+
+  const selFase = el('select', { id: 'sel-fase' });
+  fases.forEach((k) => {
+    const o = el('option', { value: k }, `${NOMES_FASE[k] || k} (${fmt(r.parametros[k === 'etapa1' ? 'taxa1_rps' : 'taxa2_rps'], 0)} req/s alvo)`);
+    if (k === 'telemetria') o.textContent = NOMES_FASE[k];
+    if (k === estado.fase) o.selected = true;
+    selFase.append(o);
+  });
+  selFase.addEventListener('change', (e) => { estado.fase = e.target.value; render(); });
+
+  raiz.append(el('div', { class: 'filtros' },
+    el('label', {}, 'Rodada', selRodada),
+    el('label', {}, 'Fase', selFase),
+    el('span', { class: 'meta' },
+      r.abortada_por_threshold ? '⚠ rodada interrompida pelo limite de proteção da VM' : `${fmt(f.duracao_s, 0)} s medidos`)));
+
+  // --- KPIs ----------------------------------------------------------------
+  const kpi = (titulo, valor, unidade, sub) => el('div', { class: 'card' },
+    el('div', { class: 'card-title' }, titulo),
+    el('div', { class: 'card-value' }, valor, el('small', {}, unidade)),
+    el('div', { class: 'card-sub' }, sub));
+  const sondaCarga = get(r, 'sonda_tcp', 'carga') || {};
+  raiz.append(el('div', { class: 'grid' },
+    kpi('Latência p95', fmt(get(f, 'latencia_ms', 'p95'), 0), 'ms', `p50 ${fmt(get(f, 'latencia_ms', 'p50'), 0)} · p99 ${fmt(get(f, 'latencia_ms', 'p99'), 0)} ms`),
+    kpi('Vazão', fmt(f.vazao_rps, 2), 'req/s', `${fmt(f.vazao_kbps, 1)} KB/s recebidos`),
+    kpi('Perda de rede', fmt(sondaCarga.perda_pct, 2), '%', `aplicação: ${fmt(get(f, 'erros', 'perda_aplicacao_pct'), 2)}% sem resposta`),
+    kpi('Jitter de rede', fmt(sondaCarga.jitter_ms, 1), 'ms', `aplicação (health): ${fmt(get(f, 'health', 'jitter_ms'), 1)} ms`),
+    kpi('Erros 4xx', fmt(get(f, 'erros', '4xx_pct'), 2), '%', `dos quais 409: ${fmt(get(f, 'erros', '409_pct'), 2)}%`),
+    kpi('Erros 5xx', fmt(get(f, 'erros', '5xx_pct'), 2), '%', `${f.requisicoes ?? '—'} requisições na fase`)));
+
+  // --- Grafico: percentis de latencia por endpoint ---------------------------
+  raiz.append(el('div', { class: 'section-title' }, `Latência por endpoint · ${NOMES_FASE[estado.fase] || estado.fase}`));
+  raiz.append(el('p', { class: 'nota' }, 'Percentis, não média: o p99 mostra as pausas de coleta de lixo da JVM e a fila do proxy, que a média esconde.'));
+  const larguraUtil = Math.max(300, raiz.clientWidth - 34); // descontando o padding do card
+  raiz.append(card(graficoPercentis(f.endpoints || {}, larguraUtil)));
+
+  // --- Tabela por endpoint (tambem e a "vista em tabela" do grafico) --------
+  const corpo = el('tbody');
+  for (const [nome, e] of Object.entries(f.endpoints || {})) {
+    const l = e.latencia_ms || {};
+    corpo.append(el('tr', {},
+      el('td', {}, nome),
+      el('td', { class: 'num' }, String(l.n ?? '—')),
+      el('td', { class: 'num' }, fmt(l.p50, 0)), el('td', { class: 'num' }, fmt(l.p90, 0)),
+      el('td', { class: 'num' }, fmt(l.p95, 0)), el('td', { class: 'num' }, fmt(l.p99, 0)),
+      el('td', { class: 'num' }, fmt(l.max, 0)),
+      el('td', { class: 'num' }, fmt(e.erro_4xx_pct, 2)), el('td', { class: 'num' }, fmt(e.erro_5xx_pct, 2)),
+      el('td', { class: 'num' }, fmt(e.falha_transporte_pct, 2))));
+  }
+  raiz.append(el('div', { class: 'tabela-rolavel' }, el('table', {},
+    el('thead', {}, el('tr', {}, ...['Endpoint', 'n', 'p50', 'p90', 'p95', 'p99', 'máx', '4xx %', '5xx %', 'sem resp. %']
+      .map((t, i) => el('th', { class: i ? 'num' : '' }, t)))),
+    corpo)));
+
+  // --- Rede (sonda TCP) e canario ------------------------------------------
+  const linhaSonda = (rotulo, s) => el('tr', {},
+    el('td', {}, rotulo),
+    el('td', { class: 'num' }, fmt(get(s, 'p50'), 1)), el('td', { class: 'num' }, fmt(get(s, 'p95'), 1)),
+    el('td', { class: 'num' }, fmt(get(s, 'jitter_ms'), 2)),
+    el('td', { class: 'num' }, `${fmt(get(s, 'perda_pct'), 2)} (${get(s, 'perdidas') ?? '—'}/${get(s, 'tentativas') ?? '—'})`));
+  const tabSonda = el('table', {},
+    el('thead', {}, el('tr', {}, ...['Momento', 'RTT p50', 'RTT p95', 'Jitter', 'Perda %'].map((t, i) => el('th', { class: i ? 'num' : '' }, t)))),
+    el('tbody', {}, linhaSonda('Repouso (sem carga)', get(r, 'sonda_tcp', 'repouso')), linhaSonda('Durante a carga', sondaCarga)));
+
+  const c = r.canario || {};
+  const base = get(c, 'antes', 'p95');
+  const linhaCanario = (rotulo, s) => el('tr', {},
+    el('td', {}, rotulo),
+    el('td', { class: 'num' }, String(get(s, 'n') ?? '—')),
+    el('td', { class: 'num' }, fmt(get(s, 'p50'), 0)), el('td', { class: 'num' }, fmt(get(s, 'p95'), 0)),
+    el('td', { class: 'num' }, String(get(s, 'falhas') ?? '—')),
+    el('td', {}, base && get(s, 'p95') != null ? selo(get(s, 'p95') / base, 1.5, 2.5) : el('span')));
+  const tabCanario = el('table', {},
+    el('thead', {}, el('tr', {}, ...['Momento', 'n', 'p50 ms', 'p95 ms', 'falhas', 'vs. antes'].map((t, i) => el('th', { class: i && i < 5 ? 'num' : '' }, t)))),
+    el('tbody', {}, linhaCanario('Antes', c.antes), linhaCanario('Durante', c.durante), linhaCanario('Depois', c.depois)));
+
+  raiz.append(el('div', { class: 'two-col' },
+    el('div', {}, el('div', { class: 'section-title' }, 'Rede · sonda TCP na porta 443 (ms)'),
+      el('p', { class: 'nota' }, 'Handshake TCP = 1 ida e volta. Isola a rede do Nginx e da JVM.'), tabSonda),
+    el('div', {}, el('div', { class: 'section-title' }, 'Aplicação vizinha (Flux) · canário'),
+      el('p', { class: 'nota' }, 'Prova de que a medição não prejudica a outra aplicação da VM. Selo: p95 do momento ÷ p95 antes (até 1,5× ok; até 2,5× atenção).'), tabCanario)));
+
+  // --- Reprodutibilidade entre repeticoes ----------------------------------
+  const agregado = RESUMO.agregado_por_origem || {};
+  const corpoAg = el('tbody');
+  const ROTULOS = {
+    latencia_p95_etapa2: 'Latência p95, etapa 2', latencia_p99_etapa2: 'Latência p99, etapa 2',
+    vazao_etapa2: 'Vazão, etapa 2', perda_rede_carga: 'Perda de rede (carga)',
+    jitter_rede_carga: 'Jitter de rede (carga)', jitter_health_etapa2: 'Jitter aplicação, etapa 2',
+    erro_4xx_etapa2: 'Erros 4xx, etapa 2', erro_5xx_etapa2: 'Erros 5xx, etapa 2',
+  };
+  for (const [origem, bloco] of Object.entries(agregado)) {
+    for (const [chave, rot] of Object.entries(ROTULOS)) {
+      const i = get(bloco, 'indicadores', chave);
+      if (!i) continue;
+      corpoAg.append(el('tr', {},
+        el('td', {}, origem), el('td', {}, `${rot} (${i.unidade})`),
+        el('td', { class: 'num' }, String((i.valores || []).length)),
+        el('td', { class: 'num' }, fmt(i.media, 2)), el('td', { class: 'num' }, fmt(i.desvio, 2)),
+        el('td', { class: 'num' }, `${fmt(i.min, 2)} – ${fmt(i.max, 2)}`)));
+    }
+  }
+  raiz.append(el('div', { class: 'section-title' }, 'Reprodutibilidade entre repetições'));
+  raiz.append(el('p', { class: 'nota' }, 'Desvio pequeno entre repetições indica medição estável; desvio grande pede investigar a rodada fora da curva.'));
+  const excluidas = Object.values(agregado).flatMap((b) => b.rodadas_excluidas || []);
+  if (excluidas.length) {
+    raiz.append(el('p', { class: 'nota' },
+      `⚠ Fora da média por terem sido interrompidas pela proteção da VM: ${excluidas.join(', ')}. Continuam disponíveis no seletor de rodada.`));
+  }
+  raiz.append(el('div', { class: 'tabela-rolavel' }, el('table', {},
+    el('thead', {}, el('tr', {}, ...['Origem', 'Indicador', 'reps', 'média', 'desvio', 'mín – máx'].map((t, i) => el('th', { class: i > 1 ? 'num' : '' }, t)))),
+    corpoAg)));
+
+}
+
+function card(conteudo) {
+  return el('div', { class: 'card grafico' }, conteudo);
+}
+
+// Barras horizontais agrupadas: p50, p95, p99 por endpoint, mesma escala.
+function graficoPercentis(endpoints, largura) {
+  const linhas = Object.entries(endpoints).filter(([, e]) => get(e, 'latencia_ms', 'n'));
+  const frag = document.createDocumentFragment();
+  const series = [['p50', 'var(--p50)'], ['p95', 'var(--p95)'], ['p99', 'var(--p99)']];
+  frag.append(el('div', { class: 'legenda' }, ...series.map(([n, cor]) =>
+    el('span', {}, (() => { const i = el('i'); i.style.background = cor; return i; })(), n))));
+  if (!linhas.length) { frag.append(el('p', { class: 'vazio' }, 'Sem amostras nesta fase.')); return frag; }
+
+  // Tela estreita: nome do endpoint acima das barras, em vez de ao lado.
+  const estreito = largura < 640;
+  const margemE = estreito ? 4 : 300, margemD = 44, alturaBarra = 9, gap = 2, topoRotulo = estreito ? 16 : 0;
+  const alturaGrupo = 3 * (alturaBarra + gap) + 18 + topoRotulo;
+  const altura = linhas.length * alturaGrupo + 28;
+  // Escala com passos "redondos" (1, 2 ou 5 × 10^n) para os ticks lerem bem.
+  const bruto = Math.max(...linhas.map(([, e]) => e.latencia_ms.p99 || 0)) || 1;
+  const passoBruto = bruto / 5;
+  const mag = 10 ** Math.floor(Math.log10(passoBruto));
+  const passo = [1, 2, 5, 10].map((m) => m * mag).find((v) => v >= passoBruto);
+  const passos = Math.ceil(bruto / passo);
+  const maximo = passo * passos;
+  const x = (v) => margemE + (v / maximo) * (largura - margemE - margemD);
+
+  const s = svg('svg', { viewBox: `0 0 ${largura} ${altura}`, width: largura, height: altura, role: 'img',
+    'aria-label': 'Percentis de latência por endpoint, em milissegundos' });
+
+  // grade recessiva
+  for (let i = 0; i <= passos; i++) {
+    const v = passo * i, xx = x(v);
+    s.append(svg('line', { x1: xx, x2: xx, y1: 0, y2: altura - 22, stroke: 'var(--grid)', 'stroke-width': 1 }));
+    const t = svg('text', { x: xx, y: altura - 6, 'text-anchor': 'middle' });
+    t.textContent = `${fmt(v, 0)} ms`;
+    s.append(t);
+  }
+
+  const tooltip = document.getElementById('tooltip');
+  linhas.forEach(([nome, e], i) => {
+    const y0 = i * alturaGrupo + 6 + topoRotulo;
+    const rot = estreito
+      ? svg('text', { x: margemE, y: y0 - 5, 'text-anchor': 'start', class: 'rotulo' })
+      : svg('text', { x: margemE - 10, y: y0 + 1.5 * (alturaBarra + gap) + 4, 'text-anchor': 'end', class: 'rotulo' });
+    rot.textContent = nome.length > 42 ? nome.slice(0, 41) + '…' : nome;
+    s.append(rot);
+    series.forEach(([p, cor], j) => {
+      const v = e.latencia_ms[p];
+      const y = y0 + j * (alturaBarra + gap);
+      const w = Math.max(2, x(v) - margemE);
+      // caminho com cantos arredondados so na ponta do dado
+      const r = Math.min(4, w / 2, alturaBarra / 2);
+      const d = `M${margemE},${y} h${w - r} a${r},${r} 0 0 1 ${r},${r} v${alturaBarra - 2 * r} a${r},${r} 0 0 1 -${r},${r} h-${w - r} z`;
+      const barra = svg('path', { d, fill: cor, class: 'barra', tabindex: 0,
+        'aria-label': `${nome}, ${p}: ${fmt(v, 0)} ms` });
+      // alvo de toque maior que a barra
+      const alvo = svg('rect', { x: margemE, y: y - gap / 2, width: largura - margemE - margemD, height: alturaBarra + gap, fill: 'transparent' });
+      const mostrar = (ev) => {
+        tooltip.replaceChildren(el('strong', {}, `${fmt(v, 0)} ms`), document.createTextNode(`${p} · ${nome}`));
+        tooltip.style.display = 'block';
+        const caixa = s.parentElement.getBoundingClientRect();
+        const px = ev.clientX ?? (caixa.left + caixa.width / 2);
+        const py = ev.clientY ?? caixa.top;
+        tooltip.style.left = `${px + window.scrollX + 12}px`;
+        tooltip.style.top = `${py + window.scrollY - 10}px`;
+      };
+      const esconder = () => { tooltip.style.display = 'none'; };
+      for (const n of [barra, alvo]) {
+        n.addEventListener('pointermove', mostrar);
+        n.addEventListener('pointerleave', esconder);
+      }
+      barra.addEventListener('focus', () => {
+        const b = barra.getBoundingClientRect();
+        mostrar({ clientX: b.right, clientY: b.top });
+      });
+      barra.addEventListener('blur', esconder);
+      s.append(alvo, barra);
+      if (p === 'p99') {
+        const t = svg('text', { x: x(v) + 6, y: y + alturaBarra - 1 });
+        t.textContent = `${fmt(v, 0)}`;
+        s.append(t);
+      }
+    });
+  });
+  frag.append(s);
+  return frag;
+}
+
+// Redesenha ao mudar a largura (girar o celular, redimensionar a janela).
+let espera;
+window.addEventListener('resize', () => { clearTimeout(espera); espera = setTimeout(() => RESUMO && render(), 150); });
+
+// tooltip absoluto em relacao a pagina
+document.getElementById('tooltip').style.position = 'absolute';
+
+fetch('rede/resumo-rede.json', { cache: 'no-store' })
+  .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+  .then((dados) => { RESUMO = dados; render(); })
+  .catch(() => {
+    document.getElementById('conteudo').replaceChildren(el('p', { class: 'vazio' },
+      'Resumo ainda não publicado. Rode benchmark/analisar_rede.py --publicar e faça o deploy.'));
+  });
+</script>
+</body>
+</html>

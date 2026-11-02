@@ -1,0 +1,1394 @@
+{
+  "gerado_em": "2026-10-26T00:38:23+00:00",
+  "historia": "PI3-31",
+  "aviso": "Projeto academico. Dados sinteticos; telemetria de temperatura e GPS simulada. Medicoes de uma VM compartilhada de pequeno porte, nao representam ambiente hospitalar real.",
+  "definicoes": {
+    "latencia": "http_req_duration do k6, visto pelo cliente, em ms; percentis por interpolacao linear",
+    "vazao": "requisicoes concluidas / duracao observada da etapa (req/s); bytes recebidos (KB/s)",
+    "perda_rede": "sonda TCP na porta 443: % de handshakes sem resposta em 1 s",
+    "perda_aplicacao": "% de requisicoes sem resposta HTTP (timeout, recusa, reset)",
+    "jitter": "media de |x(i) - x(i-1)| entre amostras consecutivas (RFC 3550), em ms",
+    "erros": "% de respostas 4xx e 5xx sobre o total; 409 contado em 4xx e destacado a parte"
+  },
+  "rodadas": [
+    {
+      "id": "2026-10-25_2329_notebook_rep1",
+      "origem": "notebook",
+      "repeticao": 1,
+      "inicio_local": "2026-10-25T20:29:39-03:00",
+      "inicio_utc": "2026-10-25T23:29:39+00:00",
+      "abortada_por_threshold": true,
+      "parametros": {
+        "taxa1_rps": 5.0,
+        "taxa2_rps": 10.0,
+        "aquecimento_s": 120,
+        "etapa_s": 300,
+        "repouso_s": 60,
+        "sonda_repouso_s": 60,
+        "telemetria": false
+      },
+      "fases": {
+        "etapa1": {
+          "duracao_s": 81.2,
+          "requisicoes": 376,
+          "vazao_rps": 4.63,
+          "vazao_kbps": 33.94,
+          "iteracoes_descartadas": 31,
+          "latencia_ms": {
+            "n": 376,
+            "p50": 207.62,
+            "p90": 422.91,
+            "p95": 6051.8,
+            "p99": 12481.28,
+            "max": 13134.69,
+            "min": 205.05,
+            "media": 886.02
+          },
+          "erros": {
+            "2xx_pct": 100.0,
+            "4xx_pct": 0.0,
+            "409_pct": 0.0,
+            "5xx_pct": 0.0,
+            "perda_aplicacao_pct": 0.0,
+            "contagem": {
+              "2xx": 376,
+              "4xx": 0,
+              "409": 0,
+              "5xx": 0,
+              "transporte": 0
+            }
+          },
+          "health": {
+            "latencia_ms": {
+              "n": 142,
+              "p50": 205.47,
+              "p90": 208.19,
+              "p95": 224.74,
+              "p99": 12008.51,
+              "max": 13055.1,
+              "min": 204.05,
+              "media": 651.1
+            },
+            "jitter_ms": 162.2
+          },
+          "endpoints": {
+            "GET /api/v1/bolsas?status=DISPONIVEL": {
+              "latencia_ms": {
+                "n": 120,
+                "p50": 410.25,
+                "p90": 425.78,
+                "p95": 4294.9,
+                "p99": 9766.12,
+                "max": 12795.44,
+                "min": 407.03,
+                "media": 882.77
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/hemocentros": {
+              "latencia_ms": {
+                "n": 109,
+                "p50": 207.17,
+                "p90": 237.26,
+                "p95": 7190.88,
+                "p99": 11498.65,
+                "max": 12954.77,
+                "min": 205.67,
+                "media": 881.74
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/indicadores/estoque-por-tipo": {
+              "latencia_ms": {
+                "n": 72,
+                "p50": 206.3,
+                "p90": 209.83,
+                "p95": 3951.27,
+                "p99": 11194.27,
+                "max": 13134.69,
+                "min": 205.05,
+                "media": 727.15
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/indicadores/validade": {
+              "latencia_ms": {
+                "n": 75,
+                "p50": 206.61,
+                "p90": 1288.21,
+                "p95": 8510.72,
+                "p99": 12484.87,
+                "max": 12750.52,
+                "min": 205.07,
+                "media": 1049.95
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            }
+          }
+        }
+      },
+      "sonda_tcp": {
+        "repouso": {
+          "n": 273,
+          "p50": 201.63,
+          "p90": 202.06,
+          "p95": 202.27,
+          "p99": 202.55,
+          "max": 208.58,
+          "min": 200.48,
+          "media": 201.65,
+          "tentativas": 278,
+          "perdidas": 5,
+          "perda_pct": 1.799,
+          "motivos_perda": {
+            "timeout": 5
+          },
+          "jitter_ms": 0.51
+        },
+        "carga": {
+          "n": 356,
+          "p50": 201.63,
+          "p90": 202.04,
+          "p95": 202.21,
+          "p99": 206.77,
+          "max": 212.04,
+          "min": 200.22,
+          "media": 201.72,
+          "tentativas": 356,
+          "perdidas": 0,
+          "perda_pct": 0.0,
+          "motivos_perda": {},
+          "jitter_ms": 0.54
+        }
+      },
+      "canario": {
+        "antes": {
+          "n": 13,
+          "p50": 609.63,
+          "p90": 611.11,
+          "p95": 611.38,
+          "p99": 611.63,
+          "max": 611.69,
+          "min": 607.35,
+          "media": 609.58,
+          "falhas": 0
+        },
+        "durante": {
+          "n": 8,
+          "p50": 607.65,
+          "p90": 670.11,
+          "p95": 740.26,
+          "p99": 796.38,
+          "max": 810.41,
+          "min": 606.83,
+          "media": 633.15,
+          "falhas": 0
+        },
+        "depois": {
+          "n": 0,
+          "falhas": 0
+        }
+      }
+    },
+    {
+      "id": "2026-10-25_2336_notebook_rep2",
+      "origem": "notebook",
+      "repeticao": 2,
+      "inicio_local": "2026-10-25T20:36:55-03:00",
+      "inicio_utc": "2026-10-25T23:36:55+00:00",
+      "abortada_por_threshold": false,
+      "parametros": {
+        "taxa1_rps": 5.0,
+        "taxa2_rps": 10.0,
+        "aquecimento_s": 120,
+        "etapa_s": 300,
+        "repouso_s": 60,
+        "sonda_repouso_s": 60,
+        "telemetria": false
+      },
+      "fases": {
+        "etapa1": {
+          "duracao_s": 299.6,
+          "requisicoes": 1501,
+          "vazao_rps": 5.01,
+          "vazao_kbps": 32.44,
+          "iteracoes_descartadas": 0,
+          "latencia_ms": {
+            "n": 1501,
+            "p50": 205.74,
+            "p90": 408.93,
+            "p95": 409.63,
+            "p99": 413.84,
+            "max": 1024.04,
+            "min": 203.42,
+            "media": 265.95
+          },
+          "erros": {
+            "2xx_pct": 100.0,
+            "4xx_pct": 0.0,
+            "409_pct": 0.0,
+            "5xx_pct": 0.0,
+            "perda_aplicacao_pct": 0.0,
+            "contagem": {
+              "2xx": 1501,
+              "4xx": 0,
+              "409": 0,
+              "5xx": 0,
+              "transporte": 0
+            }
+          },
+          "health": {
+            "latencia_ms": {
+              "n": 600,
+              "p50": 204.57,
+              "p90": 205.94,
+              "p95": 206.64,
+              "p99": 216.06,
+              "max": 656.86,
+              "min": 202.74,
+              "media": 206.51
+            },
+            "jitter_ms": 4.58
+          },
+          "endpoints": {
+            "GET /api/v1/bolsas?status=DISPONIVEL": {
+              "latencia_ms": {
+                "n": 440,
+                "p50": 408.41,
+                "p90": 410.25,
+                "p95": 411.69,
+                "p99": 461.75,
+                "max": 1024.04,
+                "min": 405.25,
+                "media": 411.55
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/hemocentros": {
+              "latencia_ms": {
+                "n": 476,
+                "p50": 205.48,
+                "p90": 206.52,
+                "p95": 206.79,
+                "p99": 209.86,
+                "max": 241.01,
+                "min": 203.68,
+                "media": 205.73
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/indicadores/estoque-por-tipo": {
+              "latencia_ms": {
+                "n": 291,
+                "p50": 205.1,
+                "p90": 206.11,
+                "p95": 206.59,
+                "p99": 211.25,
+                "max": 216.04,
+                "min": 203.42,
+                "media": 205.26
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/indicadores/validade": {
+              "latencia_ms": {
+                "n": 294,
+                "p50": 205.43,
+                "p90": 206.48,
+                "p95": 206.74,
+                "p99": 209.65,
+                "max": 219.32,
+                "min": 203.65,
+                "media": 205.6
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            }
+          }
+        },
+        "etapa2": {
+          "duracao_s": 299.7,
+          "requisicoes": 3000,
+          "vazao_rps": 10.01,
+          "vazao_kbps": 65.76,
+          "iteracoes_descartadas": 1,
+          "latencia_ms": {
+            "n": 3000,
+            "p50": 205.36,
+            "p90": 408.43,
+            "p95": 409.03,
+            "p99": 414.38,
+            "max": 1031.13,
+            "min": 202.33,
+            "media": 266.76
+          },
+          "erros": {
+            "2xx_pct": 100.0,
+            "4xx_pct": 0.0,
+            "409_pct": 0.0,
+            "5xx_pct": 0.0,
+            "perda_aplicacao_pct": 0.0,
+            "contagem": {
+              "2xx": 3000,
+              "4xx": 0,
+              "409": 0,
+              "5xx": 0,
+              "transporte": 0
+            }
+          },
+          "health": {
+            "latencia_ms": {
+              "n": 600,
+              "p50": 204.37,
+              "p90": 205.46,
+              "p95": 206.38,
+              "p99": 211.27,
+              "max": 230.57,
+              "min": 202.37,
+              "media": 204.62
+            },
+            "jitter_ms": 1.16
+          },
+          "endpoints": {
+            "GET /api/v1/bolsas?status=DISPONIVEL": {
+              "latencia_ms": {
+                "n": 894,
+                "p50": 408.04,
+                "p90": 409.38,
+                "p95": 410.98,
+                "p99": 455.78,
+                "max": 1031.13,
+                "min": 208.78,
+                "media": 409.9
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/hemocentros": {
+              "latencia_ms": {
+                "n": 956,
+                "p50": 205.06,
+                "p90": 205.91,
+                "p95": 206.26,
+                "p99": 213.49,
+                "max": 1002.01,
+                "min": 202.33,
+                "media": 207.01
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/indicadores/estoque-por-tipo": {
+              "latencia_ms": {
+                "n": 577,
+                "p50": 204.95,
+                "p90": 205.71,
+                "p95": 206.23,
+                "p99": 217.4,
+                "max": 231.07,
+                "min": 202.86,
+                "media": 205.22
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/indicadores/validade": {
+              "latencia_ms": {
+                "n": 573,
+                "p50": 205.02,
+                "p90": 205.76,
+                "p95": 206.1,
+                "p99": 209.65,
+                "max": 215.78,
+                "min": 203.0,
+                "media": 205.1
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            }
+          }
+        }
+      },
+      "sonda_tcp": {
+        "repouso": {
+          "n": 298,
+          "p50": 201.63,
+          "p90": 202.07,
+          "p95": 202.15,
+          "p99": 203.11,
+          "max": 229.45,
+          "min": 200.66,
+          "media": 201.79,
+          "tentativas": 298,
+          "perdidas": 0,
+          "perda_pct": 0.0,
+          "motivos_perda": {},
+          "jitter_ms": 0.68
+        },
+        "carga": {
+          "n": 2409,
+          "p50": 201.59,
+          "p90": 202.07,
+          "p95": 202.26,
+          "p99": 207.66,
+          "max": 237.74,
+          "min": 199.99,
+          "media": 201.74,
+          "tentativas": 2522,
+          "perdidas": 113,
+          "perda_pct": 4.481,
+          "motivos_perda": {
+            "timeout": 113
+          },
+          "jitter_ms": 0.7
+        }
+      },
+      "canario": {
+        "antes": {
+          "n": 13,
+          "p50": 611.93,
+          "p90": 629.14,
+          "p95": 630.15,
+          "p99": 631.26,
+          "max": 631.53,
+          "min": 608.62,
+          "media": 615.48,
+          "falhas": 0
+        },
+        "durante": {
+          "n": 60,
+          "p50": 610.77,
+          "p90": 613.68,
+          "p95": 626.68,
+          "p99": 812.0,
+          "max": 812.59,
+          "min": 608.36,
+          "media": 618.98,
+          "falhas": 0
+        },
+        "depois": {
+          "n": 5,
+          "p50": 610.86,
+          "p90": 732.42,
+          "p95": 772.5,
+          "p99": 804.57,
+          "max": 812.58,
+          "min": 609.81,
+          "media": 651.13,
+          "falhas": 0
+        }
+      }
+    },
+    {
+      "id": "2026-10-25_2356_notebook_rep3",
+      "origem": "notebook",
+      "repeticao": 3,
+      "inicio_local": "2026-10-25T20:56:34-03:00",
+      "inicio_utc": "2026-10-25T23:56:34+00:00",
+      "abortada_por_threshold": false,
+      "parametros": {
+        "taxa1_rps": 5.0,
+        "taxa2_rps": 10.0,
+        "aquecimento_s": 120,
+        "etapa_s": 300,
+        "repouso_s": 60,
+        "sonda_repouso_s": 60,
+        "telemetria": false
+      },
+      "fases": {
+        "etapa1": {
+          "duracao_s": 299.6,
+          "requisicoes": 1501,
+          "vazao_rps": 5.01,
+          "vazao_kbps": 33.02,
+          "iteracoes_descartadas": 0,
+          "latencia_ms": {
+            "n": 1501,
+            "p50": 204.68,
+            "p90": 407.61,
+            "p95": 408.14,
+            "p99": 412.35,
+            "max": 661.93,
+            "min": 201.61,
+            "media": 266.1
+          },
+          "erros": {
+            "2xx_pct": 100.0,
+            "4xx_pct": 0.0,
+            "409_pct": 0.0,
+            "5xx_pct": 0.0,
+            "perda_aplicacao_pct": 0.0,
+            "contagem": {
+              "2xx": 1501,
+              "4xx": 0,
+              "409": 0,
+              "5xx": 0,
+              "transporte": 0
+            }
+          },
+          "health": {
+            "latencia_ms": {
+              "n": 600,
+              "p50": 203.79,
+              "p90": 204.47,
+              "p95": 204.86,
+              "p99": 209.77,
+              "max": 226.49,
+              "min": 201.54,
+              "media": 203.94
+            },
+            "jitter_ms": 0.94
+          },
+          "endpoints": {
+            "GET /api/v1/bolsas?status=DISPONIVEL": {
+              "latencia_ms": {
+                "n": 449,
+                "p50": 407.27,
+                "p90": 408.51,
+                "p95": 409.18,
+                "p99": 439.36,
+                "max": 661.93,
+                "min": 208.68,
+                "media": 408.44
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/hemocentros": {
+              "latencia_ms": {
+                "n": 480,
+                "p50": 204.4,
+                "p90": 205.17,
+                "p95": 205.46,
+                "p99": 216.78,
+                "max": 628.71,
+                "min": 202.55,
+                "media": 206.36
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/indicadores/estoque-por-tipo": {
+              "latencia_ms": {
+                "n": 294,
+                "p50": 204.32,
+                "p90": 204.92,
+                "p95": 205.21,
+                "p99": 210.91,
+                "max": 222.29,
+                "min": 202.54,
+                "media": 204.45
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/indicadores/validade": {
+              "latencia_ms": {
+                "n": 278,
+                "p50": 204.38,
+                "p90": 205.03,
+                "p95": 205.3,
+                "p99": 211.5,
+                "max": 219.98,
+                "min": 201.61,
+                "media": 204.55
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            }
+          }
+        },
+        "etapa2": {
+          "duracao_s": 299.5,
+          "requisicoes": 3000,
+          "vazao_rps": 10.02,
+          "vazao_kbps": 66.7,
+          "iteracoes_descartadas": 0,
+          "latencia_ms": {
+            "n": 3000,
+            "p50": 204.52,
+            "p90": 407.39,
+            "p95": 407.83,
+            "p99": 408.78,
+            "max": 661.52,
+            "min": 201.58,
+            "media": 266.41
+          },
+          "erros": {
+            "2xx_pct": 100.0,
+            "4xx_pct": 0.0,
+            "409_pct": 0.0,
+            "5xx_pct": 0.0,
+            "perda_aplicacao_pct": 0.0,
+            "contagem": {
+              "2xx": 3000,
+              "4xx": 0,
+              "409": 0,
+              "5xx": 0,
+              "transporte": 0
+            }
+          },
+          "health": {
+            "latencia_ms": {
+              "n": 600,
+              "p50": 203.89,
+              "p90": 204.49,
+              "p95": 204.67,
+              "p99": 207.64,
+              "max": 222.56,
+              "min": 202.42,
+              "media": 204.02
+            },
+            "jitter_ms": 0.7
+          },
+          "endpoints": {
+            "GET /api/v1/bolsas?status=DISPONIVEL": {
+              "latencia_ms": {
+                "n": 910,
+                "p50": 407.07,
+                "p90": 408.09,
+                "p95": 408.47,
+                "p99": 426.62,
+                "max": 661.52,
+                "min": 404.26,
+                "media": 408.46
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/hemocentros": {
+              "latencia_ms": {
+                "n": 900,
+                "p50": 204.24,
+                "p90": 204.92,
+                "p95": 205.16,
+                "p99": 209.5,
+                "max": 644.36,
+                "min": 201.58,
+                "media": 204.79
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/indicadores/estoque-por-tipo": {
+              "latencia_ms": {
+                "n": 590,
+                "p50": 204.24,
+                "p90": 204.8,
+                "p95": 205.03,
+                "p99": 209.43,
+                "max": 221.92,
+                "min": 202.15,
+                "media": 204.35
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/indicadores/validade": {
+              "latencia_ms": {
+                "n": 600,
+                "p50": 204.37,
+                "p90": 204.92,
+                "p95": 205.1,
+                "p99": 207.52,
+                "max": 229.09,
+                "min": 202.12,
+                "media": 204.4
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            }
+          }
+        }
+      },
+      "sonda_tcp": {
+        "repouso": {
+          "n": 298,
+          "p50": 201.57,
+          "p90": 202.06,
+          "p95": 202.15,
+          "p99": 202.35,
+          "max": 207.31,
+          "min": 200.28,
+          "media": 201.59,
+          "tentativas": 298,
+          "perdidas": 0,
+          "perda_pct": 0.0,
+          "motivos_perda": {},
+          "jitter_ms": 0.44
+        },
+        "carga": {
+          "n": 2913,
+          "p50": 201.61,
+          "p90": 202.12,
+          "p95": 202.32,
+          "p99": 208.55,
+          "max": 225.38,
+          "min": 199.88,
+          "media": 201.78,
+          "tentativas": 2925,
+          "perdidas": 12,
+          "perda_pct": 0.41,
+          "motivos_perda": {
+            "timeout": 12
+          },
+          "jitter_ms": 0.68
+        }
+      },
+      "canario": {
+        "antes": {
+          "n": 13,
+          "p50": 609.84,
+          "p90": 610.83,
+          "p95": 611.43,
+          "p99": 612.12,
+          "max": 612.3,
+          "min": 608.04,
+          "media": 609.91,
+          "falhas": 0
+        },
+        "durante": {
+          "n": 60,
+          "p50": 608.28,
+          "p90": 647.63,
+          "p95": 806.12,
+          "p99": 807.29,
+          "max": 807.71,
+          "min": 605.65,
+          "media": 623.58,
+          "falhas": 0
+        },
+        "depois": {
+          "n": 6,
+          "p50": 608.68,
+          "p90": 610.14,
+          "p95": 610.73,
+          "p99": 611.21,
+          "max": 611.33,
+          "min": 608.56,
+          "media": 609.13,
+          "falhas": 0
+        }
+      }
+    },
+    {
+      "id": "2026-10-26_0022_notebook_rep4",
+      "origem": "notebook",
+      "repeticao": 4,
+      "inicio_local": "2026-10-25T21:22:54-03:00",
+      "inicio_utc": "2026-10-26T00:22:54+00:00",
+      "abortada_por_threshold": false,
+      "parametros": {
+        "taxa1_rps": 5.0,
+        "taxa2_rps": 10.0,
+        "aquecimento_s": 120,
+        "etapa_s": 300,
+        "repouso_s": 60,
+        "sonda_repouso_s": 60,
+        "telemetria": false
+      },
+      "fases": {
+        "etapa1": {
+          "duracao_s": 299.2,
+          "requisicoes": 1500,
+          "vazao_rps": 5.01,
+          "vazao_kbps": 32.87,
+          "iteracoes_descartadas": 0,
+          "latencia_ms": {
+            "n": 1500,
+            "p50": 204.51,
+            "p90": 407.33,
+            "p95": 407.88,
+            "p99": 408.81,
+            "max": 662.99,
+            "min": 201.79,
+            "media": 264.84
+          },
+          "erros": {
+            "2xx_pct": 100.0,
+            "4xx_pct": 0.0,
+            "409_pct": 0.0,
+            "5xx_pct": 0.0,
+            "perda_aplicacao_pct": 0.0,
+            "contagem": {
+              "2xx": 1500,
+              "4xx": 0,
+              "409": 0,
+              "5xx": 0,
+              "transporte": 0
+            }
+          },
+          "health": {
+            "latencia_ms": {
+              "n": 600,
+              "p50": 203.89,
+              "p90": 204.46,
+              "p95": 204.8,
+              "p99": 207.58,
+              "max": 241.34,
+              "min": 202.17,
+              "media": 204.02
+            },
+            "jitter_ms": 0.78
+          },
+          "endpoints": {
+            "GET /api/v1/bolsas?status=DISPONIVEL": {
+              "latencia_ms": {
+                "n": 447,
+                "p50": 407.04,
+                "p90": 408.16,
+                "p95": 408.46,
+                "p99": 416.17,
+                "max": 662.99,
+                "min": 206.91,
+                "media": 407.77
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/hemocentros": {
+              "latencia_ms": {
+                "n": 449,
+                "p50": 204.01,
+                "p90": 204.75,
+                "p95": 205.01,
+                "p99": 205.54,
+                "max": 211.69,
+                "min": 201.79,
+                "media": 203.96
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/indicadores/estoque-por-tipo": {
+              "latencia_ms": {
+                "n": 301,
+                "p50": 204.22,
+                "p90": 204.81,
+                "p95": 205.1,
+                "p99": 208.65,
+                "max": 217.4,
+                "min": 202.64,
+                "media": 204.27
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/indicadores/validade": {
+              "latencia_ms": {
+                "n": 303,
+                "p50": 204.3,
+                "p90": 205.1,
+                "p95": 205.44,
+                "p99": 207.73,
+                "max": 208.95,
+                "min": 202.28,
+                "media": 204.34
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            }
+          }
+        },
+        "etapa2": {
+          "duracao_s": 299.4,
+          "requisicoes": 3000,
+          "vazao_rps": 10.02,
+          "vazao_kbps": 66.62,
+          "iteracoes_descartadas": 0,
+          "latencia_ms": {
+            "n": 3000,
+            "p50": 204.41,
+            "p90": 407.16,
+            "p95": 407.53,
+            "p99": 409.7,
+            "max": 663.65,
+            "min": 201.81,
+            "media": 266.1
+          },
+          "erros": {
+            "2xx_pct": 100.0,
+            "4xx_pct": 0.0,
+            "409_pct": 0.0,
+            "5xx_pct": 0.0,
+            "perda_aplicacao_pct": 0.0,
+            "contagem": {
+              "2xx": 3000,
+              "4xx": 0,
+              "409": 0,
+              "5xx": 0,
+              "transporte": 0
+            }
+          },
+          "health": {
+            "latencia_ms": {
+              "n": 600,
+              "p50": 203.96,
+              "p90": 204.52,
+              "p95": 204.95,
+              "p99": 206.82,
+              "max": 210.81,
+              "min": 202.18,
+              "media": 204.03
+            },
+            "jitter_ms": 0.59
+          },
+          "endpoints": {
+            "GET /api/v1/bolsas?status=DISPONIVEL": {
+              "latencia_ms": {
+                "n": 909,
+                "p50": 406.92,
+                "p90": 407.75,
+                "p95": 408.44,
+                "p99": 415.74,
+                "max": 663.65,
+                "min": 404.86,
+                "media": 408.04
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/hemocentros": {
+              "latencia_ms": {
+                "n": 879,
+                "p50": 204.09,
+                "p90": 204.63,
+                "p95": 204.9,
+                "p99": 207.66,
+                "max": 217.6,
+                "min": 201.81,
+                "media": 204.13
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/indicadores/estoque-por-tipo": {
+              "latencia_ms": {
+                "n": 584,
+                "p50": 204.17,
+                "p90": 204.79,
+                "p95": 205.12,
+                "p99": 206.41,
+                "max": 214.93,
+                "min": 202.48,
+                "media": 204.19
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            },
+            "GET /api/v1/indicadores/validade": {
+              "latencia_ms": {
+                "n": 628,
+                "p50": 204.31,
+                "p90": 204.8,
+                "p95": 205.06,
+                "p99": 207.26,
+                "max": 628.87,
+                "min": 202.55,
+                "media": 204.99
+              },
+              "erro_4xx_pct": 0.0,
+              "erro_5xx_pct": 0.0,
+              "falha_transporte_pct": 0.0
+            }
+          }
+        }
+      },
+      "sonda_tcp": {
+        "repouso": {
+          "n": 298,
+          "p50": 201.53,
+          "p90": 201.98,
+          "p95": 202.1,
+          "p99": 202.76,
+          "max": 205.26,
+          "min": 200.34,
+          "media": 201.51,
+          "tentativas": 298,
+          "perdidas": 0,
+          "perda_pct": 0.0,
+          "motivos_perda": {},
+          "jitter_ms": 0.47
+        },
+        "carga": {
+          "n": 2885,
+          "p50": 201.7,
+          "p90": 202.13,
+          "p95": 202.31,
+          "p99": 204.25,
+          "max": 234.51,
+          "min": 200.08,
+          "media": 201.8,
+          "tentativas": 2903,
+          "perdidas": 18,
+          "perda_pct": 0.62,
+          "motivos_perda": {
+            "timeout": 18
+          },
+          "jitter_ms": 0.54
+        }
+      },
+      "canario": {
+        "antes": {
+          "n": 13,
+          "p50": 607.6,
+          "p90": 609.54,
+          "p95": 610.14,
+          "p99": 610.83,
+          "max": 611.0,
+          "min": 605.88,
+          "media": 608.01,
+          "falhas": 0
+        },
+        "durante": {
+          "n": 60,
+          "p50": 609.57,
+          "p90": 611.09,
+          "p95": 612.04,
+          "p99": 694.97,
+          "max": 811.44,
+          "min": 606.35,
+          "media": 612.85,
+          "falhas": 0
+        },
+        "depois": {
+          "n": 6,
+          "p50": 609.79,
+          "p90": 610.4,
+          "p95": 610.43,
+          "p99": 610.46,
+          "max": 610.47,
+          "min": 609.16,
+          "media": 609.87,
+          "falhas": 0
+        }
+      }
+    }
+  ],
+  "agregado_por_origem": {
+    "notebook": {
+      "repeticoes": 3,
+      "rodadas_incluidas": [
+        "2026-10-25_2336_notebook_rep2",
+        "2026-10-25_2356_notebook_rep3",
+        "2026-10-26_0022_notebook_rep4"
+      ],
+      "rodadas_excluidas": [
+        "2026-10-25_2329_notebook_rep1"
+      ],
+      "motivo_exclusao": "interrompida por threshold de protecao (abortOnFail)",
+      "indicadores": {
+        "latencia_p50_etapa1": {
+          "unidade": "ms",
+          "media": 204.977,
+          "desvio": 0.667,
+          "min": 204.51,
+          "max": 205.74,
+          "valores": [
+            205.74,
+            204.68,
+            204.51
+          ]
+        },
+        "latencia_p95_etapa1": {
+          "unidade": "ms",
+          "media": 408.55,
+          "desvio": 0.944,
+          "min": 407.88,
+          "max": 409.63,
+          "valores": [
+            409.63,
+            408.14,
+            407.88
+          ]
+        },
+        "latencia_p99_etapa1": {
+          "unidade": "ms",
+          "media": 411.667,
+          "desvio": 2.584,
+          "min": 408.81,
+          "max": 413.84,
+          "valores": [
+            413.84,
+            412.35,
+            408.81
+          ]
+        },
+        "latencia_p50_etapa2": {
+          "unidade": "ms",
+          "media": 204.763,
+          "desvio": 0.52,
+          "min": 204.41,
+          "max": 205.36,
+          "valores": [
+            205.36,
+            204.52,
+            204.41
+          ]
+        },
+        "latencia_p95_etapa2": {
+          "unidade": "ms",
+          "media": 408.13,
+          "desvio": 0.794,
+          "min": 407.53,
+          "max": 409.03,
+          "valores": [
+            409.03,
+            407.83,
+            407.53
+          ]
+        },
+        "latencia_p99_etapa2": {
+          "unidade": "ms",
+          "media": 410.953,
+          "desvio": 3.003,
+          "min": 408.78,
+          "max": 414.38,
+          "valores": [
+            414.38,
+            408.78,
+            409.7
+          ]
+        },
+        "vazao_etapa1": {
+          "unidade": "req/s",
+          "media": 5.01,
+          "desvio": 0.0,
+          "min": 5.01,
+          "max": 5.01,
+          "valores": [
+            5.01,
+            5.01,
+            5.01
+          ]
+        },
+        "vazao_etapa2": {
+          "unidade": "req/s",
+          "media": 10.017,
+          "desvio": 0.006,
+          "min": 10.01,
+          "max": 10.02,
+          "valores": [
+            10.01,
+            10.02,
+            10.02
+          ]
+        },
+        "vazao_kbps_etapa2": {
+          "unidade": "KB/s",
+          "media": 66.36,
+          "desvio": 0.521,
+          "min": 65.76,
+          "max": 66.7,
+          "valores": [
+            65.76,
+            66.7,
+            66.62
+          ]
+        },
+        "erro_4xx_etapa2": {
+          "unidade": "%",
+          "media": 0.0,
+          "desvio": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "valores": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "erro_5xx_etapa2": {
+          "unidade": "%",
+          "media": 0.0,
+          "desvio": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "valores": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "perda_aplicacao_etapa2": {
+          "unidade": "%",
+          "media": 0.0,
+          "desvio": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "valores": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "jitter_health_etapa2": {
+          "unidade": "ms",
+          "media": 0.817,
+          "desvio": 0.302,
+          "min": 0.59,
+          "max": 1.16,
+          "valores": [
+            1.16,
+            0.7,
+            0.59
+          ]
+        },
+        "rtt_p50_repouso": {
+          "unidade": "ms",
+          "media": 201.577,
+          "desvio": 0.05,
+          "min": 201.53,
+          "max": 201.63,
+          "valores": [
+            201.63,
+            201.57,
+            201.53
+          ]
+        },
+        "rtt_p50_carga": {
+          "unidade": "ms",
+          "media": 201.633,
+          "desvio": 0.059,
+          "min": 201.59,
+          "max": 201.7,
+          "valores": [
+            201.59,
+            201.61,
+            201.7
+          ]
+        },
+        "rtt_p95_carga": {
+          "unidade": "ms",
+          "media": 202.297,
+          "desvio": 0.032,
+          "min": 202.26,
+          "max": 202.32,
+          "valores": [
+            202.26,
+            202.32,
+            202.31
+          ]
+        },
+        "perda_rede_repouso": {
+          "unidade": "%",
+          "media": 0.0,
+          "desvio": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "valores": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "perda_rede_carga": {
+          "unidade": "%",
+          "media": 1.837,
+          "desvio": 2.292,
+          "min": 0.41,
+          "max": 4.481,
+          "valores": [
+            4.481,
+            0.41,
+            0.62
+          ]
+        },
+        "jitter_rede_repouso": {
+          "unidade": "ms",
+          "media": 0.53,
+          "desvio": 0.131,
+          "min": 0.44,
+          "max": 0.68,
+          "valores": [
+            0.68,
+            0.44,
+            0.47
+          ]
+        },
+        "jitter_rede_carga": {
+          "unidade": "ms",
+          "media": 0.64,
+          "desvio": 0.087,
+          "min": 0.54,
+          "max": 0.7,
+          "valores": [
+            0.7,
+            0.68,
+            0.54
+          ]
+        },
+        "canario_p95_antes": {
+          "unidade": "ms",
+          "media": 617.24,
+          "desvio": 11.199,
+          "min": 610.14,
+          "max": 630.15,
+          "valores": [
+            630.15,
+            611.43,
+            610.14
+          ]
+        },
+        "canario_p95_durante": {
+          "unidade": "ms",
+          "media": 681.613,
+          "desvio": 108.074,
+          "min": 612.04,
+          "max": 806.12,
+          "valores": [
+            626.68,
+            806.12,
+            612.04
+          ]
+        },
+        "canario_p95_depois": {
+          "unidade": "ms",
+          "media": 664.553,
+          "desvio": 93.485,
+          "min": 610.43,
+          "max": 772.5,
+          "valores": [
+            772.5,
+            610.73,
+            610.43
+          ]
+        }
+      }
+    }
+  }
+}
