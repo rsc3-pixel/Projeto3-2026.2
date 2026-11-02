@@ -10,12 +10,17 @@
  *      doze unidades, escolhendo a cada passo o hospital nao visitado mais
  *      proximo da posicao atual.
  *
+ *   3. Indice de estoque por hash (U2/W12), com tabela feita a mao e hash
+ *      perfeito, e matriz de compatibilidade ABO/Rh.
+ *
  * VERSAO EM C++. A versao original em C esta em aed/unidade2/c/ e serve de
  * contraponto para a traducao comentada exigida pela U2 de AED: as duas
  * implementam exatamente a mesma logica, com os mesmos dados e a mesma saida.
  */
 
 #include "fila_fefo.hpp"
+#include "indice_estoque.hpp"
+#include "matriz_compatibilidade.hpp"
 #include "dijkstra.hpp"
 #include "grafo.hpp"
 #include "vizinho_mais_proximo.hpp"
@@ -404,14 +409,178 @@ int main() {
               + std::to_string(divergencias) + " ponto(s)")
               << '\n';
 
-    etapa("11. Liberacao da memoria do grafo");
+    etapa("11. Indice de estoque por hash: um balde por combinacao");
+    /*
+     * As 32 combinacoes possiveis - 8 grupos x 4 tipos - sao indexadas, uma
+     * bolsa em cada, e o balde de todas e impresso. Se dois baldes se
+     * repetissem, haveria colisao; a conferencia no fim acusa.
+     */
+    IndiceEstoque indice;
+
+    std::cout << "  capacidade da tabela: " << IndiceEstoque::CAPACIDADE
+              << " baldes, para " << (TOTAL_GRUPOS * TOTAL_TIPOS)
+              << " chaves possiveis\n\n";
+
+    bool baldeUsado[IndiceEstoque::CAPACIDADE] = {false};
+    int baldesRepetidos = 0;
+
+    std::cout << "    chave                                        balde\n";
+    for (int g = 0; g < TOTAL_GRUPOS; ++g) {
+        for (int t = 0; t < TOTAL_TIPOS; ++t) {
+            const GrupoSanguineo grupo = static_cast<GrupoSanguineo>(g);
+            const TipoHemocomponente tipo = static_cast<TipoHemocomponente>(t);
+
+            const std::string codigo = std::string("BS") + std::to_string(g) + std::to_string(t);
+            indice.adicionar(Bolsa{codigo, rotuloGrupo(grupo), nomeTipo(tipo), 450,
+                                   "2026-08-01", "2026-10-01", "DISPONIVEL"},
+                             grupo, tipo);
+
+            const int balde = IndiceEstoque::hashDaChave(grupo, tipo);
+            if (baldeUsado[balde]) ++baldesRepetidos;
+            baldeUsado[balde] = true;
+
+            std::cout << "    " << std::left << std::setw(8) << rotuloGrupo(grupo)
+                      << std::setw(28) << nomeTipo(tipo) << std::right
+                      << std::setw(10) << balde << '\n';
+        }
+    }
+
+    std::cout << "\n  bolsas indexadas: " << indice.tamanho() << '\n';
+
+    /* Busca: cada combinacao devolve so a sua bolsa. */
+    const std::vector<Bolsa> soONeg = indice.buscar(GrupoSanguineo::O_NEG,
+                                                    TipoHemocomponente::CONCENTRADO_HEMACIAS);
+    std::cout << "  busca O- / CONCENTRADO_HEMACIAS devolve " << soONeg.size()
+              << " bolsa(s): " << (soONeg.empty() ? "-" : soONeg[0].codigo_rastreio) << '\n';
+
+    /* Agrupamento: varias bolsas na mesma chave nao sao colisao. */
+    indice.adicionar(Bolsa{"BS-EXTRA", "O-", "CONCENTRADO_HEMACIAS", 450,
+                           "2026-08-01", "2026-11-01", "DISPONIVEL"},
+                     GrupoSanguineo::O_NEG, TipoHemocomponente::CONCENTRADO_HEMACIAS);
+    const int baldeONeg = IndiceEstoque::hashDaChave(GrupoSanguineo::O_NEG,
+                                                     TipoHemocomponente::CONCENTRADO_HEMACIAS);
+    std::cout << "  apos somar outra bolsa O-, o balde " << baldeONeg << " tem "
+              << indice.ocupacaoDoBalde(baldeONeg)
+              << " bolsa(s) - agrupamento, nao colisao\n";
+
+    /* Remocao. */
+    const bool removeu = indice.remover("BS-EXTRA", GrupoSanguineo::O_NEG,
+                                        TipoHemocomponente::CONCENTRADO_HEMACIAS);
+    std::cout << "  remover BS-EXTRA: " << (removeu ? "ok" : "falhou")
+              << ", total agora " << indice.tamanho() << '\n';
+
+    std::cout << "\n    " << (baldesRepetidos == 0 ? "CONFERE" : "DIVERGE")
+              << "  as 32 chaves ocuparam 32 baldes distintos"
+              << " (repetidos: " << baldesRepetidos << ")\n";
+
+    etapa("12. Matriz de compatibilidade ABO/Rh");
+    /*
+     * Percorre os 8 grupos nas duas tabelas, imprime quem pode doar para quem
+     * e compara com a referencia extraida do MatrizCompatibilidade.java.
+     *
+     * A referencia e um vetor de bits por linha: o bit i ligado significa que
+     * o grupo de ordinal i pode doar. Foi gerada executando a versao Java, e
+     * nao reescrita a mao - se as duas divergirem, uma das implementacoes
+     * mudou.
+     */
+    struct LinhaReferencia {
+        TipoHemocomponente tipo;
+        GrupoSanguineo     receptor;
+        unsigned char      doadores;
+    };
+
+    static const LinhaReferencia REFERENCIA_JAVA[] = {
+    {TipoHemocomponente::CONCENTRADO_HEMACIAS, GrupoSanguineo::A_POS, 0xC3},
+    {TipoHemocomponente::CONCENTRADO_HEMACIAS, GrupoSanguineo::A_NEG, 0x82},
+    {TipoHemocomponente::CONCENTRADO_HEMACIAS, GrupoSanguineo::B_POS, 0xCC},
+    {TipoHemocomponente::CONCENTRADO_HEMACIAS, GrupoSanguineo::B_NEG, 0x88},
+    {TipoHemocomponente::CONCENTRADO_HEMACIAS, GrupoSanguineo::AB_POS, 0xFF},
+    {TipoHemocomponente::CONCENTRADO_HEMACIAS, GrupoSanguineo::AB_NEG, 0xAA},
+    {TipoHemocomponente::CONCENTRADO_HEMACIAS, GrupoSanguineo::O_POS, 0xC0},
+    {TipoHemocomponente::CONCENTRADO_HEMACIAS, GrupoSanguineo::O_NEG, 0x80},
+    {TipoHemocomponente::PLASMA_FRESCO_CONGELADO, GrupoSanguineo::A_POS, 0x33},
+    {TipoHemocomponente::PLASMA_FRESCO_CONGELADO, GrupoSanguineo::A_NEG, 0x33},
+    {TipoHemocomponente::PLASMA_FRESCO_CONGELADO, GrupoSanguineo::B_POS, 0x3C},
+    {TipoHemocomponente::PLASMA_FRESCO_CONGELADO, GrupoSanguineo::B_NEG, 0x3C},
+    {TipoHemocomponente::PLASMA_FRESCO_CONGELADO, GrupoSanguineo::AB_POS, 0x30},
+    {TipoHemocomponente::PLASMA_FRESCO_CONGELADO, GrupoSanguineo::AB_NEG, 0x30},
+    {TipoHemocomponente::PLASMA_FRESCO_CONGELADO, GrupoSanguineo::O_POS, 0xFF},
+    {TipoHemocomponente::PLASMA_FRESCO_CONGELADO, GrupoSanguineo::O_NEG, 0xFF},
+    };
+
+    int divergenciasMatriz = 0;
+
+    for (const LinhaReferencia& linha : REFERENCIA_JAVA) {
+        const unsigned char obtido =
+                MatrizCompatibilidade::doadoresEmBits(linha.receptor, linha.tipo);
+        const bool confere = (obtido == linha.doadores);
+        if (!confere) ++divergenciasMatriz;
+
+        /* Lista legivel de quem pode doar. */
+        std::string lista;
+        for (const GrupoSanguineo d :
+                 MatrizCompatibilidade::doadoresPara(linha.receptor, linha.tipo)) {
+            if (!lista.empty()) lista += " ";
+            lista += rotuloGrupo(d);
+        }
+
+        std::cout << "    " << (confere ? "CONFERE" : "DIVERGE") << "  "
+                  << std::left << std::setw(24) << nomeTipo(linha.tipo)
+                  << " recebe " << std::setw(4) << rotuloGrupo(linha.receptor)
+                  << " de: " << std::setw(26) << lista << std::right;
+        if (!confere) {
+            std::cout << "  esperado 0x" << std::hex << static_cast<int>(linha.doadores)
+                      << ", obtido 0x" << static_cast<int>(obtido) << std::dec;
+        }
+        std::cout << '\n';
+    }
+
+    /* A nao simetria, que e o erro classico ao modelar compatibilidade. */
+    std::cout << "\n  a relacao nao e simetrica:\n";
+    const bool oNegDoaParaAPos = MatrizCompatibilidade::compativel(
+            GrupoSanguineo::O_NEG, GrupoSanguineo::A_POS,
+            TipoHemocomponente::CONCENTRADO_HEMACIAS);
+    const bool aPosDoaParaONeg = MatrizCompatibilidade::compativel(
+            GrupoSanguineo::A_POS, GrupoSanguineo::O_NEG,
+            TipoHemocomponente::CONCENTRADO_HEMACIAS);
+    std::cout << "    O- doa hemacias para A+: " << (oNegDoaParaAPos ? "sim" : "nao") << '\n'
+              << "    A+ doa hemacias para O-: " << (aPosDoaParaONeg ? "sim" : "nao") << '\n';
+    const bool naoSimetrica = oNegDoaParaAPos && !aPosDoaParaONeg;
+    if (!naoSimetrica) ++divergenciasMatriz;
+    std::cout << "    " << (naoSimetrica ? "CONFERE" : "DIVERGE")
+              << "  inverter os argumentos muda a resposta\n";
+
+    /* A inversao do plasma, que a intuicao das hemacias contradiz. */
+    const bool oNegDoaPlasmaParaAPos = MatrizCompatibilidade::compativel(
+            GrupoSanguineo::O_NEG, GrupoSanguineo::A_POS,
+            TipoHemocomponente::PLASMA_FRESCO_CONGELADO);
+    std::cout << "\n  o plasma inverte a regra:\n"
+              << "    O- doa plasma para A+: " << (oNegDoaPlasmaParaAPos ? "sim" : "nao")
+              << " (em hemacias doaria)\n";
+    if (oNegDoaPlasmaParaAPos) ++divergenciasMatriz;
+    std::cout << "    " << (!oNegDoaPlasmaParaAPos ? "CONFERE" : "DIVERGE")
+              << "  plasma de O- nao serve para receptor A+\n";
+
+    /* Argumento fora da faixa nao lanca, devolve vazio. */
+    const auto invalidos = MatrizCompatibilidade::doadoresPara(
+            static_cast<GrupoSanguineo>(99), TipoHemocomponente::CONCENTRADO_HEMACIAS);
+    if (!invalidos.empty()) ++divergenciasMatriz;
+    std::cout << "\n    " << (invalidos.empty() ? "CONFERE" : "DIVERGE")
+              << "  grupo invalido devolve conjunto vazio, sem excecao\n";
+
+    std::cout << "\n  " << (divergenciasMatriz == 0 && baldesRepetidos == 0
+            ? "tudo confere com a versao Java"
+            : "ATENCAO: houve divergencia com a versao Java")
+              << '\n';
+
+    etapa("13. Liberacao da memoria do grafo e do indice");
     /*
      * DIFERENCA PARA A VERSAO EM JAVA: la nao ha nada a fazer, o coletor de
-     * lixo recolhe os mapas. Aqui o destrutor do Grafo percorre as duas
-     * cadeias - vertices e arestas de cada vertice - liberando no por no, e
-     * roda sozinho ao sair do escopo.
+     * lixo recolhe os mapas. Aqui os destrutores percorrem as cadeias
+     * liberando no por no, e rodam sozinhos ao sair do escopo.
      */
-    std::cout << "  o destrutor do Grafo libera vertices e arestas (RAII)\n\n";
+    std::cout << "  o destrutor do Grafo libera vertices e arestas (RAII)\n"
+              << "  o destrutor do IndiceEstoque libera os 32 baldes e o vetor\n\n";
 
     return 0;
 }
