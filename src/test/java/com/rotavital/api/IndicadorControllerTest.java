@@ -48,11 +48,38 @@ class IndicadorControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/indicadores/descarte retorna status 200")
+    @DisplayName("GET /api/v1/indicadores/descarte retorna status 200 com o descarte evitavel pela FEFO")
     void deveConsultarTaxaDescarte() throws Exception {
         mvc().perform(get("/api/v1/indicadores/descarte"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].taxaDescarte").isNumber())
+                .andExpect(jsonPath("$[0].descarteEvitavelFefo").isNumber())
+                .andExpect(jsonPath("$[0].percentualEvitavelFefo").isNumber());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/indicadores/descarte/por-periodo aceita SEMANA e MES")
+    void deveConsultarTaxaDescartePorPeriodo() throws Exception {
+        mvc().perform(get("/api/v1/indicadores/descarte/por-periodo"))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
+        mvc().perform(get("/api/v1/indicadores/descarte/por-periodo").param("granularidade", "MES"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/indicadores/desabastecimento retorna os oito tipos com probabilidade e risco")
+    void deveConsultarProbabilidadeDesabastecimento() throws Exception {
+        mvc().perform(get("/api/v1/indicadores/desabastecimento"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.distribuicao").isString())
+                .andExpect(jsonPath("$.diasObservados").isNumber())
+                .andExpect(jsonPath("$.porTipo.length()").value(8))
+                .andExpect(jsonPath("$.porTipo[0].probabilidadePercentual").isNumber())
+                .andExpect(jsonPath("$.porTipo[0].probabilidadePoissonPercentual").isNumber())
+                .andExpect(jsonPath("$.porTipo[0].nivelRisco").isString());
     }
 
     @Test

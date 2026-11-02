@@ -11,8 +11,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.rotavital.api.dto.indicadores.BolsaCriticaResponse;
 import com.rotavital.api.dto.indicadores.CoberturaResponse;
+import com.rotavital.api.dto.indicadores.DesabastecimentoResponse;
+import com.rotavital.api.dto.indicadores.DescarteComponenteResponse;
+import com.rotavital.api.dto.indicadores.DescartePeriodoResponse;
 import com.rotavital.api.dto.indicadores.EstoquePorTipoResponse;
-import com.rotavital.dominio.Hemocentro;
+import com.rotavital.api.dto.indicadores.PeriodoDescarte;
+import com.rotavital.api.dto.indicadores.ValidadeResponse;
 import com.rotavital.servico.HemocentroServico;
 import com.rotavital.servico.IndicadorServico;
 
@@ -26,12 +30,21 @@ import com.rotavital.servico.IndicadorServico;
  *
  * <p>O alvo e quem opera um hemocentro: a tela mostra onde ele esta, o que esta
  * em transito agora e o que vence antes do que deveria.
+ *
+ * <p>O painel consolidado (PI3-32) reune os indicadores da Unidade 1 (estoque,
+ * cobertura, bolsas criticas) e os da Unidade 2 (descarte por periodo, descarte
+ * evitavel pela FEFO, dispersao da validade e probabilidade de desabastecimento).
+ * Cada numero sai do mesmo metodo que atende {@code /api/v1/indicadores/*}.
  */
 @Controller
 public class PainelWebController {
 
     /** Uma bolsa a menos de 7 dias do vencimento ja entra como alerta. */
     private static final int DIAS_PARA_ALERTA = 7;
+
+    /** Limiares da HU-06 para destacar o que precisa de acao, alem do deficit de cobertura. */
+    static final int LIMIAR_DESCARTE_PCT = 50;
+    static final int LIMIAR_RISCO_PCT = 50;
 
     private final IndicadorServico indicadorServico;
     private final HemocentroServico hemocentroServico;
@@ -53,10 +66,22 @@ public class PainelWebController {
         List<CoberturaResponse> cobertura = indicadorServico.coberturaPorTipo(hoje);
         BolsaCriticaResponse criticas =
                 indicadorServico.bolsasProximasDoVencimento(DIAS_PARA_ALERTA, hoje);
+        List<DescarteComponenteResponse> descarte = indicadorServico.taxaDescartePorComponente(hoje);
+        List<DescartePeriodoResponse> descartePorSemana =
+                indicadorServico.taxaDescartePorPeriodo(hoje, PeriodoDescarte.SEMANA);
+        ValidadeResponse validade = indicadorServico.dispersaoValidade(hoje);
+        DesabastecimentoResponse desabastecimento = indicadorServico.probabilidadeDesabastecimento(hoje);
 
         model.addAttribute("estoque", estoque);
         model.addAttribute("cobertura", cobertura);
         model.addAttribute("criticas", criticas);
+        model.addAttribute("descarte", descarte);
+        model.addAttribute("descartePorSemana", descartePorSemana);
+        model.addAttribute("validade", validade);
+        model.addAttribute("desabastecimento", desabastecimento);
+        model.addAttribute("limiarDescarte", LIMIAR_DESCARTE_PCT);
+        model.addAttribute("limiarRisco", LIMIAR_RISCO_PCT);
+        model.addAttribute("hoje", hoje);
         model.addAttribute("centroAtual", hemocentroServico.buscar(id));
         model.addAttribute("agora", LocalDateTime.now());
         model.addAttribute("centroId", id);

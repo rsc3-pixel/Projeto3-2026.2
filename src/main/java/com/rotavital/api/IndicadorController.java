@@ -2,9 +2,12 @@ package com.rotavital.api;
 
 import com.rotavital.api.dto.indicadores.BolsaCriticaResponse;
 import com.rotavital.api.dto.indicadores.CoberturaResponse;
+import com.rotavital.api.dto.indicadores.DesabastecimentoResponse;
 import com.rotavital.api.dto.indicadores.DescarteComponenteResponse;
+import com.rotavital.api.dto.indicadores.DescartePeriodoResponse;
 import com.rotavital.api.dto.indicadores.EstoquePorComponenteResponse;
 import com.rotavital.api.dto.indicadores.EstoquePorTipoResponse;
+import com.rotavital.api.dto.indicadores.PeriodoDescarte;
 import com.rotavital.api.dto.indicadores.ValidadeResponse;
 import com.rotavital.servico.IndicadorServico;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,7 +28,7 @@ import java.util.List;
  * <p>Exposicao das metricas analiticas portadas de {@code dados/analise.py} sob o path
  * {@code /api/v1/indicadores/*}.</p>
  */
-@Tag(name = "Indicadores", description = "Indicadores analiticos de estoque, validade, descarte e cobertura de demanda")
+@Tag(name = "Indicadores", description = "Indicadores analiticos de estoque, validade, descarte, cobertura e probabilidade de desabastecimento")
 @RestController
 @RequestMapping("/api/v1/indicadores")
 public class IndicadorController {
@@ -51,12 +54,36 @@ public class IndicadorController {
     }
 
     @Operation(summary = "Taxa de descarte por vencimento",
-               description = "Calcula total, bolsas vencidas e taxa de descarte percentual para cada hemocomponente.")
+               description = "Calcula total, bolsas vencidas e taxa de descarte percentual para cada hemocomponente, "
+                       + "e quantas das vencidas tiveram demanda compativel dentro da validade (descarte evitavel pela FEFO).")
     @GetMapping("/descarte")
     public List<DescarteComponenteResponse> taxaDescarte(
             @Parameter(description = "Data de referencia para calculo do vencimento (padrao: hoje)")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataReferencia) {
         return indicadorServico.taxaDescartePorComponente(dataReferencia);
+    }
+
+    @Operation(summary = "Taxa de descarte por periodo de coleta",
+               description = "Agrupa as bolsas pela semana ISO ou pelo mes de coleta e calcula, em cada periodo, "
+                       + "total, vencidas e taxa de descarte, no geral e por hemocomponente.")
+    @GetMapping("/descarte/por-periodo")
+    public List<DescartePeriodoResponse> taxaDescartePorPeriodo(
+            @Parameter(description = "SEMANA (ISO, segunda a domingo) ou MES (padrao: SEMANA)")
+            @RequestParam(defaultValue = "SEMANA") PeriodoDescarte granularidade,
+            @Parameter(description = "Data de referencia para calculo do vencimento (padrao: hoje)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataReferencia) {
+        return indicadorServico.taxaDescartePorPeriodo(dataReferencia, granularidade);
+    }
+
+    @Operation(summary = "Probabilidade de desabastecimento por tipo sanguineo",
+               description = "Trata a demanda como variavel aleatoria (Binomial Negativa calibrada na serie diaria de "
+                       + "requisicoes) e devolve, por tipo, a probabilidade de a demanda superar o estoque valido, "
+                       + "a variancia observada, a cobertura e o nivel de risco. A Poisson e devolvida como referencia.")
+    @GetMapping("/desabastecimento")
+    public DesabastecimentoResponse probabilidadeDesabastecimento(
+            @Parameter(description = "Data de referencia para calculo do vencimento (padrao: hoje)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataReferencia) {
+        return indicadorServico.probabilidadeDesabastecimento(dataReferencia);
     }
 
     @Operation(summary = "Medidas de tendencia central e dispersao da validade",
