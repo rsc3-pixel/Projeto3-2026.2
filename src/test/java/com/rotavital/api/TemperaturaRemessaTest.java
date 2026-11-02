@@ -30,6 +30,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -242,14 +243,75 @@ class TemperaturaRemessaTest {
     }
 
     // -----------------------------------------------------------------------
+    // GPS simulado (PI3-112)
+    // -----------------------------------------------------------------------
+
+    @Test
+    @DisplayName("GPS: leitura com posicao devolve e guarda a latitude e a longitude")
+    void leituraComPosicao() throws Exception {
+        String rota = rotaEmTransitoCom(TipoHemocomponente.CONCENTRADO_HEMACIAS);
+
+        registrarComPosicao(rota, 4.0, -8.0476, -34.8770)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.latitude").value(-8.0476))
+                .andExpect(jsonPath("$.longitude").value(-34.8770))
+                .andExpect(jsonPath("$.dentroDaFaixa").value(true));
+
+        // A posicao tambem volta no historico: e o que o mapa do trajeto usa.
+        mvc.perform(get("/api/v1/rotas/" + rota + "/temperaturas"))
+                .andExpect(jsonPath("$[0].latitude").value(-8.0476))
+                .andExpect(jsonPath("$[0].longitude").value(-34.8770));
+    }
+
+    @Test
+    @DisplayName("GPS: leitura sem posicao continua valida, com latitude e longitude nulas")
+    void leituraSemPosicaoContinuaValida() throws Exception {
+        String rota = rotaEmTransitoCom(TipoHemocomponente.CONCENTRADO_HEMACIAS);
+
+        // O contrato anterior a PI3-112 (so temperatura) nao pode quebrar.
+        mvc.perform(post("/api/v1/rotas/" + rota + "/temperaturas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"temperaturaCelsius\": 4.0}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.latitude").value(nullValue()))
+                .andExpect(jsonPath("$.longitude").value(nullValue()));
+    }
+
+    @Test
+    @DisplayName("GPS: so latitude, sem longitude, e recusada com 400")
+    void meiaCoordenadaERecusada() throws Exception {
+        String rota = rotaEmTransitoCom(TipoHemocomponente.CONCENTRADO_HEMACIAS);
+
+        registrarComPosicao(rota, 4.0, -8.05, null).andExpect(status().isBadRequest());
+        registrarComPosicao(rota, 4.0, null, -34.88).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("GPS: coordenada fora do globo e recusada com 400")
+    void coordenadaImpossivelERecusada() throws Exception {
+        String rota = rotaEmTransitoCom(TipoHemocomponente.CONCENTRADO_HEMACIAS);
+
+        registrarComPosicao(rota, 4.0, 91.0, -34.88).andExpect(status().isBadRequest());
+        registrarComPosicao(rota, 4.0, -8.05, -181.0).andExpect(status().isBadRequest());
+    }
+
+    // -----------------------------------------------------------------------
     // Apoio
     // -----------------------------------------------------------------------
+
+    private org.springframework.test.web.servlet.ResultActions registrarComPosicao(
+            String rotaId, double temperatura, Double latitude, Double longitude) throws Exception {
+        return mvc.perform(post("/api/v1/rotas/" + rotaId + "/temperaturas")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(
+                        new LeituraTemperaturaRequest(temperatura, latitude, longitude))));
+    }
 
     private org.springframework.test.web.servlet.ResultActions registrar(
             String rotaId, double temperatura) throws Exception {
         return mvc.perform(post("/api/v1/rotas/" + rotaId + "/temperaturas")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json.writeValueAsString(new LeituraTemperaturaRequest(temperatura))));
+                .content(json.writeValueAsString(new LeituraTemperaturaRequest(temperatura, null, null))));
     }
 
     private String rotaEmTransitoCom(TipoHemocomponente tipo) throws Exception {

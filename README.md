@@ -383,6 +383,8 @@ Material de apoio, não exigido pelas entregas:
 | [docs/entendendo-o-rota-vital.md](docs/entendendo-o-rota-vital.md) | guia comentado do código, do modelo de domínio ao deploy |
 | [docs/plano-frontends.md](docs/plano-frontends.md) | plano dos dois front-ends: Thymeleaf e Angular |
 | [frontend/](frontend/) | onde cada front-end mora e como trabalhar só nele |
+| [docs/telemetria-simulada.md](docs/telemetria-simulada.md) | canal de telemetria **simulada** (temperatura + GPS): simulador, hospedagem e contrato (PI3-112) |
+| [docs/benchmark-rede.md](docs/benchmark-rede.md) | benchmarking de rede e painel `/painel-rede.html` (PI3-31) |
 
 ## Entregas anteriores
 

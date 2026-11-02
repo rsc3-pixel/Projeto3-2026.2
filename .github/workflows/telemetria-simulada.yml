@@ -1,0 +1,82 @@
+name: Telemetria simulada
+
+# Canal de telemetria SIMULADA do Rota Vital (PI3-112).
+#
+# Roda telemetria/simulador.py, que faz o papel dos sensores dos veiculos:
+# 3 veiculos reportando temperatura e GPS a cada 30 s, por HTTPS, para a API
+# em producao. O runner do GitHub fica na internet, como ficaria um sensor
+# num caminhao, entao cada leitura atravessa o mesmo caminho de um sensor
+# real: internet -> Nginx (TLS, 443) -> API (8081).
+#
+# Por que aqui e nao na VM: o simulador nao precisa de acesso a VM nem ocupa
+# a memoria dela, que e compartilhada com o Flux. Se alguem com acesso
+# preferir hospeda-lo la, telemetria/rota-vital-sensor.service ja esta
+# pronto (ver docs/telemetria-simulada.md).
+#
+# Cobertura: uma execucao por hora, cada uma com 55 min de envio. O GitHub
+# nao garante o horario exato de agendamentos; atrasos de alguns minutos
+# deixam buracos curtos entre execucoes, o que e aceitavel para dado simulado.
+#
+# Para pausar (ex.: durante uma rodada de benchmarking que nao deva ter
+# trafego de fundo): aba Actions > Telemetria simulada > "..." > Disable.
+
+on:
+  schedule:
+    # Minuto 7 de cada hora (UTC): fora do minuto 0, o mais disputado no
+    # agendador do GitHub.
+    - cron: '7 * * * *'
+  workflow_dispatch:
+    inputs:
+      duracao_min:
+        description: 'Minutos de envio'
+        default: '55'
+      veiculos:
+        description: 'Veiculos simultaneos'
+        default: '3'
+      intervalo_s:
+        description: 'Segundos entre leituras de cada veiculo'
+        default: '30'
+
+# Nunca dois simuladores ao mesmo tempo: dobraria os veiculos e o trafego.
+# Uma execucao que chega enquanto outra roda espera a anterior terminar.
+concurrency:
+  group: telemetria-simulada
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sensores:
+    name: Sensores simulados
+    runs-on: ubuntu-latest
+    timeout-minutes: 62
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Testes do simulador
+        run: python3 -m unittest telemetria/test_simulador.py -v
+
+      - name: Enviar telemetria simulada
+        env:
+          DURACAO_MIN: ${{ inputs.duracao_min || '55' }}
+          VEICULOS: ${{ inputs.veiculos || '3' }}
+          INTERVALO_S: ${{ inputs.intervalo_s || '30' }}
+        run: |
+          python3 telemetria/simulador.py \
+            --veiculos "$VEICULOS" \
+            --intervalo "$INTERVALO_S" \
+            --duracao "$(( DURACAO_MIN * 60 ))" \
+            --saida leituras.jsonl
+
+      # Uma linha por leitura enviada (status, latencia, posicao). Evidencia de
+      # que a telemetria chegou, e insumo para o benchmarking (PI3-31).
+      - name: Guardar leituras enviadas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: telemetria-${{ github.run_id }}
+          path: leituras.jsonl
+          if-no-files-found: ignore
+          retention-days: 7
