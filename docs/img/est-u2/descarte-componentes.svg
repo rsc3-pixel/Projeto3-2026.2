@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="331" role="img" viewBox="0 0 1100 331">
+<title>Rota Vital — bolsas vencidas por hemocomponente</title><desc>Dados sintéticos · fotografia em 17/09/2026 · denominador: todas as bolsas do componente</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<g font-family="Arial,sans-serif" fill="#183247">
+<text x="24" y="31" font-size="21" font-weight="bold">Rota Vital — bolsas vencidas por hemocomponente</text>
+<text x="24" y="56" font-size="14">Dados sintéticos · fotografia em 17/09/2026 · denominador: todas as bolsas do componente</text>
+<text x="24" y="98" font-size="15">Plaquetas</text>
+<rect x="200" y="80" width="450" height="26" fill="#edf1f5"/>
+<rect x="200" y="80" width="405.900" height="26" fill="#ab354a"/>
+<text x="665" y="98" font-size="14">90.2% · 367 vencidas / 407 bolsas</text>
+<text x="24" y="142" font-size="15">Hemácias</text>
+<rect x="200" y="124" width="450" height="26" fill="#edf1f5"/>
+<rect x="200" y="124" width="114.750" height="26" fill="#ab354a"/>
+<text x="665" y="142" font-size="14">25.5% · 288 vencidas / 1128 bolsas</text>
+<text x="24" y="186" font-size="15">Plasma</text>
+<rect x="200" y="168" width="450" height="26" fill="#edf1f5"/>
+<rect x="200" y="168" width="0.000" height="26" fill="#ab354a"/>
+<text x="665" y="186" font-size="14">0.0% · 0 vencidas / 369 bolsas</text>
+<text x="24" y="230" font-size="15">Crioprecipitado</text>
+<rect x="200" y="212" width="450" height="26" fill="#edf1f5"/>
+<rect x="200" y="212" width="0.000" height="26" fill="#ab354a"/>
+<text x="665" y="230" font-size="14">0.0% · 0 vencidas / 96 bolsas</text>
+<text x="200" y="291" font-size="12">Escala das barras: 0% a 100%</text>
+<text x="24" y="315" font-size="12">Vencimento observado na base sintética; não é previsão de descarte nem ganho medido de FEFO.</text>
+</g></svg>
