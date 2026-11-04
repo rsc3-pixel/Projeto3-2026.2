@@ -17,17 +17,21 @@
 #   - ssh configurado para o servidor (chave sem senha, ou ssh-agent ativo)
 #
 # PRE-REQUISITOS (servidor)
-#   - /var/www/rota-vital-angular/  deve existir e pertencer ao usuario de deploy
-#       sudo mkdir -p /var/www/rota-vital-angular
-#       sudo chown $USER:$USER /var/www/rota-vital-angular
-#   - Nginx configurado com infra/nginx-rota-vital.conf (location /app/)
+#   - Usuario de deploy com sudo sem senha (NOPASSWD) para: mkdir, chown,
+#     cp, ln, nginx, systemctl
+#   - Se for a primeira vez, o script configura tudo automaticamente.
 #
 # O QUE ESTE SCRIPT FAZ
-#   1. Verifica pre-requisitos
-#   2. Instala dependencias (bun install ou npm ci)
-#   3. Builda com ng build --configuration=production
-#   4. Faz rsync do dist/ para o servidor (--delete remove arquivos obsoletos)
-#   5. Recarrega o Nginx no servidor (sem derrubar conexoes em andamento)
+#   1. Verifica pre-requisitos locais
+#   2. Faz setup de primeiro acesso no servidor (se necessario):
+#        - cria /var/www/rota-vital-angular/
+#        - instala infra/nginx-rota-vital.conf em sites-available
+#        - habilita o site (symlink em sites-enabled)
+#        - valida e recarrega o Nginx
+#   3. Instala dependencias (bun install ou npm ci)
+#   4. Builda com ng build --configuration=production
+#   5. Faz rsync do dist/ para o servidor (--delete remove arquivos obsoletos)
+#   6. Recarrega o Nginx no servidor (sem derrubar conexoes em andamento)
 
 set -euo pipefail
 
@@ -92,7 +96,41 @@ ssh -o BatchMode=yes -o ConnectTimeout=8 "${DEPLOY_HOST}" "echo ok" &>/dev/null 
     || die "Nao foi possivel conectar via SSH em ${DEPLOY_HOST}.\nVerifique sua chave SSH ou execute: ssh-add ~/.ssh/id_rsa"
 
 # ---------------------------------------------------------------------------
-# 2. Instalar dependencias
+# 2. Setup de primeiro acesso no servidor (idempotente)
+# ---------------------------------------------------------------------------
+
+NGINX_CONF_SRC="${SCRIPT_DIR}/nginx-rota-vital.conf"
+[[ -f "${NGINX_CONF_SRC}" ]] || die "Arquivo de conf Nginx nao encontrado: ${NGINX_CONF_SRC}"
+
+info "Enviando config do Nginx para o servidor..."
+scp "${NGINX_CONF_SRC}" "${DEPLOY_HOST}:/tmp/_nginx_rota_vital.conf"
+
+info "Executando setup no servidor (idempotente)..."
+ssh "${DEPLOY_HOST}" bash -s <<'REMOTE_SETUP'
+set -euo pipefail
+
+if [[ ! -d /var/www/rota-vital-angular ]]; then
+    echo "[servidor] Criando /var/www/rota-vital-angular..."
+    sudo mkdir -p /var/www/rota-vital-angular
+    sudo chown "$(id -u):$(id -g)" /var/www/rota-vital-angular
+fi
+
+if [[ ! -f /etc/nginx/sites-available/rota-vital ]]; then
+    echo "[servidor] Instalando config do Nginx (sites-available)..."
+    sudo cp /tmp/_nginx_rota_vital.conf /etc/nginx/sites-available/rota-vital
+fi
+
+if [[ ! -L /etc/nginx/sites-enabled/rota-vital ]]; then
+    echo "[servidor] Habilitando site (symlink sites-enabled)..."
+    sudo ln -sf /etc/nginx/sites-available/rota-vital /etc/nginx/sites-enabled/rota-vital
+fi
+
+sudo nginx -t
+echo "[servidor] Setup OK."
+REMOTE_SETUP
+
+# ---------------------------------------------------------------------------
+# 3. Instalar dependencias
 # ---------------------------------------------------------------------------
 info "Instalando dependencias (${PKG_MANAGER})..."
 (cd "${ANGULAR_DIR}" && ${INSTALL_CMD})
