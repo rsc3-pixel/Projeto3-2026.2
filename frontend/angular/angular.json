@@ -2,7 +2,8 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "cli": {
-    "packageManager": "npm"
+    "packageManager": "npm",
+    "analytics": "ddbe432f-a07c-4990-8e24-49f5d5201eea"
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -28,6 +29,7 @@
           },
           "configurations": {
             "production": {
+              "baseHref": "/app/",
               "budgets": [
                 {
                   "type": "initial",

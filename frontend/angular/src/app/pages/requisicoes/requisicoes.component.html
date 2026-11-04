@@ -1,0 +1,63 @@
+<section class="page-content">
+  <h2>Requisições</h2>
+
+  <div class="filter-bar">
+    <label>
+      Status
+      <select [value]="filtroStatus()" (change)="filtroStatus.set($any($event.target).value)">
+        <option value="">Todos</option>
+        <option value="PENDENTE">Pendente</option>
+        <option value="PARCIALMENTE_ATENDIDA">Parcialmente Atendida</option>
+        <option value="ATENDIDA">Atendida</option>
+        <option value="CANCELADA">Cancelada</option>
+      </select>
+    </label>
+    <label>
+      Prioridade
+      <select [value]="filtroPrioridade()" (change)="filtroPrioridade.set($any($event.target).value)">
+        <option value="">Todas</option>
+        <option value="ROTINA">Rotina</option>
+        <option value="URGENTE">Urgente</option>
+        <option value="EMERGENCIA">Emergência</option>
+      </select>
+    </label>
+    <span class="count-label">{{ filtered().length }} requisição(ões)</span>
+  </div>
+
+  @if (loading()) {
+    <p class="loading-msg">Carregando requisições...</p>
+  } @else if (error()) {
+    <p class="error-msg">{{ error() }}</p>
+  } @else {
+    <div class="rv-frame">
+    <div class="table-wrap">
+      <table class="rv-table">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Hospital</th>
+            <th>Prioridade</th>
+            <th>Status</th>
+            <th>Itens</th>
+            <th>Prazo</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of filtered(); track r.id) {
+            <tr>
+              <td>{{ formatDate(r.dataHoraCriacao) }}</td>
+              <td class="id-cell">{{ r.hospitalId }}</td>
+              <td><span [class]="badgePrioridade(r.prioridade)"><i></i>{{ formatPrioridade(r.prioridade) }}</span></td>
+              <td><span [class]="badgeStatus(r.status)"><i></i>{{ formatStatusReq(r.status) }}</span></td>
+              <td>{{ r.itens.length }}</td>
+              <td>{{ r.prazoEntrega ? formatDate(r.prazoEntrega) : '—' }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="empty-msg">Nenhuma requisição encontrada.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    </div>
+  }
+</section>

@@ -1,1 +1,400 @@
-/* You can add global styles to this file, and also import other style files */
+/* Rota Vital — design system adaptado do Admin-panel (jubayer910) */
+
+/* ── Tokens ──────────────────────────────────────────────────────── */
+:root {
+  /* brand */
+  --rv-primary:      #dc2626;
+  --rv-primary-hov:  #b91c1c;
+  --rv-on-primary:   #fff;
+
+  /* surfaces */
+  --rv-page-bg:   #f5f5f5;
+  --rv-surface:   #ffffff;
+  --rv-side-bg:   #efefef;
+  --rv-band-bg:   #efefef;
+
+  /* ink */
+  --rv-ink:       #0f172a;
+  --rv-ink-soft:  #334155;
+  --rv-text-2:    #4c4c4c;
+  --rv-soft:      #64748b;
+  --rv-faint:     #94a3b8;
+
+  /* borders */
+  --rv-border:      #e2e8f0;
+  --rv-border-hov:  #cbd5e1;
+
+  /* fills */
+  --rv-fill:  rgba(0, 0, 0, 0.04);
+  --rv-lift:  rgba(255, 255, 255, 0.55);
+
+  /* semantic */
+  --rv-ok:      #15803d;
+  --rv-ok-bg:   rgba(21, 128, 61, 0.09);
+  --rv-bad:     #b42318;
+  --rv-bad-bg:  rgba(180, 35, 24, 0.07);
+  --rv-warn:    #b45309;
+  --rv-warn-bg: rgba(180, 83, 9, 0.08);
+
+  /* shadows */
+  --rv-raise: 0 1px 2px rgba(0, 0, 0, 0.06);
+
+  /* engraved hairlines — 1px white highlight + 1px grey shadow */
+  --rule-highlight: rgb(255, 255, 255);
+  --rule-shadow:    rgb(220, 220, 220);
+  --hair-t: inset 0  1px 0 var(--rule-highlight), inset 0  2px 0 var(--rule-shadow);
+  --hair-b: inset 0 -1px 0 var(--rule-shadow),    inset 0 -2px 0 var(--rule-highlight);
+  --hair-l: inset  1px 0 0 var(--rule-highlight), inset  2px 0 0 var(--rule-shadow);
+  --hair-r: inset -1px 0 0 var(--rule-shadow),    inset -2px 0 0 var(--rule-highlight);
+
+  /* motion */
+  --ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+/* ── Reset ───────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+app-root {
+  display: block;
+  min-height: 100dvh;
+}
+
+button {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* ── Status badges — dot + label (padrão do Admin-panel) ─────────── */
+/*
+  Uso no template:
+    <span [class]="statusClass(x)"><i></i>{{ formatStatus(x) }}</span>
+  statusClass() retorna algo como "rv-status rv-status-disponivel"
+*/
+.rv-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.rv-status i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* Bolsa */
+.rv-status-disponivel         { background: var(--rv-ok-bg);   color: var(--rv-ok);   }
+.rv-status-reservada          { background: #dbeafe;            color: #1d4ed8;        }
+.rv-status-alocada            { background: #ede9fe;            color: #7c3aed;        }
+.rv-status-em-transito        { background: var(--rv-warn-bg);  color: var(--rv-warn); }
+.rv-status-entregue           { background: #d1fae5;            color: #065f46;        }
+.rv-status-descartada         { background: var(--rv-fill);     color: var(--rv-soft); }
+
+/* Requisição status */
+.rv-status-pendente           { background: #fef9c3;            color: #854d0e;        }
+.rv-status-atendida           { background: var(--rv-ok-bg);   color: var(--rv-ok);   }
+.rv-status-parcialmente-atendida { background: var(--rv-warn-bg); color: var(--rv-warn); }
+.rv-status-cancelada          { background: var(--rv-fill);     color: var(--rv-soft); }
+
+/* Rota status */
+.rv-status-planejada          { background: #dbeafe;            color: #1d4ed8;        }
+.rv-status-concluida          { background: #d1fae5;            color: #065f46;        }
+
+/* Prioridade */
+.rv-status-rotina             { background: var(--rv-fill);     color: var(--rv-text-2); }
+.rv-status-urgente            { background: var(--rv-warn-bg);  color: var(--rv-warn); }
+.rv-status-emergencia         { background: var(--rv-bad-bg);   color: var(--rv-bad);  }
+
+/* ── KPI strip ───────────────────────────────────────────────────── */
+/* Réplica direta do .kpis / .kpi do Admin-panel */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: var(--rv-surface);
+  border: 1px solid var(--rv-border);
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.kpi-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 22px 20px;
+  border-right: 1px solid var(--rv-border);
+  transition: background-color 180ms var(--ease-out);
+  cursor: default;
+}
+
+.kpi-cell:last-child {
+  border-right: none;
+}
+
+.kpi-cell:hover {
+  background: var(--rv-fill);
+}
+
+.kpi-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--rv-text-2);
+}
+
+.kpi-value {
+  font-weight: 500;
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: -1.2px;
+  font-variant-numeric: tabular-nums;
+  color: var(--rv-ink);
+}
+
+.kpi-value.accent { color: var(--rv-primary); }
+
+.kpi-sub {
+  font-size: 12px;
+  color: var(--rv-faint);
+}
+
+@media (max-width: 900px) {
+  .kpi-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .kpi-cell:nth-child(2) { box-shadow: var(--hair-b); }
+  .kpi-cell:nth-child(1) { box-shadow: var(--hair-r), var(--hair-b); }
+  .kpi-cell:nth-child(3) { box-shadow: var(--hair-r); }
+}
+
+/* ── Frame / Card ────────────────────────────────────────────────── */
+.rv-frame,
+.rv-card {
+  position: relative;
+  background: var(--rv-surface);
+  border-radius: 10px;
+  border: 1px solid var(--rv-border);
+  overflow: hidden;
+}
+
+.rv-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.rv-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--rv-border);
+}
+
+.rv-card-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--rv-ink);
+}
+
+.rv-card-flush {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ── Tabela — limpa, sem hairlines ───────────────────────────────── */
+.rv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  color: var(--rv-ink-soft);
+}
+
+.rv-table th {
+  height: 36px;
+  padding: 0 14px;
+  background: var(--rv-band-bg);
+  border-bottom: 1px solid var(--rv-border);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--rv-soft);
+}
+
+.rv-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--rv-border);
+  vertical-align: middle;
+}
+
+.rv-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.rv-table tbody tr:hover td {
+  background: var(--rv-fill);
+}
+
+.rv-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rv-table td.num {
+  font-weight: 500;
+  color: var(--rv-ink);
+}
+
+/* ── Filter bar ──────────────────────────────────────────────────── */
+/* Facets (filtros com borda tracejada, estilo Admin-panel) */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 54px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rv-border);
+  margin-bottom: 0;
+}
+
+.filter-bar label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rv-faint);
+}
+
+.filter-bar select {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--rv-border);
+  border-radius: 7px;
+  background: var(--rv-surface);
+  font-size: 13px;
+  color: var(--rv-text-2);
+  cursor: pointer;
+  outline: none;
+  min-width: 140px;
+  transition: border-color 140ms, box-shadow 140ms;
+}
+
+.filter-bar select:hover {
+  border-color: var(--rv-border-hov);
+}
+
+.filter-bar select:focus {
+  border-color: var(--rv-primary);
+  box-shadow: 0 0 0 3px rgba(220,38,38,0.1);
+}
+
+.count-label {
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--rv-text-2);
+  margin-left: auto;
+}
+
+/* ── Tables grid (Painel) ────────────────────────────────────────── */
+.tables-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* Section titles no Painel */
+.section-title {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rv-faint);
+}
+
+/* ── States ──────────────────────────────────────────────────────── */
+.loading-msg {
+  padding: 48px 20px;
+  background: var(--rv-band-bg);
+  font-size: 14px;
+  text-align: center;
+  color: var(--rv-soft);
+}
+
+.error-msg {
+  padding: 48px 20px;
+  background: var(--rv-bad-bg);
+  font-size: 14px;
+  text-align: center;
+  color: var(--rv-bad);
+}
+
+.empty-msg {
+  padding: 48px 20px;
+  background: var(--rv-band-bg);
+  font-size: 14px;
+  text-align: center;
+  color: var(--rv-soft);
+}
+
+/* ── Helpers ─────────────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; }
+
+.id-cell {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  color: var(--rv-faint);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.muted { color: var(--rv-faint); }
+
+/* ── Alerta de déficit (Painel cobertura) ────────────────────────── */
+.deficit-alert {
+  color: var(--rv-bad);
+  font-weight: 500;
+}
+
+/* ── Bolsas críticas info ────────────────────────────────────────── */
+.criticas-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  padding: 14px 22px;
+  background: var(--rv-warn-bg);
+  box-shadow: var(--hair-t), var(--hair-b), var(--hair-l), var(--hair-r);
+  font-size: 13px;
+  color: var(--rv-warn);
+  margin-top: 20px;
+}

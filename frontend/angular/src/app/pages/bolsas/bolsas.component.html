@@ -1,0 +1,82 @@
+<section class="page-content">
+  <h2>Estoque de Bolsas</h2>
+
+  <div class="filter-bar">
+    <label>
+      Status
+      <select [value]="filtroStatus()" (change)="filtroStatus.set($any($event.target).value)">
+        <option value="">Todos</option>
+        <option value="DISPONIVEL">Disponível</option>
+        <option value="RESERVADA">Reservada</option>
+        <option value="ALOCADA">Alocada</option>
+        <option value="EM_TRANSITO">Em Trânsito</option>
+        <option value="ENTREGUE">Entregue</option>
+        <option value="DESCARTADA">Descartada</option>
+      </select>
+    </label>
+    <label>
+      Componente
+      <select [value]="filtroTipo()" (change)="filtroTipo.set($any($event.target).value)">
+        <option value="">Todos</option>
+        <option value="CONCENTRADO_HEMACIAS">Conc. Hemácias</option>
+        <option value="PLASMA_FRESCO_CONGELADO">Plasma</option>
+        <option value="CONCENTRADO_PLAQUETAS">Plaquetas</option>
+        <option value="CRIOPRECIPITADO">Crioprecipitado</option>
+      </select>
+    </label>
+    <label>
+      Grupo Sanguíneo
+      <select [value]="filtroGrupo()" (change)="filtroGrupo.set($any($event.target).value)">
+        <option value="">Todos</option>
+        <option value="A_POSITIVO">A+</option>
+        <option value="A_NEGATIVO">A-</option>
+        <option value="B_POSITIVO">B+</option>
+        <option value="B_NEGATIVO">B-</option>
+        <option value="AB_POSITIVO">AB+</option>
+        <option value="AB_NEGATIVO">AB-</option>
+        <option value="O_POSITIVO">O+</option>
+        <option value="O_NEGATIVO">O-</option>
+      </select>
+    </label>
+    <span class="count-label">{{ filtered().length }} bolsa(s)</span>
+  </div>
+
+  @if (loading()) {
+    <p class="loading-msg">Carregando bolsas...</p>
+  } @else if (error()) {
+    <p class="error-msg">{{ error() }}</p>
+  } @else {
+    <div class="rv-frame">
+    <div class="table-wrap">
+      <table class="rv-table">
+        <thead>
+          <tr>
+            <th>Componente</th>
+            <th>Grupo</th>
+            <th>Volume (mL)</th>
+            <th>Coleta</th>
+            <th>Validade</th>
+            <th>Status</th>
+            <th>Hemocentro</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (b of filtered(); track b.id) {
+            <tr>
+              <td>{{ formatComponente(b.tipoHemocomponente) }}</td>
+              <td>{{ formatGrupo(b.grupoSanguineo) }}</td>
+              <td>{{ b.volumeMl }}</td>
+              <td>{{ formatDate(b.dataColeta) }}</td>
+              <td>{{ formatDate(b.dataValidade) }}</td>
+              <td><span [class]="statusClass(b.status)"><i></i>{{ formatStatus(b.status) }}</span></td>
+              <td class="id-cell">{{ b.hemocentroId }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="empty-msg">Nenhuma bolsa encontrada com os filtros selecionados.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    </div>
+  }
+</section>
