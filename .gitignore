@@ -32,6 +32,9 @@ __pycache__/
 
 # Front-end
 node_modules/
+node_modules
+dist/
+dist
 frontend/angular/dist/
 frontend/angular/.angular/
 

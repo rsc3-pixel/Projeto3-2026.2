@@ -1,0 +1,412 @@
+/* ── Rota Vital Shell ───────────────────────────────────── */
+
+/* ── Tokens ─────────────────────────────────────────────── */
+.rv-app {
+  --side-w: 248px;
+
+  --bg:          #f5f5f5;
+  --side-bg:     #e8e8e8;
+  --surface:     #ffffff;
+  --border:      rgba(0,0,0,0.08);
+  --ink:         #111111;
+  --ink2:        #444444;
+  --muted:       #888888;
+  --accent:      #dc2626;
+  --active-bg:   rgba(0,0,0,0.07);
+  --active-shadow: none;
+  --ease:        cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* propagate para globals */
+  --rv-primary:     var(--accent);
+  --rv-page-bg:     var(--bg);
+  --rv-surface:     var(--surface);
+  --rv-side-bg:     var(--side-bg);
+  --rv-band-bg:     #e8e8e8;
+  --rv-ink:         var(--ink);
+  --rv-ink-soft:    var(--ink2);
+  --rv-text-2:      var(--ink2);
+  --rv-soft:        var(--muted);
+  --rv-faint:       #aaaaaa;
+  --rv-border:      var(--border);
+  --rv-border-hov:  rgba(0,0,0,0.15);
+  --rv-fill:        rgba(0,0,0,0.05);
+  --rv-lift:        rgba(255,255,255,0.6);
+  --rv-ok:          #15803d;
+  --rv-ok-bg:       rgba(21,128,61,0.09);
+  --rv-bad:         #b42318;
+  --rv-bad-bg:      rgba(180,35,24,0.07);
+  --rv-warn:        #b45309;
+  --rv-warn-bg:     rgba(180,83,9,0.08);
+  --rv-raise:       var(--active-shadow);
+  --rule-highlight: #ffffff;
+  --rule-shadow:    #d0d0d0;
+  --hair-t: inset 0  1px 0 var(--rule-highlight), inset 0  2px 0 var(--rule-shadow);
+  --hair-b: inset 0 -1px 0 var(--rule-shadow),    inset 0 -2px 0 var(--rule-highlight);
+  --hair-l: inset  1px 0 0 var(--rule-highlight), inset  2px 0 0 var(--rule-shadow);
+  --hair-r: inset -1px 0 0 var(--rule-shadow),    inset -2px 0 0 var(--rule-highlight);
+  --ease-out: var(--ease);
+
+  display: grid;
+  grid-template-columns: var(--side-w) minmax(0, 1fr);
+  min-height: 100dvh;
+  /* sidebar color fills the full left column via the grid background */
+  background: var(--side-bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  color: var(--ink2);
+  transition: grid-template-columns 280ms var(--ease);
+}
+
+/* ── Dark mode ──────────────────────────────────────────── */
+.rv-app[data-theme="dark"] {
+  --bg:          #161616;
+  --side-bg:     #0f0f0f;
+  --surface:     #1e1e1e;
+  --border:      rgba(255,255,255,0.07);
+  --ink:         #f0f0f0;
+  --ink2:        #c8c8c8;
+  --muted:       #777777;
+  --active-bg:   rgba(255,255,255,0.08);
+  --active-shadow: none;
+  --rule-highlight: #2a2a2a;
+  --rule-shadow:    #080808;
+  --rv-band-bg:  #1a1a1a;
+  --rv-faint:    #666666;
+  --rv-fill:     rgba(255,255,255,0.06);
+  --rv-lift:     rgba(255,255,255,0.03);
+  --rv-border-hov: rgba(255,255,255,0.12);
+}
+
+/* ── Sidebar ────────────────────────────────────────────── */
+.rv-side {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 10px 12px; /* sem padding-top — head começa em y=0 */
+  background: var(--side-bg);
+  transition: padding 280ms var(--ease);
+}
+
+/* ── Brand + toggle (flex row, sem absolute) ────────────── */
+.rv-side-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 56px;           /* igual ao topbar → linhas alinham em y=56px */
+  padding: 0 2px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.rv-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.rv-brand-badge {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  display: grid;
+  place-items: center;
+}
+
+.rv-brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  transition: opacity 200ms var(--ease), width 280ms var(--ease);
+}
+
+.rv-brand-text strong {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rv-brand-text span {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.rv-side-toggle {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  color: var(--muted);
+  transition: background 140ms var(--ease), color 140ms var(--ease);
+}
+
+.rv-side-toggle:hover {
+  background: var(--rv-fill);
+  color: var(--ink);
+}
+
+/* ── Nav ────────────────────────────────────────────────── */
+.rv-nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  padding: 10px 0 8px;
+}
+
+.rv-nav::-webkit-scrollbar { display: none; }
+
+.rv-nav-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.rv-nav-group {
+  padding: 0 8px;
+  margin-bottom: 2px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity 200ms var(--ease), height 280ms var(--ease);
+}
+
+.rv-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 36px;
+  padding: 0 8px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink2);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background 120ms var(--ease), color 120ms var(--ease);
+}
+
+.rv-nav-icon {
+  flex: 0 0 18px;
+  color: var(--muted);
+  transition: color 120ms var(--ease);
+}
+
+.rv-nav-link:hover {
+  background: var(--rv-fill);
+  color: var(--ink);
+}
+
+.rv-nav-link:hover .rv-nav-icon {
+  color: var(--ink2);
+}
+
+.rv-nav-link[data-active] {
+  background: var(--active-bg);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.rv-nav-link[data-active] .rv-nav-icon {
+  color: var(--ink);
+}
+
+.rv-side-label {
+  transition: opacity 200ms var(--ease);
+  overflow: hidden;
+}
+
+/* ── Footer ─────────────────────────────────────────────── */
+.rv-side-foot {
+  flex: 0 0 auto;
+  height: 40px;
+  border-top: 1px solid var(--border);
+  background:
+    repeating-linear-gradient(45deg,  transparent, transparent 3px, var(--rv-fill) 3px, var(--rv-fill) 4px),
+    repeating-linear-gradient(-45deg, transparent, transparent 3px, var(--rv-fill) 3px, var(--rv-fill) 4px),
+    transparent;
+}
+
+/* ── Estado colapsado ───────────────────────────────────── */
+.rv-app.collapsed {
+  --side-w: 60px;
+}
+
+.rv-app.collapsed .rv-side {
+  padding: 0 6px 12px;
+  align-items: center;
+}
+
+.rv-app.collapsed .rv-side-head {
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 100%;
+}
+
+.rv-app.collapsed .rv-brand {
+  display: none;
+}
+
+.rv-app.collapsed .rv-side-toggle {
+  flex: none;
+  width: 22px;
+  height: 22px;
+}
+
+.rv-app.collapsed .rv-nav {
+  width: 100%;
+}
+
+.rv-app.collapsed .rv-nav-section {
+  width: 100%;
+}
+
+.rv-app.collapsed .rv-nav-group {
+  height: 1px;
+  padding: 0;
+  margin: 3px 0 5px;
+  background: var(--border);
+  overflow: hidden;
+  font-size: 0;
+}
+
+/* Link vira quadrado 48×36, centralizado na coluna */
+.rv-app.collapsed .rv-nav-link {
+  width: 48px;
+  margin: 0 auto;
+  padding: 0;
+  gap: 0;
+  justify-content: center;
+}
+
+.rv-app.collapsed .rv-side-label {
+  display: none;
+}
+
+/* tooltip no collapsed */
+.rv-app.collapsed .rv-nav-link[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: fixed;
+  left: calc(var(--side-w) + 8px);
+  margin-top: -18px;
+  z-index: 100;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--surface);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Borda da sidebar se estende pela altura toda da página via box-shadow no work */
+.rv-app { position: relative; }
+
+/* ── Work area ──────────────────────────────────────────── */
+.rv-work {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--bg);
+  /* borda esquerda estende-se por toda a altura, cobrindo o que a sidebar não alcança */
+  box-shadow: -1px 0 0 var(--border);
+}
+
+/* ── Topbar ─────────────────────────────────────────────── */
+.rv-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  padding: 0 28px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  border-bottom: 1px solid var(--border);
+}
+
+.rv-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  flex: 1;
+  min-width: 0;
+}
+
+.rv-crumbs strong {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.rv-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rv-top-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  color: var(--muted);
+  transition: background 140ms var(--ease), color 140ms var(--ease);
+}
+
+.rv-top-icon:hover {
+  background: var(--rv-fill);
+  color: var(--ink);
+}
+
+/* ── Main ───────────────────────────────────────────────── */
+.rv-main {
+  flex: 1;
+  padding: 28px 28px 64px;
+  min-width: 0;
+}
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .rv-app {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rv-side {
+    display: none;
+  }
+  .rv-main {
+    padding: 16px 16px 64px;
+  }
+}

@@ -1,0 +1,54 @@
+<section class="page-content">
+  <h2>Rotas de Entrega</h2>
+
+  <div class="filter-bar">
+    <label>
+      Status
+      <select [value]="filtroStatus()" (change)="filtroStatus.set($any($event.target).value)">
+        <option value="">Todos</option>
+        <option value="PLANEJADA">Planejada</option>
+        <option value="EM_TRANSITO">Em Trânsito</option>
+        <option value="CONCLUIDA">Concluída</option>
+        <option value="CANCELADA">Cancelada</option>
+      </select>
+    </label>
+    <span class="count-label">{{ filtered().length }} rota(s)</span>
+  </div>
+
+  @if (loading()) {
+    <p class="loading-msg">Carregando rotas...</p>
+  } @else if (error()) {
+    <p class="error-msg">{{ error() }}</p>
+  } @else {
+    <div class="rv-frame">
+    <div class="table-wrap">
+      <table class="rv-table">
+        <thead>
+          <tr>
+            <th>Origem (Hemocentro)</th>
+            <th>Destino (Hospital)</th>
+            <th>Prev. Saída</th>
+            <th>Prev. Chegada</th>
+            <th>Status</th>
+            <th>Bolsas</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of filtered(); track r.id) {
+            <tr>
+              <td class="id-cell">{{ r.hemocentroOrigemId }}</td>
+              <td class="id-cell">{{ r.hospitalDestinoId }}</td>
+              <td>{{ formatDate(r.previsaoSaida) }}</td>
+              <td>{{ formatDate(r.previsaoChegada) }}</td>
+              <td><span [class]="badgeRota(r.status)"><i></i>{{ formatStatusRota(r.status) }}</span></td>
+              <td>{{ r.bolsas?.length ?? 0 }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="empty-msg">Nenhuma rota encontrada.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    </div>
+  }
+</section>

@@ -1,0 +1,131 @@
+<section class="page-content">
+  <h2>Painel Geral</h2>
+
+  @if (loading()) {
+    <p class="loading-msg">Carregando indicadores...</p>
+  } @else if (error()) {
+    <p class="error-msg">{{ error() }}</p>
+  } @else {
+
+    <!-- ── KPI strip ──────────────────────────────────── -->
+    <div class="kpi-strip">
+      <div class="kpi-cell">
+        <span class="kpi-label">Bolsas em Estoque</span>
+        <span class="kpi-value">{{ totalBolsas }}</span>
+        <span class="kpi-sub">estoque ativo</span>
+      </div>
+      <div class="kpi-cell">
+        <span class="kpi-label">Hemocentros</span>
+        <span class="kpi-value">{{ totalHemocentros() }}</span>
+        <span class="kpi-sub">na rede</span>
+      </div>
+      <div class="kpi-cell">
+        <span class="kpi-label">Hospitais</span>
+        <span class="kpi-value">{{ totalHospitais() }}</span>
+        <span class="kpi-sub">cadastrados</span>
+      </div>
+      <div class="kpi-cell">
+        <span class="kpi-label">Bolsas Críticas</span>
+        <span class="kpi-value accent">{{ bolsasCriticas()?.quantidade ?? 0 }}</span>
+        <span class="kpi-sub">vencem em ≤ 7 dias</span>
+      </div>
+    </div>
+
+    <!-- ── Linha 1: Tipo (barra) + Componente (donut) ── -->
+    <div class="dash-row-top">
+
+      <div class="rv-frame">
+        <header class="rv-card-head">
+          <h3 class="rv-card-title">Distribuição por Tipo Sanguíneo</h3>
+          <span class="card-sub">bolsas em estoque</span>
+        </header>
+        <div class="chart-wrap">
+          <canvas id="chart-tipo"></canvas>
+        </div>
+      </div>
+
+      <div class="rv-frame">
+        <header class="rv-card-head">
+          <h3 class="rv-card-title">Por Componente</h3>
+        </header>
+        <div class="chart-wrap chart-donut">
+          <canvas id="chart-componente"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Linha 2: Cobertura (barra horizontal, full) ── -->
+    <div class="rv-frame dash-full">
+      <header class="rv-card-head">
+        <h3 class="rv-card-title">Cobertura por Tipo Sanguíneo</h3>
+        <span class="card-sub">
+          <span class="legend-dot ok"></span>≥ 100%&nbsp;&nbsp;
+          <span class="legend-dot warn"></span>50–99%&nbsp;&nbsp;
+          <span class="legend-dot bad"></span>&lt; 50%
+        </span>
+      </header>
+      <div class="chart-wrap chart-cob">
+        <canvas id="chart-cobertura"></canvas>
+      </div>
+    </div>
+
+    <!-- ── Linha 3: Descarte + Críticas ─────────────── -->
+    <div class="dash-row-bot">
+
+      <div class="rv-frame">
+        <header class="rv-card-head">
+          <h3 class="rv-card-title">Taxa de Descarte</h3>
+          <span class="card-sub">por componente</span>
+        </header>
+        <div class="rv-card-flush table-wrap">
+          <table class="rv-table">
+            <thead>
+              <tr>
+                <th>Componente</th>
+                <th class="num">Total</th>
+                <th class="num">Vencidas</th>
+                <th class="num">Taxa</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (d of descarte(); track d.tipoHemocomponente) {
+                <tr>
+                  <td>{{ formatComponente(d.tipoHemocomponente) }}</td>
+                  <td class="num">{{ d.totalBolsas }}</td>
+                  <td class="num">{{ d.bolsasVencidas }}</td>
+                  <td class="num">{{ d.taxaDescartePercentual | number:'1.1-1' }}%</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="4" class="empty-msg">Sem dados</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      @if (bolsasCriticas(); as criticas) {
+        <div class="criticas-card rv-frame">
+          <div class="criticas-top">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+              <circle cx="10" cy="10" r="8"/>
+              <path d="M10 6v4.5"/>
+              <circle cx="10" cy="13.5" r=".75" fill="currentColor" stroke="none"/>
+            </svg>
+            <span>Bolsas Críticas</span>
+          </div>
+          <div class="criticas-num">{{ criticas.quantidade }}</div>
+          <p class="criticas-desc">vencem em ≤ {{ criticas.limiteDias }} dias</p>
+          <div class="criticas-pct-wrap">
+            <div class="criticas-pct-bar" [style.width.%]="criticas.percentualDoEstoqueValido"></div>
+          </div>
+          <span class="criticas-pct-label">
+            {{ criticas.percentualDoEstoqueValido | number:'1.1-1' }}% do estoque válido
+          </span>
+        </div>
+      }
+
+    </div>
+
+  }
+</section>
