@@ -384,6 +384,8 @@ Material de apoio, não exigido pelas entregas:
 | [docs/entendendo-o-rota-vital.md](docs/entendendo-o-rota-vital.md) | guia comentado do código, do modelo de domínio ao deploy |
 | [docs/plano-frontends.md](docs/plano-frontends.md) | plano dos dois front-ends: Thymeleaf e Angular |
 | [frontend/](frontend/) | onde cada front-end mora e como trabalhar só nele |
+| [docs/telemetria-simulada.md](docs/telemetria-simulada.md) | canal de telemetria **simulada** (temperatura + GPS): simulador, hospedagem e contrato (PI3-112) |
+| [docs/benchmark-rede.md](docs/benchmark-rede.md) | benchmarking de rede e painel `/painel-rede.html` (PI3-31) |
 
 ## Entregas anteriores
 
@@ -468,7 +470,7 @@ Material de apoio, não exigido pelas entregas:
 - Painel mostra medidas de dispersão, não só média
 - Cada indicador exibe a unidade e o período considerado
 
-**Implementação:** `IndicadorServico.java` · `IndicadorController.java` · endpoints `GET /api/v1/indicadores/*`
+**Implementação:** `IndicadorServico.java` · `IndicadorController.java` · endpoints `GET /api/v1/indicadores/*` · painel consolidado em `/painel/{id}` (U2: `/desabastecimento`, `/descarte/por-periodo` e o descarte evitável pela FEFO em `/descarte`; fórmulas em [`docs/interpretacao_indicadores.md`](docs/interpretacao_indicadores.md), evidências em [`docs/evidencias-pi3-103.md`](docs/evidencias-pi3-103.md) e [`docs/evidencias-pi3-32.md`](docs/evidencias-pi3-32.md))
 
 ---
 

@@ -313,7 +313,7 @@ class CenariosAceitacaoTest {
             mvc.perform(post("/api/v1/rotas/" + rota + "/temperaturas")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json.writeValueAsString(
-                                    new LeituraTemperaturaRequest(5.0))))
+                                    new LeituraTemperaturaRequest(5.0, null, null))))
                     .andExpect(status().isCreated())
                     // Entao a leitura e marcada como fora da faixa
                     .andExpect(jsonPath("$.dentroDaFaixa").value(false))
