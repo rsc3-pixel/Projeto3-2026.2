@@ -382,6 +382,7 @@ Material de apoio, não exigido pelas entregas:
 | Documento | O que cobre |
 |---|---|
 | [docs/entendendo-o-rota-vital.md](docs/entendendo-o-rota-vital.md) | guia comentado do código, do modelo de domínio ao deploy |
+| [docs/mapa-dominio-ddd.md](docs/mapa-dominio-ddd.md) | mapa do domínio em linguagem de DDD: contextos, entidades, agregados e raízes, objetos de valor e serviços, nomeados a partir do código em `dominio/` |
 | [docs/plano-frontends.md](docs/plano-frontends.md) | plano dos dois front-ends: Thymeleaf e Angular |
 | [frontend/](frontend/) | onde cada front-end mora e como trabalhar só nele |
 | [docs/telemetria-simulada.md](docs/telemetria-simulada.md) | canal de telemetria **simulada** (temperatura + GPS): simulador, hospedagem e contrato (PI3-112) |
