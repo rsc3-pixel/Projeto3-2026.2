@@ -57,6 +57,12 @@
               th:title="${centroAtual.nome}"
               th:text="${centroAtual.nome}">Hemocentro</span>
     </div>
+
+    <!-- Troca para o front-end em Angular. Os dois leem a mesma API: muda a
+         forma de ver, nao o dado. href puro, sem @{}: o /app/ e servido pelo
+         Nginx na raiz do dominio, fora da aplicacao Spring. -->
+    <a class="troca-front" href="/app/"
+       title="Abrir o painel de gestao, feito em Angular">ANGULAR &rarr;</a>
 </header>
 
 <main data-atualizar>
