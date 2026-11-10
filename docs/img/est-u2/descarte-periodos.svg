@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="287" role="img" viewBox="0 0 1100 287">
+<title>Rota Vital — vencimento por mês de coleta</title><desc>Dados sintéticos · todos os lotes avaliados na mesma data: 17/09/2026</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<g font-family="Arial,sans-serif" fill="#183247">
+<text x="24" y="31" font-size="21" font-weight="bold">Rota Vital — vencimento por mês de coleta</text>
+<text x="24" y="56" font-size="14">Dados sintéticos · todos os lotes avaliados na mesma data: 17/09/2026</text>
+<text x="24" y="98" font-size="15">2026-07</text>
+<rect x="200" y="80" width="450" height="26" fill="#edf1f5"/>
+<rect x="200" y="80" width="344.700" height="26" fill="#ab354a"/>
+<text x="665" y="98" font-size="14">76.6% · 301 vencidas / 393 coletadas</text>
+<text x="24" y="142" font-size="15">2026-08</text>
+<rect x="200" y="124" width="450" height="26" fill="#edf1f5"/>
+<rect x="200" y="124" width="124.200" height="26" fill="#ab354a"/>
+<text x="665" y="142" font-size="14">27.6% · 285 vencidas / 1032 coletadas</text>
+<text x="24" y="186" font-size="15">2026-09</text>
+<rect x="200" y="168" width="450" height="26" fill="#edf1f5"/>
+<rect x="200" y="168" width="54.000" height="26" fill="#ab354a"/>
+<text x="665" y="186" font-size="14">12.0% · 69 vencidas / 575 coletadas</text>
+<text x="200" y="247" font-size="12">Escala das barras: 0% a 100%</text>
+<text x="24" y="271" font-size="12">Lotes recentes tiveram menos tempo para vencer. A diferença não demonstra melhoria da operação.</text>
+</g></svg>
