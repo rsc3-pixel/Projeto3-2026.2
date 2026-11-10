@@ -22,6 +22,10 @@ concurrency:
 env:
   JAVA_VERSION: '21'
   JAVA_DISTRIBUICAO: 'temurin'
+  # O Angular 22 recusa versoes abaixo de 24.15.0: o CLI para com erro, nao
+  # com aviso. Fixado aqui para o pipeline nao quebrar quando o runner
+  # atualizar a versao padrao do Node.
+  NODE_VERSION: '24.15.0'
   # A aplicacao escuta em 127.0.0.1:8081 e so e alcancavel pelo Nginx, que
   # a serve neste dominio com HTTPS. As verificacoes publicas usam esta URL,
   # nao a porta 8081, que recusa conexao de fora.
@@ -202,6 +206,50 @@ jobs:
           name: aplicacao
           path: target/rota-vital.jar
           retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # FRONT-END ANGULAR - o front compila?
+  #
+  # Nao depende dos jobs de Java e nenhum job depende dele: o front e o back
+  # sao construidos e publicados separadamente, entao uma quebra no Angular
+  # nao deve impedir o deploy da API, que continua no ar e funcionando.
+  #
+  # 'npm ci' de proposito, e nao 'npm install': ele exige que o
+  # package-lock.json esteja em dia com o package.json e falha quando nao
+  # esta. E a mesma verificacao que o infra/deploy-angular.sh faz na VM
+  # quando o bun nao esta instalado, entao o pipeline passa a pegar aqui o
+  # que antes so aparecia na hora de publicar.
+  # ---------------------------------------------------------------------------
+  frontend:
+    name: Front-end Angular
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar o codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/angular/package-lock.json
+
+      - name: Instalar as dependencias
+        working-directory: frontend/angular
+        run: npm ci
+
+      - name: Compilar para producao
+        working-directory: frontend/angular
+        run: npm run build -- --configuration production
+
+      - name: Guardar o bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-angular
+          path: frontend/angular/dist/
+          retention-days: 7
+          if-no-files-found: error
 
   # ---------------------------------------------------------------------------
   # 4. DEPLOY - publica na VM do Google Cloud
