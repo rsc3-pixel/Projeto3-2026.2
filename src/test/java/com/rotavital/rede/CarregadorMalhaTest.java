@@ -159,4 +159,82 @@ class CarregadorMalhaTest {
         assertEquals(0.0, rota.custoTotal());
         assertEquals(ResultadoRota.semCaminho(), rota);
     }
+
+    // -----------------------------------------------------------------------
+    // HU-05: a malha montada para qualquer conjunto de unidades, com alcance
+    // maximo. E o que a roteirizacao usa sobre as unidades do banco.
+    // -----------------------------------------------------------------------
+
+    /**
+     * A sobrecarga com lista, alimentada com as 12 reais, produz a mesma
+     * malha que o carregamento padrao: os dois caminhos nao podem divergir.
+     */
+    @Test
+    void carregarComListaDasDozeReaisProduzAMesmaMalha() {
+        Grafo<String> padrao = CarregadorMalha.carregar();
+        Grafo<String> comLista = CarregadorMalha.carregar(UnidadeRede.TODAS);
+
+        assertEquals(padrao.listarVertices(), comLista.listarVertices());
+        for (String unidade : padrao.listarVertices()) {
+            assertEquals(padrao.vizinhosComPeso(unidade), comLista.vizinhosComPeso(unidade),
+                    "vizinhos de " + unidade + " diferem entre os dois carregamentos");
+        }
+    }
+
+    /**
+     * Uma unidade alem do alcance maximo de todas as outras entra como
+     * vertice, mas sem aresta: e assim que "destino inalcancavel" acontece
+     * de verdade na roteirizacao (cenario 2 da HU-05). Sem o limite de
+     * alcance, a regra dos 4 vizinhos mais proximos ligaria qualquer unidade
+     * a malha, por mais distante que fosse.
+     */
+    @Test
+    void unidadeAlemDoAlcanceMaximoFicaIsolada() {
+        UnidadeRede saoPaulo = new UnidadeRede("SP01", "Hospital em Sao Paulo",
+                "AGENCIA_TRANSFUSIONAL", "Sao Paulo", "Bela Vista", -23.5614, -46.6559);
+        List<UnidadeRede> unidades = new java.util.ArrayList<>(UnidadeRede.TODAS);
+        unidades.add(saoPaulo);
+
+        Grafo<String> malha = CarregadorMalha.carregar(unidades);
+
+        assertTrue(malha.contemVertice("SP01"));
+        assertTrue(malha.vizinhosComPeso("SP01").isEmpty(), "SP01 nao deveria ter trecho algum");
+        assertTrue(CarregadorMalha.distanciaKm(saoPaulo, UnidadeRede.TODAS.get(0))
+                > PremissasMalha.ALCANCE_MAXIMO_KM);
+
+        ResultadoRota<String> rota = new Dijkstra<>(malha).calcularRota("HC01", "SP01");
+        assertFalse(rota.alcancavel());
+
+        // E as 12 reais continuam ligadas entre si como antes.
+        assertEquals(12, new Dijkstra<>(malha).calcularDistancias("HC01").size());
+    }
+
+    /**
+     * O alcance limita quem recebe aresta, nao quantas: uma unidade com
+     * apenas duas vizinhas dentro do alcance liga-se a essas duas, e nao
+     * forca uma terceira fora do limite.
+     */
+    @Test
+    void dentroDoAlcanceLigaSoAsQueEstaoAoAlcance() {
+        UnidadeRede a = new UnidadeRede("A", "A", "HEMOCENTRO", "X", "x", -8.00, -34.90);
+        UnidadeRede b = new UnidadeRede("B", "B", "HEMOCENTRO", "X", "x", -8.01, -34.90);
+        UnidadeRede c = new UnidadeRede("C", "C", "HEMOCENTRO", "X", "x", -8.02, -34.90);
+        UnidadeRede longe = new UnidadeRede("L", "L", "HEMOCENTRO", "X", "x", -9.50, -34.90);
+
+        Grafo<String> malha = CarregadorMalha.carregar(List.of(a, b, c, longe));
+
+        assertEquals(java.util.Set.of("B", "C"), malha.listarVizinhos("A"));
+        assertTrue(malha.listarVizinhos("L").isEmpty());
+    }
+
+    @Test
+    void carregarRecusaListaNulaOuComNulo() {
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> CarregadorMalha.carregar((List<UnidadeRede>) null));
+
+        List<UnidadeRede> comNulo = new java.util.ArrayList<>();
+        comNulo.add(null);
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> CarregadorMalha.carregar(comNulo));
+    }
 }

@@ -11,11 +11,12 @@ Unidade 2 · as seções que o enunciado pede:
 |---|---|
 | [Equipe](#equipe) | os oito integrantes |
 | [Como rodar](#como-rodar) | subir do zero com um comando |
-| [Testes](#testes) | os três níveis, 421 testes |
+| [Testes](#testes) | os três níveis, 498 testes |
 | [Pipeline e deploy](#pipeline-e-deploy) | os cinco jobs, o portão e o rollback |
 | [Decisões](#decisões) | 16 decisões, com alternativas e porquê |
 | [Uso de IA](#uso-de-ia) | ferramenta, uso e verificação |
 | [Evidências](#evidências) | execuções, container e apresentação |
+| [Entrega 04 · POO](#entrega-04--poo-módulo-ii) | histórias novas, testes, tracker e apresentação final |
 
 **Aplicação no ar:** <https://rsc3-rotavital.duckdns.org>
 
@@ -124,13 +125,13 @@ Usa H2 em memória, sem banco externo.
 ./mvnw test -Dtest=CenariosAceitacaoTest     # só os de aceitação
 ```
 
-São **421 testes** em três níveis:
+São **498 testes** em três níveis:
 
 | Nível | O que exercita | Onde |
 |---|---|---|
 | Unitário | uma regra isolada, sem Spring | `MatrizCompatibilidadeTest`, `SelecaoFefoTest` |
 | Integração | um endpoint, com banco | `FluxoRequisicaoTest`, `TemperaturaRemessaTest` |
-| Aceitação | um cenário da história, de ponta a ponta | `CenariosAceitacaoTest` |
+| Aceitação | um cenário da história, de ponta a ponta | `CenariosAceitacaoTest`, `FluxoRequisicaoBolsaRotaTest` |
 
 Os testes de aceitação traduzem os cenários escritos em Gherkin no
 [documento de histórias](docs/historias-de-usuario.md), com a estrutura
@@ -151,7 +152,7 @@ build → testes → imagem → deploy
 | Job | O que faz | Quando |
 |---|---|---|
 | **Build** | compila | todo push e PR |
-| **Testes** | roda os 421 testes | depois do build |
+| **Testes** | roda os 498 testes | depois do build |
 | **Imagem** | constrói a imagem Docker e publica no GHCR | depois dos testes |
 | **Empacotamento** | gera o jar como artefato | depois dos testes |
 | **Deploy** | publica na VM por SSH | só na `main`, nunca em PR |
@@ -297,6 +298,9 @@ A API está no ar, publicada automaticamente a cada push na `main`:
 |---|---|
 | [`/actuator/health`](https://rsc3-rotavital.duckdns.org/actuator/health) | estado da aplicação |
 | [`/painel.html`](https://rsc3-rotavital.duckdns.org/painel.html) | painel de indicadores de estoque e demanda |
+| [`/painel/HC01/risco`](https://rsc3-rotavital.duckdns.org/painel/HC01/risco) | estoque crítico do HEMOPE: o que vence em 7, 15 ou 30 dias (HU-04) |
+| [`/api/v1/bolsas/em-risco?dias=7`](https://rsc3-rotavital.duckdns.org/api/v1/bolsas/em-risco?dias=7) | o mesmo painel, em JSON |
+| [`/api/v1/rotas/calcular?origemId=HC01&destinoId=HO06`](https://rsc3-rotavital.duckdns.org/api/v1/rotas/calcular?origemId=HC01&destinoId=HO06) | caminho mais rápido do HEMOPE ao HC UFPE (HU-05) |
 | [`/docs`](https://rsc3-rotavital.duckdns.org/docs) | API Reference interativa (Scalar) |
 | [`/api/v1/hemocentros`](https://rsc3-rotavital.duckdns.org/api/v1/hemocentros) | os hemocentros da carga inicial |
 | [`/api/v1/bolsas`](https://rsc3-rotavital.duckdns.org/api/v1/bolsas) | o estoque |
@@ -321,9 +325,9 @@ Os endpoints de negócio seguem o [contrato_api.md](docs/contrato_api.md):
 |---|---|
 | `/api/v1/hemocentros` | GET, POST, PUT, DELETE; sub-recursos `/bolsas` e `/rotas` |
 | `/api/v1/hospitais` | GET, POST, PUT, DELETE; sub-recurso `/requisicoes` |
-| `/api/v1/bolsas` | GET, POST, PATCH (status), DELETE |
+| `/api/v1/bolsas` | GET, POST, PATCH (status), DELETE; `/em-risco?dias=` (HU-04); `/lote` |
 | `/api/v1/requisicoes` | GET, POST, PATCH (cancelamento); sub-recursos `/itens` e `/itens/{id}/alocacoes` |
-| `/api/v1/rotas` | GET, POST, PATCH (status); sub-recurso `/bolsas` (embarque) |
+| `/api/v1/rotas` | GET, POST (chegada calculada se omitida), PATCH (status); `/calcular?origemId=&destinoId=` (HU-05); sub-recursos `/bolsas` (embarque) e `/temperaturas` |
 
 Ao subir, a aplicação carrega dados sintéticos (4 hemocentros, 6 hospitais,
 100 bolsas e requisições) para que a API já responda com conteúdo. A carga
@@ -375,6 +379,163 @@ e [docs/deploy.md](docs/deploy.md).
 > Rodando localmente com o perfil `prod`, a aplicação responde em
 > `http://localhost:8081`, não na 8080.
 
+## Entrega 04 · POO (Módulo II)
+
+**Status:** código, testes e README entregues em 12/11/2026. Screencasts a
+publicar (roteiro pronto). Validação com o monitor a registrar.
+
+**Artefatos**
+
+| Artefato | Link |
+|---|---|
+| **Aplicação no ar** | [rsc3-rotavital.duckdns.org](https://rsc3-rotavital.duckdns.org/actuator/health) · [estoque crítico](https://rsc3-rotavital.duckdns.org/painel/HC01/risco) · [cálculo de rota](https://rsc3-rotavital.duckdns.org/api/v1/rotas/calcular?origemId=HC01&destinoId=HO06) |
+| **API Reference (Scalar)** | [/docs](https://rsc3-rotavital.duckdns.org/docs) |
+| Histórias de usuário | [docs/historias-de-usuario.md](docs/historias-de-usuario.md) |
+| Contrato da API, com os endpoints novos | [docs/contrato_api.md](docs/contrato_api.md) |
+| Testes: 498 em três níveis, 47 novos nesta entrega | [seção Testes](#testes) · `./mvnw test` |
+| Issue / Bug tracker | [github.com/…/issues](https://github.com/rsc3-pixel/Projeto3-2026.2/issues?q=is%3Aissue) · print abaixo |
+| Screencast do sistema | _a gravar_ · roteiro em [docs/roteiro-screencasts-e04.md](docs/roteiro-screencasts-e04.md) |
+| Screencast do código | _a gravar_ · roteiro em [docs/roteiro-screencasts-e04.md](docs/roteiro-screencasts-e04.md) |
+| Apresentação final de POO | [slides](apresentacao/apresentacao-final-poo.html) · [roteiro de 8 min](docs/apresentacao-final-poo.md) |
+| Premissas da malha de rotas | [docs/premissas-malha-rede.md](docs/premissas-malha-rede.md) |
+
+### Histórias implementadas
+
+Três histórias, cada uma lendo e escrevendo no banco pela API, com cenários
+BDD em `CenariosAceitacaoTest` e testes de integração próprios.
+
+**HU-04 — Ver bolsas em risco de vencimento**
+
+| | |
+|---|---|
+| **Como** | técnico do hemocentro |
+| **Quero** | ver quais bolsas vencem nos próximos dias, ordenadas pelas mais críticas |
+| **Para que** | eu possa priorizar o despacho antes que virem descarte |
+
+**Critérios de aceite:**
+- O prazo do filtro é configurável (7, 15, 30 dias)
+- Resultado ordenado da mais crítica para a menos
+- Estado vazio tem mensagem própria, não tabela em branco
+- Bolsas já vencidas aparecem separadas das que ainda podem ser usadas
+
+"Em estoque" são as bolsas `DISPONIVEL` e `RESERVADA`: as que ainda podem
+virar descarte se não saírem a tempo. Bolsa em trânsito já saiu, entregue já
+foi usada e descartada já é perda contabilizada. A ordem é por validade e, em
+empate, por código de rastreio, o mesmo desempate da seleção FEFO, para que o
+painel e a fila de saída nunca discordem.
+
+**Implementação:** `BolsaServico.emRisco` · `GET /api/v1/bolsas/em-risco?dias=7&hemocentroId=` · tela `/painel/{id}/risco` (Thymeleaf, aba EM RISCO) · testes `BolsasEmRiscoTest` (14 casos) e `EstoqueWebControllerTest`
+
+---
+
+**HU-05 — Calcular rota de entrega**
+
+| | |
+|---|---|
+| **Como** | técnico do hemocentro |
+| **Quero** | que o sistema calcule o caminho mais rápido até o hospital de destino |
+| **Para que** | a remessa chegue dentro da janela de tempo e da cadeia fria |
+
+**Critérios de aceite:**
+- O peso considerado é tempo estimado, não distância
+- Caminho calculado confere com verificação manual em rede pequena
+- Ausência de rota devolve resposta tratada, não erro
+- Bolsas embarcadas mudam de status ao despachar
+
+A malha deixou de ser a lista fixa das 12 unidades e passou a ser montada a
+partir dos hemocentros e hospitais **do banco**, com as coordenadas de cada
+endereço e as mesmas premissas (25 km/h, sinuosidade 1,4, 4 vizinhos). Ganhou
+uma premissa nova, o alcance máximo de 50 km: sem ela, qualquer unidade seria
+"alcançável", por mais distante, e o cenário de destino inalcançável não
+poderia acontecer. O `POST /api/v1/rotas` passou a aceitar omitir a previsão
+de chegada: ela é a saída mais o tempo do caminho, e o caminho fica gravado na
+rota.
+
+**Implementação:** `RoteirizacaoServico` (malha do banco + `Dijkstra`) · `GET /api/v1/rotas/calcular?origemId=&destinoId=` · `POST /api/v1/rotas` sem `previsaoChegada` · `Rota.tempoEstimadoMinutos` e `Rota.caminho` · `PremissasMalha.ALCANCE_MAXIMO_KM` · testes `CalculoRotaTest` (10 casos) e `CarregadorMalhaTest`
+
+---
+
+**HU-02 — Solicitar hemocomponentes** (complemento: prazo pela prioridade)
+
+| | |
+|---|---|
+| **Como** | responsável de agência transfusional |
+| **Quero** | abrir uma requisição informando o que preciso e com que urgência |
+| **Para que** | o hemocentro saiba o que separar e em quanto tempo |
+
+**Critérios de aceite:**
+- Requisição aceita múltiplos itens de componentes e tipos diferentes
+- Prioridade define o prazo esperado de atendimento
+- Requisição sem item é rejeitada
+- Status inicial é PENDENTE
+
+O que faltava era o segundo critério: o prazo era informado pelo cliente ou
+ficava nulo. Agora, quando o hospital não informa, ele deriva da prioridade,
+EMERGENCIA em 2 horas, URGENTE em 12, ROTINA em 72. A tabela mora no próprio
+enum `PrioridadeRequisicao`; antes estava duplicada na carga inicial.
+
+**Implementação:** `PrioridadeRequisicao.getPrazoHoras()` · `RequisicaoServico.criar` · `POST /api/v1/requisicoes` · cenários em `CenariosAceitacaoTest.SolicitarHemocomponentes`
+
+---
+
+### Testes e qualidade (PI3-92)
+
+Execução completa de 12/11/2026, em JDK 21 (`eclipse-temurin:21-jdk-alpine`),
+sobre esta branch:
+
+```
+Tests run: 498, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+O pipeline roda a mesma suíte a cada push e PR, e um teste vermelho barra o
+deploy ([evidência](docs/evidencias/e3-pipeline.md)).
+
+| O que a entrega acrescentou | Onde |
+|---|---|
+| Caminho completo requisição → bolsa → rota, lendo as três entidades a cada passo | `FluxoRequisicaoBolsaRotaTest` |
+| Cenários BDD das histórias HU-01, HU-02, HU-04 e HU-05 que faltavam, com Dado/Quando/Então no `@DisplayName` | `CenariosAceitacaoTest` |
+| HU-04 pela API: janela, ordem, estado vazio, vencidas, só o que está em estoque | `BolsasEmRiscoTest` |
+| HU-05 pela API: caminho, inalcançável, chegada calculada, piso de um minuto, 409 sem caminho | `CalculoRotaTest` |
+| Malha para qualquer conjunto de unidades, com alcance máximo | `CarregadorMalhaTest` |
+| As telas Thymeleaf renderizam o que o serviço calculou | `EstoqueWebControllerTest` |
+
+Os testes de alocação, cobrindo ABO/Rh e a ordem FEFO, já existiam e seguem
+verdes: `MatrizCompatibilidadeTest`, `SelecaoFefoTest`,
+`CompatibilidadeAlocacaoTest`, `CasosBordaCompatibilidadeTest` e
+`AlocacaoAutomaticaTest`.
+
+**Revisão de camadas (PI3-204):**
+
+- A ordenação da fila FEFO saiu do `EstoqueWebController` e foi para
+  `BolsaServico.filaFefo`: era regra de negócio num controller.
+- O prazo por prioridade, duplicado em `CargaInicial`, passou a viver só no
+  enum.
+- Nenhum controller contém regra: todos leem parâmetros, chamam o serviço e
+  escolhem o código HTTP. Os DTOs continuam montados dentro do serviço, com a
+  transação aberta.
+- O `.env.example` que o "Como rodar" mandava copiar não existia no
+  repositório; foi criado.
+
+### Issue / Bug tracker
+
+![Issue tracker na Entrega 04](docs/img/issue-tracker-e04.png)
+
+| Issue | Situação |
+|---|---|
+| [#57](https://github.com/rsc3-pixel/Projeto3-2026.2/issues/57) · dois caminhos de alocação, e o endpoint real ignora o índice e o FEFO | resolvida pela PI3-131: `POST …/alocacoes/automatica` consulta o índice por hash, filtra por ABO/Rh e escolhe por FEFO (`AlocacaoAutomaticaTest` prova a consulta). O caminho manual continua existindo para quando o técnico escolhe a bolsa. **Proposta: fechar.** |
+| [#58](https://github.com/rsc3-pixel/Projeto3-2026.2/issues/58) · `proxy_read_timeout` do Nginx corta o cold start | fechada (commit `bb5b252`) |
+
+### O que ficou em aberto, com justificativa (PI3-203)
+
+| Item | Por quê |
+|---|---|
+| Screencasts (PI3-210, PI3-211) | exigem gravação com áudio pelo grupo; o roteiro minuto a minuto está pronto em [docs/roteiro-screencasts-e04.md](docs/roteiro-screencasts-e04.md) |
+| Validação com o monitor (PI3-209) | depende de agenda; registrar aqui a data quando acontecer |
+| Ensaio cronometrado da apresentação (PI3-221) | exige o grupo reunido; roteiro com tempos em [docs/apresentacao-final-poo.md](docs/apresentacao-final-poo.md) |
+| Telas Angular para HU-04 e HU-05 | a SPA consome a mesma API e as telas novas foram feitas no Thymeleaf, que é renderizado pelo próprio Spring; a versão Angular fica para o backlog (PI3-38, sem responsável) |
+| `Veiculo` | entidade modelada e não integrada; nenhuma história a pede, e removê-la mudaria o diagrama de domínio sem ganho funcional |
+
 ## Documentação técnica
 
 Material de apoio, não exigido pelas entregas:
@@ -388,11 +549,14 @@ Material de apoio, não exigido pelas entregas:
 | [frontend/](frontend/) | onde cada front-end mora e como trabalhar só nele |
 | [docs/telemetria-simulada.md](docs/telemetria-simulada.md) | canal de telemetria **simulada** (temperatura + GPS): simulador, hospedagem e contrato (PI3-112) |
 | [docs/benchmark-rede.md](docs/benchmark-rede.md) | benchmarking de rede e painel `/painel-rede.html` (PI3-31) |
+| [docs/premissas-malha-rede.md](docs/premissas-malha-rede.md) | premissas da malha de rotas, inclusive o alcance máximo e a malha montada a partir do banco (HU-05) |
+| [docs/roteiro-screencasts-e04.md](docs/roteiro-screencasts-e04.md) | roteiro dos dois screencasts da Entrega 04, minuto a minuto |
+| [docs/apresentacao-final-poo.md](docs/apresentacao-final-poo.md) | roteiro cronometrado da apresentação final de POO (8 min) |
 
 ## Entregas anteriores
 
 <details>
-<summary>Entregas 01 a 04 das unidades anteriores (clique para abrir)</summary>
+<summary>Entregas 01 a 03 (clique para abrir)</summary>
 
 
 ### Entrega 01
@@ -567,10 +731,6 @@ defeitos encontrados durante a implementação:
 
 ### Entrega 04
 
-**Status:** não iniciada
-
-**Artefatos:** _(a preencher)_
-
-**Screenshots:** _(a preencher)_
+Fora deste bloco: ver [Entrega 04 · POO (Módulo II)](#entrega-04--poo-módulo-ii).
 
 </details>

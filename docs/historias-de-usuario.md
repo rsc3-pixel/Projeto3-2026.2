@@ -454,10 +454,10 @@ Então a bolsa A+ deve ser oferecida primeiro
 | História | Stories do Jira | Endpoints do contrato |
 |---|---|---|
 | HU-01 | PI3-12, PI3-18 | `POST /api/v1/bolsas` |
-| HU-02 | PI3-18 | `POST /api/v1/requisicoes` |
+| HU-02 | PI3-18, PI3-90 | `POST /api/v1/requisicoes` (prazo derivado da prioridade quando omitido) |
 | HU-03 | PI3-17, PI3-19, PI3-29 | `POST /requisicoes/{id}/itens/{itemId}/alocacoes` |
-| HU-04 | PI3-19, PI3-20 | `GET /api/v1/bolsas?sort=dataValidade,asc` |
-| HU-05 | PI3-13, PI3-17, PI3-19 | `POST /api/v1/rotas` |
+| HU-04 | PI3-19, PI3-20, PI3-90 | `GET /api/v1/bolsas/em-risco?dias=7` · tela `/painel/{id}/risco` |
+| HU-05 | PI3-13, PI3-17, PI3-19, PI3-90 | `GET /api/v1/rotas/calcular` · `POST /api/v1/rotas` (chegada calculada quando omitida) |
 | HU-06 | PI3-20, PI3-32 | `GET /api/v1/indicadores/*` |
 | HU-07 | PI3-16, PI3-30, PI3-84 | telemetria (contrato a definir) |
 | HU-08 | PI3-29, PI3-84 | `POST /requisicoes/{id}/itens/{itemId}/alocacoes` |

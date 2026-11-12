@@ -127,6 +127,7 @@
 | Método | Path | Parâmetros | Entrada | Saída | Status |
 |---|---|---|---|---|---|
 | GET | `/api/v1/bolsas` | query: `status`, `tipoHemocomponente`, `grupoSanguineo`, `hemocentroId`, `page`, `size`, `sort` (padrão `dataValidade,asc`) | — | `Page<BolsaResumo>` | 200 |
+| GET | `/api/v1/bolsas/em-risco` | query: `dias` (padrão 7; 7, 15 ou 30), `hemocentroId?`, `dataReferencia?` | — | `BolsasEmRisco` (HU-04): `dias`, `dataReferencia`, `totalEmRisco`, `totalVencidas`, `mensagem?`, `emRisco[]`, `vencidas[]`, cada item com `diasRestantes` | 200, 400, 404 |
 | GET | `/api/v1/bolsas/{id}` | path: `id` | — | `BolsaDetalhe` | 200, 404 |
 | POST | `/api/v1/bolsas` | — | `BolsaDetalhe` (sem `id`/`status`/`criadoEm`/`atualizadoEm`) | `BolsaDetalhe` | 201, 400, 401, 403 |
 | PATCH | `/api/v1/bolsas/{id}` | path: `id` | `{ "status": "..." }` | `BolsaDetalhe` | 200, 400, 404, 409 |
@@ -153,8 +154,9 @@
 | Método | Path | Parâmetros | Entrada | Saída | Status |
 |---|---|---|---|---|---|
 | GET | `/api/v1/rotas` | query: `status`, `hemocentroId`, `hospitalId`, `page`, `size`, `sort` | — | `Page<RotaResumo>` | 200 |
+| GET | `/api/v1/rotas/calcular` | query: `origemId`, `destinoId` (hemocentro ou hospital) | — | `RotaCalculada` (HU-05): `alcancavel`, `tempoMinutos`, `caminho[] { id, nome, tipo }`, `mensagem?`. Destino sem trecho devolve 200 com `alcancavel=false` | 200, 404 |
 | GET | `/api/v1/rotas/{id}` | path: `id` | — | `RotaDetalhe` | 200, 404 |
-| POST | `/api/v1/rotas` | — | `{ hemocentroOrigemId, hospitalDestinoId, previsaoSaida, previsaoChegada }` | `RotaDetalhe` | 201, 400, 401, 403 |
+| POST | `/api/v1/rotas` | — | `{ hemocentroOrigemId, hospitalDestinoId, previsaoSaida, previsaoChegada? }`. Sem `previsaoChegada`, ela é calculada: saída mais o tempo do caminho mínimo na malha (HU-05); destino sem caminho responde 409 | `RotaDetalhe`, com `tempoEstimadoMinutos` e `caminho[]` | 201, 400, 401, 403, 409 |
 | PATCH | `/api/v1/rotas/{id}` | path: `id` | `{ "status": "EM_TRANSITO" }` (com `saidaReal`/`chegadaReal` quando aplicável) | `RotaDetalhe` | 200, 400, 404, 409 |
 | GET | `/api/v1/rotas/{id}/bolsas` | path: `id` | — | `List<BolsaResumo>` | 200, 404 |
 | POST | `/api/v1/rotas/{id}/bolsas` | path: `id` | `{ "bolsaId": "..." }` | `BolsaResumo` | 201, 400, 404, 409 |
