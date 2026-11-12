@@ -40,11 +40,12 @@ Tudo abaixo está implementado, em produção e coberto por testes.
 
 **HU-01 — Cadastrar bolsa coletada**
 
-| Tarefa | Teste que nasceu primeiro |
+| Tarefa | Teste |
 |---|---|
-| Calcular a validade a partir da coleta e do componente | `BolsaTest` · validade de plaquetas é 5 dias, de hemácias 42 |
-| Recusar data de coleta futura | `BolsaControllerTest` · 400 com o campo apontado |
-| Nascer com status `DISPONIVEL`, sem aceitar status do cliente | `BolsaServicoTest` |
+| Calcular a validade a partir da coleta e do componente | `CenariosAceitacaoTest.CadastrarBolsa` · plaquetas 5 dias, hemácias 42 |
+| Recusar entrada inválida com o campo apontado | `CenariosAceitacaoTest.CadastrarBolsa.camposObrigatorios` · 400 com `campos.grupoSanguineo` |
+| Recusar bolsa que já nasceria vencida | `CenariosAceitacaoTest.AlocarPorValidade.bolsaVencidaNemChegaAoEstoque` · 409 |
+| Nascer com status `DISPONIVEL`, sem aceitar status do cliente | `CenariosAceitacaoTest.CadastrarBolsa.validadeCalculadaPeloComponente`; o `BolsaRequest` não tem campo de status |
 
 *Por que esta regra ganhou teste primeiro:* validade errada significa
 transfundir bolsa vencida ou descartar bolsa boa. É a regra onde o erro custa
@@ -56,9 +57,11 @@ mais caro.
 
 | Tarefa | Teste |
 |---|---|
-| Exigir ao menos um item na requisição | `RequisicaoServicoTest` |
+| Exigir ao menos um item na requisição | `FluxoRequisicaoTest.recusaRequisicaoSemItens` · 400 |
+| Aceitar vários itens de componentes e tipos diferentes | `CenariosAceitacaoTest.SolicitarHemocomponentes.requisicaoComMultiplosItens` |
+| Derivar o prazo da prioridade quando o hospital não informa (E04) | `CenariosAceitacaoTest.SolicitarHemocomponentes.prazoConformeAPrioridade` · 2 h, 12 h, 72 h |
 | Recalcular o status conforme os itens são atendidos | `FluxoRequisicaoTest` · PENDENTE → PARCIALMENTE_ATENDIDA → ATENDIDA |
-| Impedir alocação em requisição já fechada | `RequisicaoServicoTest` · 409 |
+| Impedir alocação em requisição já fechada | `FluxoRequisicaoBolsaRotaTest` · 409 na terceira bolsa de um pedido de duas |
 
 ### Alocar
 
@@ -95,9 +98,11 @@ por igualdade e recusava doação válida.
 
 | Tarefa | Teste |
 |---|---|
-| Caminho mínimo entre origem e destino | `DijkstraTest` |
-| Tratar ponto inalcançável sem lançar exceção | `DijkstraTest` · devolve `semCaminho()` |
-| Exigir bolsa reservada para embarcar | `RotaServicoTest` · 409 |
+| Caminho mínimo entre origem e destino, por tempo | `DijkstraTest`; `CenariosAceitacaoTest.CalcularRota.caminhoMaisRapidoNaoOMaisCurto` · 23 min |
+| Tratar ponto inalcançável sem lançar exceção | `DijkstraTest` · devolve `semCaminho()`; `CalculoRotaTest.destinoInalcancavel` · 200 com mensagem |
+| Montar a malha com as unidades do banco e alcance máximo (E04) | `CarregadorMalhaTest.unidadeAlemDoAlcanceMaximoFicaIsolada` |
+| Calcular a previsão de chegada ao planejar a rota (E04) | `CalculoRotaTest.PlanejarComPrevisaoCalculada` |
+| Exigir bolsa reservada para embarcar | `RotaControllerTest.naoEmbarcaBolsaDisponivel` · 409 |
 
 **HU-07 — Monitorar temperatura durante o transporte**
 
@@ -118,18 +123,27 @@ por igualdade e recusava doação válida.
 | Calcular estoque, descarte e cobertura por tipo | `IndicadorServicoTest` |
 | Usar desvio-padrão amostral, dividindo por n−1 | confere com o `statistics.stdev` da análise em Python |
 | Destacar cobertura abaixo de 100% | `IndicadorControllerTest` |
+| Painel de estoque crítico com janela configurável (E04) | `BolsasEmRiscoTest.JanelaConfiguravel` · 7, 15, 30 |
+| Ordenar da mais crítica para a menos; vencidas à parte (E04) | `BolsasEmRiscoTest.OrdenacaoPorUrgencia`, `VencidasSeparadas` |
+| Estado vazio com mensagem própria (E04) | `BolsasEmRiscoTest.EstadoVazio` |
 
 ---
 
-## Release 2 — planejada
+## Release 2 — entregue na Unidade 2
 
 | Etapa | História | Estado |
 |---|---|---|
-| Transportar | Roteirização por vizinho mais próximo | em andamento (PI3-94) |
-| Acompanhar | Probabilidade de desabastecimento por tipo | planejada (PI3-102) |
-| Acompanhar | Taxa de descarte por vencimento | planejada (PI3-103) |
-| Acompanhar | Painel consolidado | planejada (PI3-32) |
-| Receber | Ingestão concorrente | planejada (PI3-30) |
+| Transportar | Roteirização por vizinho mais próximo | entregue (PI3-149, PI3-150) |
+| Transportar | Cálculo de rota e previsão de chegada pela API (HU-05) | entregue na E04 (PI3-90) |
+| Acompanhar | Probabilidade de desabastecimento por tipo | entregue (PI3-102) |
+| Acompanhar | Taxa de descarte por vencimento | entregue (PI3-103) |
+| Acompanhar | Painel consolidado | entregue (PI3-32) |
+| Acompanhar | Bolsas em risco com janela configurável (HU-04) | entregue na E04 (PI3-90) |
+| Receber | Ingestão concorrente | entregue (PI3-30) |
+| Solicitar | Prazo derivado da prioridade (HU-02) | entregue na E04 (PI3-90) |
+
+O que **não** entrou, e por quê, está na seção "O que ficou em aberto" da
+Entrega 04 no README.
 
 ---
 
@@ -142,20 +156,30 @@ Transparência vale mais que cobertura inflada:
 | `CargaInicial` | dados sintéticos de desenvolvimento; não é regra de negócio |
 | Controllers, isoladamente | cobertos pelos testes de integração, que exercitam o caminho real |
 | Telemetria contra hardware | a telemetria é simulada nesta fase do projeto |
-| Front-ends | ainda não implementados |
+| Telas Thymeleaf | só exibem o que os serviços calculam; a regra que elas mostram (fila FEFO, estoque crítico) tem teste no serviço e na API |
+| Front-end Angular | tem os próprios testes (Vitest) em `frontend/angular`, fora da suíte Java |
+| `Veiculo` | modelado e não integrado: nenhum fluxo o usa ainda |
 
 ---
 
 ## Como o TDD foi aplicado
 
-O histórico do Git mostra o padrão `test:` antes de `feat:` nas histórias mais
-recentes. Exemplos:
+Os testes de cada história entram no mesmo PR que a funcionalidade, e em
+quatro casos o teste mudou a implementação (seção seguinte). A verificação
+commit a commit, registrada em [tdd-no-projeto.md](tdd-no-projeto.md), mostra
+que **a ordem dos commits não prova a ordem do trabalho**: nos exemplos abaixo
+o commit de teste é filho do commit de funcionalidade, às vezes criado no
+mesmo segundo.
 
 ```
 test(alocacao): prova o uso do indice no caminho real de alocacao (PI3-131)
 test(alocacao): cobre casos de borda da compatibilidade (PI3-130)
 test(estruturas): completa a cobertura do roteiro por vizinho mais proximo
 ```
+
+A evidência de "vermelho antes do verde" está nas mensagens de commit, nos
+comentários dos testes e na reprodução descrita no documento de TDD, não no
+`git log`.
 
 **Onde o TDD não foi seguido à risca:** nas histórias da Unidade 1, o código
 veio primeiro e os testes depois. A disciplina só passou a ser aplicada de
