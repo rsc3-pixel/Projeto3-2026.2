@@ -3,14 +3,21 @@ package com.rotavital.api;
 import com.rotavital.api.dto.AtualizarStatusBolsaRequest;
 import com.rotavital.api.dto.BolsaRequest;
 import com.rotavital.api.dto.BolsaResponse;
+import com.rotavital.api.dto.BolsasEmRiscoResponse;
 import com.rotavital.dominio.Bolsa;
 import com.rotavital.dominio.enums.GrupoSanguineo;
 import com.rotavital.dominio.enums.StatusBolsa;
 import com.rotavital.dominio.enums.TipoHemocomponente;
 import com.rotavital.servico.BolsaServico;
 import com.rotavital.servico.IngestaoConcorrenteServico;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -57,6 +65,34 @@ public class BolsaController {
         return bolsas.listar(status, tipoHemocomponente, grupoSanguineo, hemocentroId).stream()
                 .map(BolsaResponse::de)
                 .toList();
+    }
+
+    /**
+     * Painel de estoque critico (HU-04): o que vence nos proximos dias.
+     *
+     * <p>A janela e configuravel (7, 15 ou 30 dias, por exemplo) e a resposta
+     * separa o que ainda pode ser despachado do que ja venceu. Quando nada
+     * esta em risco, a resposta traz uma mensagem em vez de uma lista vazia
+     * sem explicacao.</p>
+     */
+    @Operation(summary = "Bolsas em risco de vencimento",
+            description = "Bolsas em estoque (DISPONIVEL ou RESERVADA) que vencem dentro da janela "
+                    + "de dias, da mais urgente para a menos, separadas das que ja venceram. "
+                    + "A janela e configuravel: 7, 15 ou 30 dias, por exemplo.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Painel montado"),
+            @ApiResponse(responseCode = "400", description = "Janela de dias invalida"),
+            @ApiResponse(responseCode = "404", description = "Hemocentro nao encontrado")
+    })
+    @GetMapping("/em-risco")
+    public BolsasEmRiscoResponse emRisco(
+            @Parameter(description = "Janela em dias a partir da data de referencia (padrao: 7)")
+            @RequestParam(defaultValue = "7") @Min(value = 1, message = "dias deve ser pelo menos 1") int dias,
+            @Parameter(description = "Restringe a um hemocentro; sem ele, a rede inteira")
+            @RequestParam(required = false) String hemocentroId,
+            @Parameter(description = "Data de referencia da contagem (padrao: hoje)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataReferencia) {
+        return bolsas.emRisco(dias, hemocentroId, dataReferencia);
     }
 
     @GetMapping("/{id}")
