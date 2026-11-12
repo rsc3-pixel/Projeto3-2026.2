@@ -96,16 +96,30 @@ public class RequisicaoServico {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Requisicao", id));
     }
 
+    /**
+     * Cria a requisicao com os itens pedidos.
+     *
+     * <p>O prazo de entrega e opcional no corpo. Quando o hospital nao
+     * informa, ele e derivado da prioridade (HU-02, cenario 2): EMERGENCIA
+     * em 2 horas, URGENTE em 12 e ROTINA em 72, contadas da criacao. A tabela
+     * esta em {@link PrioridadeRequisicao#getPrazoHoras()}, e nao aqui, para
+     * que a carga inicial e qualquer outro consumidor leiam o mesmo numero.</p>
+     */
     @Transactional
     public RequisicaoResponse criar(RequisicaoRequest dados) {
         Hospital hospital = hospitalServico.buscar(dados.hospitalId());
+
+        LocalDateTime criacao = LocalDateTime.now();
+        LocalDateTime prazo = dados.prazoEntrega() != null
+                ? dados.prazoEntrega()
+                : criacao.plusHours(dados.prioridade().getPrazoHoras());
 
         Requisicao requisicao = new Requisicao(
                 UUID.randomUUID().toString(),
                 hospital,
                 dados.prioridade(),
-                LocalDateTime.now(),
-                dados.prazoEntrega());
+                criacao,
+                prazo);
         requisicao.setObservacao(dados.observacao());
 
         for (ItemRequisicaoRequest item : dados.itens()) {
