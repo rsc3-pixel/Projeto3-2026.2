@@ -59,6 +59,22 @@ public final class PremissasMalha {
      */
     public static final int VIZINHOS_POR_UNIDADE = 4;
 
+    /**
+     * Distancia maxima, em linha reta e em quilometros, para que duas
+     * unidades tenham trecho direto entre si (HU-05).
+     *
+     * <p>A malha e metropolitana: cobre a Regiao Metropolitana do Recife, onde
+     * a unidade mais afastada do HEMOPE fica a cerca de 13 km em linha reta.
+     * Uma unidade a mais de 50 km de todas as outras nao recebe aresta, e por
+     * isso fica inalcancavel: nao ha trecho que a ligue. E o que faz "destino
+     * inalcancavel" ser uma resposta tratada da roteirizacao, e nao um caso
+     * impossivel de acontecer.</p>
+     *
+     * <p>Nenhuma das 12 unidades reais chega perto do limite, entao a malha
+     * registrada no documento de premissas continua a mesma.</p>
+     */
+    public static final double ALCANCE_MAXIMO_KM = 50.0;
+
     private PremissasMalha() {
         throw new AssertionError("Classe de constantes, nao deve ser instanciada");
     }
