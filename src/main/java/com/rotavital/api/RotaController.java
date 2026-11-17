@@ -5,11 +5,17 @@ import com.rotavital.api.dto.BolsaResponse;
 import com.rotavital.api.dto.EmbarqueBolsaRequest;
 import com.rotavital.api.dto.LeituraTemperaturaRequest;
 import com.rotavital.api.dto.LeituraTemperaturaResponse;
+import com.rotavital.api.dto.RotaCalculadaResponse;
 import com.rotavital.api.dto.RotaRequest;
 import com.rotavital.api.dto.RotaResponse;
 import com.rotavital.dominio.enums.StatusRota;
 import com.rotavital.servico.RotaServico;
+import com.rotavital.servico.RoteirizacaoServico;
 import com.rotavital.servico.TemperaturaServico;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -36,10 +42,13 @@ public class RotaController {
 
     private final RotaServico rotas;
     private final TemperaturaServico temperaturas;
+    private final RoteirizacaoServico roteirizacao;
 
-    public RotaController(RotaServico rotas, TemperaturaServico temperaturas) {
+    public RotaController(RotaServico rotas, TemperaturaServico temperaturas,
+                          RoteirizacaoServico roteirizacao) {
         this.rotas = rotas;
         this.temperaturas = temperaturas;
+        this.roteirizacao = roteirizacao;
     }
 
     @GetMapping
@@ -48,6 +57,28 @@ public class RotaController {
             @RequestParam(required = false) String hemocentroId,
             @RequestParam(required = false) String hospitalId) {
         return rotas.listar(status, hemocentroId, hospitalId);
+    }
+
+    /**
+     * Calcula o caminho mais rapido entre duas unidades sem criar rota
+     * alguma (HU-05). E a consulta que o tecnico faz antes de confirmar o
+     * despacho.
+     */
+    @Operation(summary = "Calcula o caminho mais rapido entre duas unidades",
+            description = "Monta a malha com os hemocentros e hospitais cadastrados e roda o "
+                    + "caminho minimo por tempo estimado (Dijkstra). Destino sem trecho na malha "
+                    + "devolve 200 com alcancavel=false e a mensagem, nao um erro.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Caminho calculado, ou aviso de que nao ha caminho"),
+            @ApiResponse(responseCode = "404", description = "Origem ou destino nao cadastrados")
+    })
+    @GetMapping("/calcular")
+    public RotaCalculadaResponse calcular(
+            @Parameter(description = "Id do hemocentro ou hospital de partida")
+            @RequestParam String origemId,
+            @Parameter(description = "Id do hemocentro ou hospital de chegada")
+            @RequestParam String destinoId) {
+        return roteirizacao.calcular(origemId, destinoId);
     }
 
     @GetMapping("/{id}")

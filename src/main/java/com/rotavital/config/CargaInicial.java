@@ -178,7 +178,10 @@ public class CargaInicial implements CommandLineRunner {
                         hospital,
                         prioridade,
                         LocalDateTime.now().minusHours(sorteio.nextInt(48)),
-                        LocalDateTime.now().plusHours(prazoEmHoras(prioridade)));
+                        // O prazo vem da propria prioridade, a mesma regra que
+                        // o RequisicaoServico aplica quando o hospital nao
+                        // informa a data (HU-02).
+                        LocalDateTime.now().plusHours(prioridade.getPrazoHoras()));
 
                 int quantosItens = 1 + sorteio.nextInt(3);
                 for (int i = 0; i < quantosItens; i++) {
@@ -192,15 +195,6 @@ public class CargaInicial implements CommandLineRunner {
                 requisicoes.save(requisicao);
             }
         }
-    }
-
-    /** Prazo por prioridade, coerente com as historias de usuario. */
-    private int prazoEmHoras(PrioridadeRequisicao prioridade) {
-        return switch (prioridade) {
-            case EMERGENCIA -> 2;
-            case URGENTE -> 12;
-            case ROTINA -> 72;
-        };
     }
 
     private Endereco endereco(String logradouro, String numero, String bairro, String cidade,

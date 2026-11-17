@@ -104,7 +104,9 @@ Um quarto caso aparece no próprio código. O javadoc de [CompatibilidadeAlocaca
 
 ## 4. Os testes do repositório e o que cada um protege
 
-A suíte tem 39 classes de teste. Na execução completa de 10/11/2026 sobre a `main`, foram 451 testes, sem falha e sem teste pulado. O README ainda cita 421, número de antes das entregas mais recentes. A diferença entre os 350 métodos anotados e os 451 executados vem dos testes parametrizados, que rodam um caso por conjunto de dados.
+A suíte tem 39 classes de teste. Na execução completa de 10/11/2026 sobre a `main`, foram 451 testes, sem falha e sem teste pulado. A diferença entre os 350 métodos anotados e os 451 executados vem dos testes parametrizados, que rodam um caso por conjunto de dados.
+
+**Atualização da Entrega 04 (12/11/2026):** a suíte passou a 45 classes e **498 testes**, sem falha e sem teste pulado, com as classes novas `BolsasEmRiscoTest` (HU-04), `CalculoRotaTest` (HU-05), `FluxoRequisicaoBolsaRotaTest` (caminho completo requisição → bolsa → rota), `EstoqueWebControllerTest` (telas Thymeleaf) e os cenários BDD acrescentados a `CenariosAceitacaoTest` e `CarregadorMalhaTest`. O README cita o número atual.
 
 ### 4.1 Regras de domínio que afetam o paciente
 
@@ -122,6 +124,9 @@ A suíte tem 39 classes de teste. Na execução completa de 10/11/2026 sobre a `
 | Teste | O que protege |
 |---|---|
 | [FluxoRequisicaoTest](../src/test/java/com/rotavital/api/FluxoRequisicaoTest.java) | o caminho completo: alocar reserva a bolsa e muda o status da requisição; mesma bolsa não é alocada duas vezes; cancelamento libera a bolsa e é barrado depois do despacho |
+| [FluxoRequisicaoBolsaRotaTest](../src/test/java/com/rotavital/aceitacao/FluxoRequisicaoBolsaRotaTest.java) (PI3-215) | requisição → bolsa → rota de ponta a ponta, lendo de volta as três entidades a cada passo: PENDENTE → PARCIALMENTE_ATENDIDA → ATENDIDA; DISPONIVEL → RESERVADA → EM_TRANSITO → ENTREGUE; PLANEJADA → EM_TRANSITO → CONCLUIDA; e as travas cruzadas (não cancela pedido com bolsa na rua, não desfaz alocação despachada) |
+| [BolsasEmRiscoTest](../src/test/java/com/rotavital/api/BolsasEmRiscoTest.java) (HU-04) | janela configurável, ordem da mais crítica para a menos, estado vazio com mensagem, vencidas separadas, só o que está em estoque conta |
+| [CalculoRotaTest](../src/test/java/com/rotavital/api/CalculoRotaTest.java) (HU-05) | caminho nomeado entre duas unidades do banco, destino inalcançável como resposta tratada, chegada calculada pela saída mais o tempo, piso de um minuto, 409 ao planejar sem caminho |
 | [AlocacaoAutomaticaTest](../src/test/java/com/rotavital/api/AlocacaoAutomaticaTest.java) (PI3-131) | que o índice por hash é consultado no caminho real de alocação e é atualizado só depois do commit |
 | [RotaControllerTest](../src/test/java/com/rotavital/api/RotaControllerTest.java) | o ciclo de vida da rota e o efeito dele no status das bolsas embarcadas |
 | [HemocentroControllerTest](../src/test/java/com/rotavital/api/HemocentroControllerTest.java) | o cadastro de ponta a ponta, a validação de entrada e a unicidade do CNPJ |

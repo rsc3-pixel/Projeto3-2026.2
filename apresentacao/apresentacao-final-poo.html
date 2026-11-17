@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rota Vital · Apresentação final de POO</title>
+<!--
+  Slides da apresentação final de POO (PI3-93, subtarefa PI3-218).
+
+  Arquivo único, sem dependência externa: abre em qualquer navegador, inclusive
+  sem rede, que é o cenário do dia da aula. Navegação: setas, espaço, PgUp/PgDn;
+  F para tela cheia; número da tecla pula para o slide. O roteiro de quem fala,
+  com os tempos, está em docs/apresentacao-final-poo.md.
+-->
+<style>
+  :root {
+    --fundo: #0f1115;
+    --painel: #171a21;
+    --texto: #e8e6e1;
+    --fraco: #9aa0a6;
+    --vermelho: #c0392b;
+    --ambar: #e0a52d;
+    --verde: #3aa66b;
+    --grade: #2a2f3a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--fundo); color: var(--texto);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .slide { display: none; width: 100vw; height: 100vh; padding: 6vh 7vw; flex-direction: column; }
+  .slide.ativo { display: flex; }
+  .slide h1 { font-size: 6vh; margin: 0 0 2vh; line-height: 1.1; }
+  .slide h2 { font-size: 4.6vh; margin: 0 0 3vh; color: var(--texto); border-left: 0.9vh solid var(--vermelho); padding-left: 2vh; line-height: 1.15; }
+  .slide h3 { font-size: 2.8vh; margin: 2vh 0 1vh; color: var(--ambar); font-weight: 600; }
+  .slide p, .slide li { font-size: 2.9vh; line-height: 1.45; }
+  .slide ul { margin: 0; padding-left: 3.2vh; }
+  .slide li { margin-bottom: 1.1vh; }
+  .fraco { color: var(--fraco); }
+  .colunas { display: grid; grid-template-columns: 1fr 1fr; gap: 4vw; flex: 1; }
+  .colunas-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3vw; flex: 1; }
+  .cartao { background: var(--painel); border: 1px solid var(--grade); border-radius: 1.2vh; padding: 2.4vh 2.6vh; }
+  .cartao h3 { margin-top: 0; }
+  .numero { font-size: 7vh; font-weight: 700; color: var(--vermelho); line-height: 1; margin-bottom: 0.8vh; }
+  .numero small { font-size: 2.4vh; color: var(--fraco); font-weight: 400; display: block; margin-top: 0.6vh; }
+  table { border-collapse: collapse; width: 100%; font-size: 2.5vh; }
+  th, td { text-align: left; padding: 1vh 1.4vh; border-bottom: 1px solid var(--grade); vertical-align: top; }
+  th { color: var(--fraco); font-weight: 600; font-size: 2.2vh; text-transform: uppercase; letter-spacing: 0.05em; }
+  .tag { display: inline-block; font-size: 2vh; padding: 0.3vh 1.1vh; border-radius: 0.6vh; background: var(--grade); color: var(--texto); margin-right: 0.6vh; }
+  .tag.ok { background: #1f4d33; color: #bfe8cf; }
+  .tag.novo { background: #5a3a07; color: #ffe2a3; }
+  a { color: #7fb3ff; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { font-family: "JetBrains Mono", Menlo, Consolas, monospace; font-size: 0.92em; background: var(--grade); padding: 0.1em 0.4em; border-radius: 0.4vh; }
+  .rodape { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; padding: 1.4vh 3vw; font-size: 1.9vh; color: var(--fraco); border-top: 1px solid var(--grade); background: var(--fundo); }
+  .rodape .tempo { color: var(--ambar); }
+  .aviso { margin-top: auto; padding: 1.6vh 2vh; border: 1px dashed var(--ambar); border-radius: 1vh; color: var(--ambar); font-size: 2.3vh; }
+  .capa { justify-content: center; }
+  .capa .gota { width: 9vh; height: 11vh; fill: var(--vermelho); margin-bottom: 2vh; }
+  .capa .equipe { font-size: 2.4vh; color: var(--fraco); margin-top: 3vh; line-height: 1.6; }
+  .fluxo { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.6vw; flex: 1; }
+  .fluxo .cartao h3 { font-size: 2.3vh; }
+  .fluxo .cartao li, .fluxo .cartao p { font-size: 2.05vh; margin-bottom: 0.6vh; }
+  .fluxo .cartao ul { padding-left: 2.2vh; }
+  .demo { display: grid; grid-template-columns: 3fr 2fr; gap: 3vw; flex: 1; }
+  .demo .quadro { background: #000; border: 1px solid var(--grade); border-radius: 1.2vh; display: flex; align-items: center; justify-content: center; color: var(--fraco); font-size: 2.4vh; text-align: center; padding: 3vh; }
+  .demo video { width: 100%; height: 100%; border-radius: 1.2vh; }
+  .licoes li { margin-bottom: 1.6vh; }
+  .licoes b { color: var(--ambar); }
+  .grande { font-size: 3.6vh; }
+  @media print {
+    .slide { display: flex !important; page-break-after: always; height: auto; min-height: 100vh; }
+    .rodape { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 1 · Capa -->
+<section class="slide capa" data-tempo="0:20">
+  <svg class="gota" viewBox="0 0 24 30" aria-hidden="true"><path d="M12 0 C12 0 23 13.5 23 20 A11 11 0 0 1 1 20 C1 13.5 12 0 12 0 Z"/></svg>
+  <h1>Rota Vital</h1>
+  <p class="grande">Plataforma de distribuição de hemocomponentes: estoque, compatibilidade e rota em um só lugar.</p>
+  <p class="fraco">Apresentação final · Programação Orientada a Objetos · Módulo II · Projeto Integrador 3 · Equipe E2 · novembro de 2026</p>
+  <p class="equipe">Cauã Rego · Fernando Andrade · Gabriel Brito · Guilherme Alves · Lucas Albuquerque · Maria Eduarda Vasconcelos · Renato Chong · Victor Roma</p>
+  <div class="aviso">Tudo nesta apresentação usa dados sintéticos; a telemetria de temperatura e GPS é simulada; a compatibilidade ABO/Rh é didática e não substitui protocolo clínico.</div>
+</section>
+
+<!-- 2 · Problema -->
+<section class="slide" data-tempo="1:00">
+  <h2>O problema: o sangue certo precisa chegar inteiro, a tempo, onde falta</h2>
+  <p>A rede de sangue precisa do componente <b>certo</b> (compatível e na validade), no <b>lugar</b> certo, no <b>tempo</b> certo e na <b>temperatura</b> certa. Quando falha, há desabastecimento de um lado e descarte do outro.</p>
+  <div class="colunas" style="margin-top:2vh">
+    <div class="cartao"><div class="numero">90,2%<small>das plaquetas venciam na base sintética sem gestão de estoque</small></div></div>
+    <div class="cartao"><div class="numero">187<small>bolsas (13,9% do estoque válido) vencendo em até 7 dias, sem ninguém ver</small></div></div>
+    <div class="cartao"><div class="numero">50% → 122%<small>cobertura da demanda, de AB− a O−: a falta só aparece quando o pedido não sai</small></div></div>
+    <div class="cartao"><div class="numero">−350 / +157<small>déficit em Jaboatão convivendo com folga no Recife: problema de distribuição, não só de volume</small></div></div>
+  </div>
+  <p class="fraco" style="margin-top:2vh">Números da análise estatística (CRISP-DM) sobre a base sintética do projeto, em <code>dados/analise.py</code>.</p>
+</section>
+
+<!-- 3 · Solução -->
+<section class="slide" data-tempo="0:50">
+  <h2>A solução: uma aplicação web que integra estoque, compatibilidade e rota</h2>
+  <div class="colunas">
+    <div class="cartao">
+      <h3>O que faz</h3>
+      <ul>
+        <li>Gerencia o estoque de hemocomponentes, com validade calculada por componente</li>
+        <li>Recebe requisições hospitalares com prioridade e prazo</li>
+        <li>Aloca bolsas <b>compatíveis</b> (ABO/Rh) priorizando <b>validade</b> (FEFO)</li>
+        <li>Calcula rotas pelo <b>tempo</b> de percurso e acompanha a cadeia fria</li>
+        <li>Mostra painéis de estoque, cobertura, descarte, risco e bolsas críticas</li>
+      </ul>
+    </div>
+    <div class="cartao">
+      <h3>Para quem</h3>
+      <ul>
+        <li><b>Técnico do hemocentro</b>: cadastra bolsas, atende requisições, despacha</li>
+        <li><b>Agência transfusional</b>: requisita e acompanha a entrega</li>
+        <li><b>Coordenador da rede</b>: acompanha indicadores antes de virar desabastecimento</li>
+        <li><b>Motorista</b>: executa a rota, saída e chegada</li>
+      </ul>
+      <h3>Como se usa</h3>
+      <p>API REST documentada (Scalar), painel Thymeleaf renderizado pelo Spring e SPA Angular, tudo no ar em <a href="https://rsc3-rotavital.duckdns.org">rsc3-rotavital.duckdns.org</a>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · Historias -->
+<section class="slide" data-tempo="0:50">
+  <h2>Oito histórias, todas implementadas, em produção e cobertas por testes</h2>
+  <table>
+    <thead><tr><th>História</th><th>O que entrega</th><th>Entrega</th></tr></thead>
+    <tbody>
+      <tr><td><b>HU-01</b> Cadastrar bolsa</td><td>validade calculada por componente; nasce DISPONIVEL</td><td><span class="tag ok">E02</span></td></tr>
+      <tr><td><b>HU-02</b> Solicitar hemocomponentes</td><td>vários itens; <b>prazo derivado da prioridade</b>: 2 h, 12 h, 72 h</td><td><span class="tag ok">E02</span> <span class="tag novo">E04</span></td></tr>
+      <tr><td><b>HU-03</b> Alocar por validade (FEFO)</td><td>quem vence antes sai antes; vencida nunca entra</td><td><span class="tag ok">E02</span></td></tr>
+      <tr><td><b>HU-04</b> Bolsas em risco</td><td><b>janela 7 / 15 / 30 dias</b>, da mais crítica para a menos, vencidas à parte</td><td><span class="tag novo">E04</span></td></tr>
+      <tr><td><b>HU-05</b> Calcular rota</td><td><b>caminho mais rápido na malha</b> (Dijkstra por tempo), chegada prevista calculada</td><td><span class="tag novo">E04</span></td></tr>
+      <tr><td><b>HU-06</b> Indicadores da rede</td><td>estoque, cobertura, descarte, desabastecimento, painel consolidado</td><td><span class="tag ok">E02</span></td></tr>
+      <tr><td><b>HU-07</b> Temperatura no transporte</td><td>faixa por componente embarcado; alerta por componente</td><td><span class="tag ok">E03</span></td></tr>
+      <tr><td><b>HU-08</b> Compatibilidade ABO/Rh</td><td>relação assimétrica; plasma com tabela invertida</td><td><span class="tag ok">E03</span></td></tr>
+    </tbody>
+  </table>
+  <p class="fraco" style="margin-top:1.6vh">Cada história lê e/ou escreve no banco pela API, está descrita no README no formato POST-IT e tem cenários Dado/Quando/Então em <code>CenariosAceitacaoTest</code>.</p>
+</section>
+
+<!-- 5 · Diferencial -->
+<section class="slide" data-tempo="0:30">
+  <h2>O diferencial: a regra clínica está no código, e na ordem certa</h2>
+  <div class="colunas-3">
+    <div class="cartao"><h3>Filtro antes da ordenação</h3><p>FEFO põe no topo quem vence primeiro, e bolsa vencida vence antes de todas. Filtrada depois, ocuparia o topo em toda seleção. O mesmo vale para a incompatível.</p></div>
+    <div class="cartao"><h3>Compatibilidade assimétrica</h3><p>O− doa para A+, mas A+ não doa para O−. Comparar grupos por igualdade recusava doação válida e deixava estoque parado: o teste pegou.</p></div>
+    <div class="cartao"><h3>Tempo, não distância</h3><p>O peso da malha é minutos de percurso. A rota HEMOPE → IMIP sai 0,1 min mais rápida por um desvio do que pela ligação direta.</p></div>
+    <div class="cartao"><h3>Índice por hash</h3><p>Quais bolsas existem desta combinação, em O(1). A chave usa <code>ordinal()</code> depois que a medição mostrou colisão por hash de identidade.</p></div>
+    <div class="cartao"><h3>Concorrência medida</h3><p>Duas alocações ao mesmo item perdiam contagem. Bloqueio otimista (<code>@Version</code>) e repetição resolveram, guiados pelo teste.</p></div>
+    <div class="cartao"><h3>Faixa por componente</h3><p>5 °C é normal para hemácias e excursão para plaquetas no mesmo compartimento. A resposta é uma lista de alertas, não um valor único.</p></div>
+  </div>
+</section>
+
+<!-- 6 · Fluxo de trabalho -->
+<section class="slide" data-tempo="1:30">
+  <h2>Fluxo de trabalho</h2>
+  <div class="fluxo">
+    <div class="cartao"><h3>Planejamento</h3><ul><li>Jira: épicos por disciplina, sprints semanais</li><li>Story points, tickets PI3-nn com subtarefas</li><li>Dependências explícitas: implementar → testar → publicar → apresentar</li></ul></div>
+    <div class="cartao"><h3>Requisitos</h3><ul><li>Histórias com cenários BDD antes do código</li><li>Story map pelo caminho do sangue</li><li>Protótipo lo-fi no Figma</li><li>Contrato de API REST acordado antes do controller</li></ul></div>
+    <div class="cartao"><h3>Desenvolvimento</h3><ul><li>Java 21, Spring Boot 4.1, JPA/Hibernate</li><li>Controller → serviço → repositório; regra só no serviço</li><li>Sem Lombok nem gerador de boilerplate</li><li>Thymeleaf + Angular sobre a mesma API</li></ul></div>
+    <div class="cartao"><h3>Gerência de configuração</h3><ul><li>GitHub Flow: branch por tarefa, PR revisado</li><li>Issues como bug tracker</li><li>Actions: build → testes → imagem → deploy</li><li>VM GCP + Nginx + HTTPS; Docker Compose do zero</li></ul></div>
+    <div class="cartao"><h3>Qualidade e testes</h3><ul><li><b>498 testes</b> em três níveis</li><li>TDD onde o teste mudou a decisão; BDD nos cenários</li><li>Teste vermelho barra o deploy (PR #72)</li><li>Oráculos independentes: força bruta e Python</li></ul></div>
+  </div>
+</section>
+
+<!-- 7 · Ferramentas -->
+<section class="slide" data-tempo="0:20">
+  <h2>Ferramentas, com links</h2>
+  <div class="colunas">
+    <div class="cartao">
+      <h3>Código e entrega</h3>
+      <ul>
+        <li>Repositório: <a href="https://github.com/rsc3-pixel/Projeto3-2026.2">github.com/rsc3-pixel/Projeto3-2026.2</a></li>
+        <li>Pipeline: <a href="https://github.com/rsc3-pixel/Projeto3-2026.2/actions">aba Actions</a> · imagem em <code>ghcr.io/rsc3-pixel/rota-vital</code></li>
+        <li>Issue tracker: <a href="https://github.com/rsc3-pixel/Projeto3-2026.2/issues">issues</a></li>
+        <li>Aplicação no ar: <a href="https://rsc3-rotavital.duckdns.org">rsc3-rotavital.duckdns.org</a></li>
+        <li>API Reference (Scalar): <a href="https://rsc3-rotavital.duckdns.org/docs">/docs</a></li>
+      </ul>
+    </div>
+    <div class="cartao">
+      <h3>Planejamento, desenho e apoio</h3>
+      <ul>
+        <li>Jira (projeto PI3) para backlog e sprints</li>
+        <li>Figma: <a href="https://www.figma.com/make/FjQBa3isHRI4lxbASP8AEn/Dark-Web-Blood-Bank-Prototype">protótipo lo-fi</a></li>
+        <li>draw.io para domínio e arquitetura de rede</li>
+        <li>Docker e Docker Compose; PostgreSQL 17; H2 em desenvolvimento</li>
+        <li>GitHub Actions, Google Cloud (VM), Nginx, Let's Encrypt</li>
+        <li>IA declarada: Claude Code, com verificação por execução antes de entrar no repositório</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 8 · Demo -->
+<section class="slide" data-tempo="1:00">
+  <h2>Demo rápida</h2>
+  <div class="demo">
+    <div class="quadro" id="quadro-demo">
+      <!-- Troque o src pelo vídeo curto gravado (PI3-219). Sem o arquivo, o
+           quadro mostra o roteiro para a demo ao vivo. -->
+      <video id="video-demo" controls preload="metadata" style="display:none">
+        <source src="demo-e04.mp4" type="video/mp4">
+      </video>
+      <div id="roteiro-demo">
+        <p><b>Vídeo curto</b> (<code>apresentacao/demo-e04.mp4</code>), para não depender da rede.</p>
+        <p class="fraco">Se o arquivo não estiver aqui, a demo é ao vivo seguindo a coluna ao lado.</p>
+      </div>
+    </div>
+    <div class="cartao">
+      <h3>O que a demo mostra, em 1 minuto</h3>
+      <ol style="font-size:2.4vh; line-height:1.5; padding-left:3vh">
+        <li><code>/painel/HC01/risco</code>: o que vence em 7, 15 e 30 dias; vencidas à parte</li>
+        <li><code>GET /api/v1/rotas/calcular?origemId=HC01&amp;destinoId=HO06</code>: caminho e minutos</li>
+        <li>Destino fora da malha: <code>alcancavel=false</code> com mensagem, sem erro</li>
+        <li><code>POST /api/v1/rotas</code> sem chegada: previsão calculada, rota PLANEJADA</li>
+        <li>Embarque e saída: bolsas passam a EM_TRANSITO</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- 9 · Licoes -->
+<section class="slide" data-tempo="0:50">
+  <h2>Lições aprendidas</h2>
+  <ul class="licoes">
+    <li><b>A ordem das operações é regra de negócio.</b> Filtrar depois de ordenar poria a bolsa vencida, ou a incompatível, no topo de toda seleção.</li>
+    <li><b>O teste achou o que nenhum log mostrava.</b> Duas alocações simultâneas perdiam contagem em silêncio; a correção foi guiada pelo vermelho, e o vermelho é reproduzível.</li>
+    <li><b>Verificar antes de afirmar.</b> A documentação dizia que a colisão do hash era "rara por construção". Medimos: não era. A chave mudou.</li>
+    <li><b>O histórico do git não prova TDD.</b> Commits criados no mesmo segundo foram separados ao commitar. A evidência está nos testes, nas mensagens e na reprodução.</li>
+    <li><b>Infraestrutura compartilhada molda decisões.</b> Porta 8081, escuta só em localhost, timeout do proxy para o cold start, jar em vez de container por 955 MB de memória.</li>
+    <li><b>IA ajuda a escrever, não a decidir.</b> Cada saída passou por execução real; três delas estavam erradas e foram pegas por mecanismos diferentes.</li>
+  </ul>
+</section>
+
+<!-- 10 · Limites -->
+<section class="slide" data-tempo="0:30">
+  <h2>Três avisos que valem para tudo o que mostramos</h2>
+  <div class="colunas-3">
+    <div class="cartao"><h3>Dados sintéticos</h3><p class="grande">Nenhum doador ou paciente real. Unidades da rede são reais; bolsas, requisições e pedidos são gerados com semente fixa (LGPD).</p></div>
+    <div class="cartao"><h3>Telemetria simulada</h3><p class="grande">As leituras de temperatura e GPS vêm de um simulador em Python, não de sensores. O contrato está pronto para hardware; o hardware não existe nesta fase.</p></div>
+    <div class="cartao"><h3>Compatibilidade didática</h3><p class="grande">A matriz ABO/Rh implementada ilustra a regra transfusional e não substitui protocolo clínico, provas cruzadas nem decisão médica.</p></div>
+  </div>
+</section>
+
+<!-- 11 · Encerramento -->
+<section class="slide capa" data-tempo="0:20">
+  <h1>Obrigado.</h1>
+  <p class="grande">Repositório, aplicação no ar e documentação:</p>
+  <p><a href="https://github.com/rsc3-pixel/Projeto3-2026.2">github.com/rsc3-pixel/Projeto3-2026.2</a> · <a href="https://rsc3-rotavital.duckdns.org">rsc3-rotavital.duckdns.org</a> · <a href="https://rsc3-rotavital.duckdns.org/docs">/docs</a></p>
+  <p class="equipe">Rota Vital · Equipe E2 · Projeto Integrador 3 · 2026.2</p>
+  <div class="aviso">Dados sintéticos · telemetria simulada · compatibilidade ABO/Rh didática</div>
+</section>
+
+<div class="rodape">
+  <span>Rota Vital · apresentação final de POO</span>
+  <span><span class="tempo" id="tempo"></span> · <span id="posicao"></span></span>
+</div>
+
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var atual = 0;
+  var posicao = document.getElementById('posicao');
+  var tempo = document.getElementById('tempo');
+
+  function mostrar(i) {
+    atual = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach(function (s, k) { s.classList.toggle('ativo', k === atual); });
+    posicao.textContent = (atual + 1) + ' / ' + slides.length;
+    tempo.textContent = 'tempo do slide: ' + (slides[atual].getAttribute('data-tempo') || '');
+    if (location.hash !== '#' + (atual + 1)) { history.replaceState(null, '', '#' + (atual + 1)); }
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { mostrar(atual + 1); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { mostrar(atual - 1); e.preventDefault(); }
+    else if (e.key === 'Home') { mostrar(0); }
+    else if (e.key === 'End') { mostrar(slides.length - 1); }
+    else if (e.key === 'f' || e.key === 'F') {
+      if (document.fullscreenElement) { document.exitFullscreen(); } else { document.documentElement.requestFullscreen(); }
+    }
+    else if (/^[0-9]$/.test(e.key)) { var n = parseInt(e.key, 10); mostrar((n === 0 ? 10 : n) - 1); }
+  });
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('a, video, button')) { return; }
+    mostrar(atual + 1);
+  });
+
+  // O video da demo so aparece se o arquivo existir ao lado deste HTML.
+  var video = document.getElementById('video-demo');
+  var roteiro = document.getElementById('roteiro-demo');
+  video.addEventListener('loadedmetadata', function () { video.style.display = 'block'; roteiro.style.display = 'none'; });
+
+  var inicial = parseInt((location.hash || '#1').slice(1), 10);
+  mostrar(isNaN(inicial) ? 0 : inicial - 1);
+})();
+</script>
+</body>
+</html>

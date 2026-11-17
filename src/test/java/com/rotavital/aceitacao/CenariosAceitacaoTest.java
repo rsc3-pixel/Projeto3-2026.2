@@ -12,11 +12,18 @@ import com.rotavital.api.dto.ItemRequisicaoRequest;
 import com.rotavital.api.dto.LeituraTemperaturaRequest;
 import com.rotavital.api.dto.RequisicaoRequest;
 import com.rotavital.api.dto.RotaRequest;
+import com.rotavital.dominio.Bolsa;
+import com.rotavital.dominio.Hemocentro;
 import com.rotavital.dominio.enums.GrupoSanguineo;
 import com.rotavital.dominio.enums.PrioridadeRequisicao;
 import com.rotavital.dominio.enums.StatusBolsa;
 import com.rotavital.dominio.enums.StatusRota;
 import com.rotavital.dominio.enums.TipoHemocomponente;
+import com.rotavital.estruturas.Dijkstra;
+import com.rotavital.estruturas.Grafo;
+import com.rotavital.estruturas.ResultadoRota;
+import com.rotavital.repositorio.BolsaRepository;
+import com.rotavital.repositorio.HemocentroRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -33,10 +40,14 @@ import org.springframework.web.context.WebApplicationContext;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -70,6 +81,17 @@ class CenariosAceitacaoTest {
 
     @Autowired
     private ObjectMapper json;
+
+    /**
+     * Acesso direto ao banco, usado so para envelhecer uma bolsa (HU-04): a
+     * API recusa cadastrar bolsa que ja nasce vencida, mas uma bolsa valida
+     * vence com o tempo, e esse estoque e o que o painel precisa mostrar.
+     */
+    @Autowired
+    private BolsaRepository bolsas;
+
+    @Autowired
+    private HemocentroRepository hemocentros;
 
     private MockMvc mvc;
     private String hemocentroId;
@@ -130,12 +152,157 @@ class CenariosAceitacaoTest {
             org.junit.jupiter.api.Assertions.assertEquals(
                     "DISPONIVEL", bolsa.get("status").asString());
         }
+
+        @Test
+        @DisplayName("Dado uma coleta de hemacias, Quando eu cadastrar a bolsa, "
+                   + "Entao a validade e de 42 dias: cada componente tem o seu prazo")
+        void validadeVariaPorComponente() throws Exception {
+            // Dado uma coleta de hemacias feita hoje
+            LocalDate coleta = LocalDate.now();
+
+            // Quando eu cadastrar a bolsa
+            String resposta = mvc.perform(post("/api/v1/bolsas")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json.writeValueAsString(new BolsaRequest(
+                                    hemocentroId, TipoHemocomponente.CONCENTRADO_HEMACIAS,
+                                    GrupoSanguineo.A_POS, 450, coleta))))
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+
+            // Entao a validade e 42 dias depois da coleta, nao os 5 das plaquetas
+            assertEquals(coleta.plusDays(42).toString(),
+                    json.readTree(resposta).get("dataValidade").asString());
+        }
+
+        @Test
+        @DisplayName("Dado o cadastro sem o tipo sanguineo, Quando eu tentar salvar, "
+                   + "Entao recebo 400 apontando o campo, e a bolsa nao e criada")
+        void camposObrigatorios() throws Exception {
+            // Dado um cadastro sem o grupo sanguineo
+            BolsaRequest semGrupo = new BolsaRequest(
+                    hemocentroId, TipoHemocomponente.CONCENTRADO_HEMACIAS,
+                    null, 450, LocalDate.now());
+
+            // Quando eu tentar salvar
+            // Entao a resposta e legivel: diz qual campo faltou, sem erro tecnico
+            mvc.perform(post("/api/v1/bolsas")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json.writeValueAsString(semGrupo)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.title").value("Dados invalidos"))
+                    .andExpect(jsonPath("$.campos.grupoSanguineo").exists());
+
+            // E a bolsa nao foi criada: o estoque do hemocentro segue vazio
+            mvc.perform(get("/api/v1/hemocentros/" + hemocentroId + "/bolsas"))
+                    .andExpect(jsonPath("$").isEmpty());
+        }
     }
 
     // =======================================================================
     @Nested
     @DisplayName("HU-02 — Solicitar hemocomponentes")
     class SolicitarHemocomponentes {
+
+        @Test
+        @DisplayName("Dado um pedido URGENTE com 2 itens, Quando eu criar a requisicao, "
+                   + "Entao ela nasce PENDENTE com 2 itens somando 3 bolsas")
+        void requisicaoComMultiplosItens() throws Exception {
+            // Dado um pedido de 2 hemacias O- e 1 plasma O-
+            RequisicaoRequest pedido = new RequisicaoRequest(
+                    hospitalId, PrioridadeRequisicao.URGENTE, null, null,
+                    List.of(
+                            new ItemRequisicaoRequest(
+                                    TipoHemocomponente.CONCENTRADO_HEMACIAS, GrupoSanguineo.O_NEG, 2),
+                            new ItemRequisicaoRequest(
+                                    TipoHemocomponente.PLASMA_FRESCO_CONGELADO, GrupoSanguineo.O_NEG, 1)));
+
+            // Quando eu criar a requisicao
+            String resposta = mvc.perform(post("/api/v1/requisicoes")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json.writeValueAsString(pedido)))
+                    .andExpect(status().isCreated())
+                    // Entao ela nasce PENDENTE
+                    .andExpect(jsonPath("$.status").value("PENDENTE"))
+                    .andExpect(jsonPath("$.itens.length()").value(2))
+                    .andReturn().getResponse().getContentAsString();
+
+            // E os 2 itens somam 3 bolsas
+            int total = 0;
+            for (JsonNode item : json.readTree(resposta).get("itens")) {
+                total += item.get("quantidadeSolicitada").asInt();
+            }
+            assertEquals(3, total);
+        }
+
+        @Test
+        @DisplayName("Dado uma requisicao sem prazo informado, Quando a prioridade e EMERGENCIA, "
+                   + "Entao o prazo e de 2 horas; Quando e ROTINA, Entao e de 72")
+        void prazoConformeAPrioridade() throws Exception {
+            // Quando eu marcar a prioridade como EMERGENCIA
+            // Entao o prazo de atendimento e de 2 horas a partir da criacao
+            assertEquals(Duration.ofHours(2), prazoDe(PrioridadeRequisicao.EMERGENCIA));
+
+            // Quando eu marcar a prioridade como ROTINA
+            // Entao o prazo de atendimento e de 72 horas
+            assertEquals(Duration.ofHours(72), prazoDe(PrioridadeRequisicao.ROTINA));
+
+            // E URGENTE fica no meio, com 12
+            assertEquals(Duration.ofHours(12), prazoDe(PrioridadeRequisicao.URGENTE));
+        }
+
+        @Test
+        @DisplayName("Dado uma requisicao com prazo informado pelo hospital, Quando eu criar, "
+                   + "Entao vale o prazo informado, nao o da prioridade")
+        void prazoInformadoPrevalece() throws Exception {
+            LocalDateTime prazoDoHospital = LocalDateTime.of(2026, 12, 1, 8, 30);
+
+            String resposta = mvc.perform(post("/api/v1/requisicoes")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json.writeValueAsString(new RequisicaoRequest(
+                                    hospitalId, PrioridadeRequisicao.EMERGENCIA, prazoDoHospital, null,
+                                    List.of(new ItemRequisicaoRequest(
+                                            TipoHemocomponente.CONCENTRADO_HEMACIAS,
+                                            GrupoSanguineo.O_NEG, 1))))))
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+
+            assertEquals(prazoDoHospital, LocalDateTime.parse(
+                    json.readTree(resposta).get("prazoEntrega").asString()));
+        }
+
+        @Test
+        @DisplayName("Dado uma requisicao sem item algum, Quando eu tentar salvar, "
+                   + "Entao recebo 400 apontando o campo itens, e a requisicao nao e criada")
+        void requisicaoPrecisaTerItens() throws Exception {
+            mvc.perform(post("/api/v1/requisicoes")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json.writeValueAsString(new RequisicaoRequest(
+                                    hospitalId, PrioridadeRequisicao.ROTINA, null, null, List.of()))))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.campos.itens")
+                            .value("a requisicao precisa de pelo menos um item"));
+
+            mvc.perform(get("/api/v1/hospitais/" + hospitalId + "/requisicoes"))
+                    .andExpect(jsonPath("$").isEmpty());
+        }
+
+        /** Cria uma requisicao sem prazo e devolve o intervalo entre a criacao e o prazo calculado. */
+        private Duration prazoDe(PrioridadeRequisicao prioridade) throws Exception {
+            String resposta = mvc.perform(post("/api/v1/requisicoes")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json.writeValueAsString(new RequisicaoRequest(
+                                    hospitalId, prioridade, null, null,
+                                    List.of(new ItemRequisicaoRequest(
+                                            TipoHemocomponente.CONCENTRADO_HEMACIAS,
+                                            GrupoSanguineo.O_NEG, 1))))))
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+
+            JsonNode requisicao = json.readTree(resposta);
+            LocalDateTime criacao = LocalDateTime.parse(requisicao.get("dataHoraCriacao").asString());
+            LocalDateTime prazo = LocalDateTime.parse(requisicao.get("prazoEntrega").asString());
+            return Duration.between(criacao, prazo);
+        }
 
         @Test
         @DisplayName("Dado uma requisicao de 2 bolsas, Quando as duas forem alocadas, "
@@ -248,8 +415,172 @@ class CenariosAceitacaoTest {
 
     // =======================================================================
     @Nested
+    @DisplayName("HU-04 — Ver bolsas em risco de vencimento")
+    class BolsasEmRisco {
+
+        @Test
+        @DisplayName("Dado bolsas vencendo em 3, 10 e 40 dias, Quando eu abrir o painel com filtro de 7, "
+                   + "Entao vejo apenas a que vence em 3 dias")
+        void painelMostraApenasOQueEstaEmRisco() throws Exception {
+            // Dado o estoque com bolsas vencendo em 3, 10 e 40 dias
+            String tresDias = criarBolsaQueVenceEm(3);
+            criarBolsaQueVenceEm(10);
+            criarBolsaQueVenceEm(40);
+
+            // Quando eu abrir o painel de estoque critico com filtro de 7 dias
+            // Entao vejo apenas a bolsa que vence em 3 dias
+            mvc.perform(get("/api/v1/bolsas/em-risco")
+                            .param("dias", "7")
+                            .param("hemocentroId", hemocentroId))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.totalEmRisco").value(1))
+                    .andExpect(jsonPath("$.emRisco[0].id").value(tresDias));
+        }
+
+        @Test
+        @DisplayName("Dado bolsas vencendo em 6, 2 e 4 dias, Quando eu abrir o painel, "
+                   + "Entao elas aparecem na ordem 2, 4 e 6")
+        void ordenacaoPorUrgencia() throws Exception {
+            // Dado bolsas cadastradas fora de ordem
+            criarBolsaQueVenceEm(6);
+            criarBolsaQueVenceEm(2);
+            criarBolsaQueVenceEm(4);
+
+            // Quando eu abrir o painel de estoque critico
+            // Entao a ordem e da mais critica para a menos
+            mvc.perform(get("/api/v1/bolsas/em-risco")
+                            .param("dias", "7")
+                            .param("hemocentroId", hemocentroId))
+                    .andExpect(jsonPath("$.emRisco[0].diasRestantes").value(2))
+                    .andExpect(jsonPath("$.emRisco[1].diasRestantes").value(4))
+                    .andExpect(jsonPath("$.emRisco[2].diasRestantes").value(6));
+        }
+
+        @Test
+        @DisplayName("Dado que nenhuma bolsa vence nos proximos 7 dias, Quando eu abrir o painel, "
+                   + "Entao vejo a mensagem 'Nenhuma bolsa em risco nos proximos 7 dias'")
+        void estoqueSaudavel() throws Exception {
+            // Dado um estoque em que tudo vence depois de 7 dias
+            criarBolsaQueVenceEm(30);
+
+            // Quando eu abrir o painel
+            // Entao o estado vazio tem mensagem propria, nao tabela em branco
+            mvc.perform(get("/api/v1/bolsas/em-risco")
+                            .param("dias", "7")
+                            .param("hemocentroId", hemocentroId))
+                    .andExpect(jsonPath("$.emRisco").isEmpty())
+                    .andExpect(jsonPath("$.mensagem").value("Nenhuma bolsa em risco nos proximos 7 dias"));
+        }
+
+        @Test
+        @DisplayName("Dado uma bolsa vencida ainda em estoque, Quando eu abrir o painel, "
+                   + "Entao ela aparece separada das que ainda podem ser usadas")
+        void vencidasSeparadas() throws Exception {
+            // Dado uma bolsa valida que vence em 3 dias e uma que venceu ha 2
+            String valida = criarBolsaQueVenceEm(3);
+            String vencida = envelhecerBolsaAteVencerHa(2);
+
+            // Quando eu abrir o painel
+            // Entao cada uma esta na sua lista
+            mvc.perform(get("/api/v1/bolsas/em-risco")
+                            .param("dias", "7")
+                            .param("hemocentroId", hemocentroId))
+                    .andExpect(jsonPath("$.emRisco.length()").value(1))
+                    .andExpect(jsonPath("$.emRisco[0].id").value(valida))
+                    .andExpect(jsonPath("$.vencidas.length()").value(1))
+                    .andExpect(jsonPath("$.vencidas[0].id").value(vencida));
+        }
+    }
+
+    // =======================================================================
+    @Nested
     @DisplayName("HU-05 — Calcular rota de entrega")
     class CalcularRota {
+
+        @Test
+        @DisplayName("Dado a rede de trechos da historia, Quando eu calcular a rota do Hemocentro ao Destino, "
+                   + "Entao o caminho e Hemocentro > A > B > Destino em 23 minutos")
+        void caminhoMaisRapidoNaoOMaisCurto() throws Exception {
+            // Dado que a rede tem os trechos da tabela da historia, em minutos
+            Grafo<String> rede = new Grafo<>();
+            rede.inserirAresta("Hemocentro", "Hospital A", 10);
+            rede.inserirAresta("Hemocentro", "Hospital B", 20);
+            rede.inserirAresta("Hospital A", "Hospital B", 5);
+            rede.inserirAresta("Hospital B", "Destino", 8);
+
+            // Quando eu calcular a rota do Hemocentro ate o Destino
+            ResultadoRota<String> rota = new Dijkstra<>(rede).calcularRota("Hemocentro", "Destino");
+
+            // Entao a rota passa por A e B, e nao pela ligacao direta ao B
+            assertEquals(List.of("Hemocentro", "Hospital A", "Hospital B", "Destino"), rota.caminho());
+            // E o tempo estimado e de 23 minutos: o peso e tempo, nao distancia
+            assertEquals(23.0, rota.custoTotal());
+        }
+
+        @Test
+        @DisplayName("Dado um hospital sem trecho ate o hemocentro, Quando eu calcular a rota, "
+                   + "Entao vejo a mensagem 'Nao ha rota disponivel para este destino'")
+        void destinoInalcancavel() throws Exception {
+            // Dado um hospital a mais de 2.000 km de qualquer unidade da malha
+            String hospitalX = idDe(mvc.perform(post("/api/v1/hospitais")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json.writeValueAsString(new HospitalRequest(
+                                    "Hospital X", "(11) 3000-0000", "1010102",
+                                    new EnderecoDto("Avenida Paulista", "1000", "Bela Vista",
+                                            "Sao Paulo", "SP", "01310-100", -23.5614, -46.6559)))))
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString());
+
+            // Quando eu calcular a rota do Hemocentro ate o Hospital X
+            // Entao a resposta e tratada, nao um erro: 200 com a mensagem
+            mvc.perform(get("/api/v1/rotas/calcular")
+                            .param("origemId", hemocentroId)
+                            .param("destinoId", hospitalX))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.alcancavel").value(false))
+                    .andExpect(jsonPath("$.mensagem").value("Nao ha rota disponivel para este destino"));
+        }
+
+        @Test
+        @DisplayName("Dado que calculei uma rota, Quando eu confirmar o despacho, "
+                   + "Entao a rota nasce PLANEJADA com previsao de saida e chegada, "
+                   + "e as bolsas embarcadas mudam para EM_TRANSITO ao sair")
+        void rotaRegistraOrigemDestinoEPrevisao() throws Exception {
+            // Dado que calculei a rota do hemocentro ao hospital
+            String calculo = mvc.perform(get("/api/v1/rotas/calcular")
+                            .param("origemId", hemocentroId)
+                            .param("destinoId", hospitalId))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.alcancavel").value(true))
+                    .andReturn().getResponse().getContentAsString();
+            double tempo = json.readTree(calculo).get("tempoMinutos").asDouble();
+
+            // Quando eu confirmar o despacho, sem informar a chegada
+            LocalDateTime saida = LocalDateTime.now().plusHours(1);
+            String resposta = mvc.perform(post("/api/v1/rotas")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json.writeValueAsString(new RotaRequest(
+                                    hemocentroId, hospitalId, saida, null))))
+                    .andExpect(status().isCreated())
+                    // Entao a rota e criada PLANEJADA
+                    .andExpect(jsonPath("$.status").value("PLANEJADA"))
+                    .andReturn().getResponse().getContentAsString();
+
+            // E contem a previsao de saida e de chegada, esta calculada pelo caminho
+            JsonNode rota = json.readTree(resposta);
+            LocalDateTime chegada = LocalDateTime.parse(rota.get("previsaoChegada").asString());
+            assertTrue(chegada.isAfter(saida), "a chegada vem depois da saida");
+            assertEquals(tempo, rota.get("tempoEstimadoMinutos").asDouble());
+            assertFalse(rota.get("caminho").isEmpty(), "o caminho fica registrado na rota");
+
+            // E as bolsas embarcadas mudam para EM_TRANSITO quando a rota sai
+            String rotaId = rota.get("id").asString();
+            embarcar(rotaId, TipoHemocomponente.CONCENTRADO_HEMACIAS, GrupoSanguineo.O_NEG);
+            porEmTransito(rotaId);
+            mvc.perform(get("/api/v1/rotas/" + rotaId))
+                    .andExpect(jsonPath("$.status").value("EM_TRANSITO"))
+                    .andExpect(jsonPath("$.bolsas[0].status").value("EM_TRANSITO"));
+        }
 
         @Test
         @DisplayName("Dado uma rota planejada com bolsa embarcada, Quando ela sair, "
@@ -386,6 +717,25 @@ class CenariosAceitacaoTest {
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return idDe(resposta);
+    }
+
+    /** Bolsa de hemacias (42 dias) coletada no dia exato para vencer daqui a {@code dias}. */
+    private String criarBolsaQueVenceEm(int dias) throws Exception {
+        TipoHemocomponente tipo = TipoHemocomponente.CONCENTRADO_HEMACIAS;
+        return criarBolsaComColeta(tipo, GrupoSanguineo.O_POS,
+                LocalDate.now().plusDays(dias).minusDays(tipo.getValidadeDias()));
+    }
+
+    /**
+     * Grava direto no banco uma bolsa que venceu ha {@code dias}: a API nao
+     * aceita cadastrar bolsa ja vencida, mas o estoque envelhece.
+     */
+    private String envelhecerBolsaAteVencerHa(int dias) {
+        TipoHemocomponente tipo = TipoHemocomponente.CONCENTRADO_PLAQUETAS;
+        Hemocentro hemocentro = hemocentros.findById(hemocentroId).orElseThrow();
+        Bolsa vencida = new Bolsa("ACEIT-VENCIDA-" + dias, tipo, GrupoSanguineo.O_POS, 300,
+                LocalDate.now().minusDays(dias).minusDays(tipo.getValidadeDias()), hemocentro);
+        return bolsas.save(vencida).getCodigoRastreio();
     }
 
     private JsonNode criarRequisicao(TipoHemocomponente tipo, GrupoSanguineo grupo,
