@@ -73,7 +73,7 @@ gh pr create --fill
 gh pr checks --watch
 ```
 
-**Observe:** no PR rodam `Build`, `Testes` e `Front-end Angular`. `Imagem Docker` e `Deploy na VM` aparecem como **SKIPPED**: código de PR aberto nunca vai para produção. A `main` exige `Build` e `Testes` verdes antes de aceitar o merge.
+**Observe:** no PR rodam `Build`, `Testes` e `Front-end Angular`. `Imagem Docker`, `Deploy na VM` e `Deploy do front-end` aparecem como **SKIPPED**: código de PR aberto nunca vai para produção. A `main` exige `Build` e `Testes` verdes antes de aceitar o merge.
 
 ### 3.4 Mesclar e acompanhar o deploy
 
@@ -144,6 +144,6 @@ O teste vermelho interrompe a cadeia: nenhum artefato é gerado e nada chega à 
 ## 6. Limites desta demonstração
 
 - **O deploy envia o jar por SSH, não o container.** A imagem é construída e publicada no GitHub Container Registry a cada push na `main`, mas a VM tem 955 MB de memória e é compartilhada com outra aplicação; rodar os containers somaria cerca de 510 MB. A decisão está registrada no README.
-- **O front-end Angular não é publicado pelo pipeline.** O job `Front-end Angular` compila e guarda o bundle, mas a publicação em `/app/` é feita pelo `infra/deploy-angular.sh`.
+- **O front-end Angular tem um deploy próprio.** O job `Deploy do front-end` publica em `/app/` o bundle que o job `Front-end Angular` compilou, independente do deploy da API: uma falha num não impede o outro. O registro da seção 4 é de antes desse job existir, por isso ele não aparece na tabela.
 - **O H2 é em memória.** Cada deploy reinicia a aplicação e recarrega a carga inicial; dados criados antes do deploy somem. Para a demonstração isso não importa, mas vale saber antes de criar dados à mão e fazer um deploy em seguida.
 - **O pipeline depende de três segredos** (`VM_HOST`, `VM_USUARIO`, `VM_CHAVE_SSH`). Num fork sem eles, o deploy é pulado com aviso, e o resto do pipeline continua valendo.
