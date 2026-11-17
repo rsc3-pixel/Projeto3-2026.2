@@ -3,6 +3,10 @@
 #
 # Builda o frontend Angular e implanta no servidor de producao.
 #
+# O deploy normal e automatico: desde o PR #105, o job "Deploy do front-end"
+# do pipeline publica o Angular a cada push na main. Este script fica para
+# publicar a mao, por exemplo com o GitHub Actions fora do ar.
+#
 # USO
 #   ./infra/deploy-angular.sh [usuario@host]
 #
@@ -12,7 +16,8 @@
 #   DEPLOY_HOST=pi@rsc3-rotavital.duckdns.org ./infra/deploy-angular.sh
 #
 # PRE-REQUISITOS (maquina local)
-#   - Node.js >= 18 (recomendado: nvm com v24)
+#   - Node.js 22.22.3+, 24.15+ ou 26+ (o Angular 22 recusa versoes abaixo;
+#     ver "engines" no frontend/angular/package.json)
 #   - bun  ou  npm  instalado
 #   - ssh configurado para o servidor (chave sem senha, ou ssh-agent ativo)
 #
@@ -68,12 +73,18 @@ if [[ -z "${DEPLOY_HOST}" ]]; then
     die "Informe o host de deploy:\n  $0 usuario@host\n  ou: export DEPLOY_HOST=usuario@host"
 fi
 
-# Node: precisa de v18+
+# Node: a mesma faixa do "engines" do package.json. Abaixo dela o Angular
+# CLI para com erro, entao checar aqui evita descobrir so no meio do build.
 if command -v node &>/dev/null; then
-    NODE_MAJOR=$(node -e "process.stdout.write(process.version.split('.')[0].replace('v',''))")
-    (( NODE_MAJOR >= 18 )) || die "Node.js >= 18 necessario (encontrado: $(node -v))"
+    NODE_MAJOR=$(node -e "process.stdout.write(process.version.slice(1).split('.')[0])")
+    NODE_MINOR=$(node -e "process.stdout.write(process.version.slice(1).split('.')[1])")
+    if ! { (( NODE_MAJOR == 22 && NODE_MINOR >= 22 )) \
+        || (( NODE_MAJOR == 24 && NODE_MINOR >= 15 )) \
+        || (( NODE_MAJOR >= 26 )); }; then
+        die "Node.js 22.22.3+, 24.15+ ou 26+ necessario (encontrado: $(node -v)). Ex.: nvm install 24.15.0"
+    fi
 else
-    die "Node.js nao encontrado. Instale com nvm: nvm install 24"
+    die "Node.js nao encontrado. Instale com nvm: nvm install 24.15.0"
 fi
 
 # Gerenciador de pacotes: bun > npm

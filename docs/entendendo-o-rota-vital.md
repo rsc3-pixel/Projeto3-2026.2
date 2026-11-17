@@ -1995,7 +1995,8 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
 
         proxy_connect_timeout 10s;
-        proxy_read_timeout    30s;
+        proxy_read_timeout    90s;
+        proxy_send_timeout    90s;
     }
 
     access_log /var/log/nginx/rota-vital-access.log;
