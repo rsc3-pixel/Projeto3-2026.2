@@ -8,6 +8,7 @@ import com.rotavital.api.dto.LeituraTemperaturaResponse;
 import com.rotavital.api.dto.RotaCalculadaResponse;
 import com.rotavital.api.dto.RotaRequest;
 import com.rotavital.api.dto.RotaResponse;
+import com.rotavital.api.dto.RoteiroResponse;
 import com.rotavital.dominio.enums.StatusRota;
 import com.rotavital.servico.RotaServico;
 import com.rotavital.servico.RoteirizacaoServico;
@@ -79,6 +80,30 @@ public class RotaController {
             @Parameter(description = "Id do hemocentro ou hospital de chegada")
             @RequestParam String destinoId) {
         return roteirizacao.calcular(origemId, destinoId);
+    }
+
+    /**
+     * Ordem de visita para entregar em varios destinos numa unica saida
+     * (PI3-227). E a roteirizacao por vizinho mais proximo da AED, agora
+     * acessivel pela aplicacao e nao so pelos testes.
+     */
+    @Operation(summary = "Monta o roteiro de entregas por vizinho mais proximo",
+            description = "A partir da origem, visita sempre o destino pendente mais proximo "
+                    + "em tempo estimado, ate passar por todos. Destino sem trecho na malha vai "
+                    + "para inalcancaveis e os outros sao visitados. A heuristica e gulosa: o "
+                    + "roteiro e bom, mas nao necessariamente o de menor tempo total.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Roteiro montado, com os destinos que ficaram de fora"),
+            @ApiResponse(responseCode = "400", description = "Nenhum destino informado"),
+            @ApiResponse(responseCode = "404", description = "Origem ou algum destino nao cadastrados")
+    })
+    @GetMapping("/roteiro")
+    public RoteiroResponse roteiro(
+            @Parameter(description = "Id do hemocentro ou hospital de partida")
+            @RequestParam String origemId,
+            @Parameter(description = "Ids dos destinos, separados por virgula")
+            @RequestParam List<String> destinos) {
+        return roteirizacao.roteiro(origemId, destinos);
     }
 
     @GetMapping("/{id}")

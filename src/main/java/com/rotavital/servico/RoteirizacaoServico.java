@@ -1,6 +1,7 @@
 package com.rotavital.servico;
 
 import com.rotavital.api.dto.RotaCalculadaResponse;
+import com.rotavital.api.dto.RoteiroResponse;
 import com.rotavital.dominio.Endereco;
 import com.rotavital.dominio.Hemocentro;
 import com.rotavital.dominio.Hospital;
@@ -8,6 +9,8 @@ import com.rotavital.dominio.Local;
 import com.rotavital.estruturas.Dijkstra;
 import com.rotavital.estruturas.Grafo;
 import com.rotavital.estruturas.ResultadoRota;
+import com.rotavital.estruturas.ResultadoRoteiro;
+import com.rotavital.estruturas.VizinhoMaisProximo;
 import com.rotavital.rede.CarregadorMalha;
 import com.rotavital.rede.UnidadeRede;
 import com.rotavital.repositorio.HemocentroRepository;
@@ -81,6 +84,31 @@ public class RoteirizacaoServico {
     @Transactional(readOnly = true)
     public ResultadoRota<String> caminhoMinimo(String origemId, String destinoId) {
         return caminhoMinimo(unidadesDaRede(), origemId, destinoId);
+    }
+
+    /**
+     * Ordem de visita para entregar em varios destinos saindo de uma
+     * unidade, pelo vizinho mais proximo (PI3-227).
+     *
+     * <p>Usa a mesma malha do calculo de rota, montada com as unidades do
+     * banco. Destino sem trecho na malha nao interrompe o roteiro: ele volta
+     * em {@code inalcancaveis} e os outros sao visitados.</p>
+     *
+     * @throws RecursoNaoEncontradoException se a origem ou algum destino nao
+     *         existir como hemocentro nem como hospital
+     */
+    @Transactional(readOnly = true)
+    public RoteiroResponse roteiro(String origemId, List<String> destinoIds) {
+        Map<String, Local> unidades = unidadesDaRede();
+        Local origem = unidadeOuErro(unidades, origemId);
+        for (String destinoId : destinoIds) {
+            unidadeOuErro(unidades, destinoId);
+        }
+
+        Grafo<String> malha = CarregadorMalha.carregar(comoUnidadesDeRede(unidades));
+        ResultadoRoteiro<String> roteiro =
+                new VizinhoMaisProximo<>(malha).calcularRoteiro(origem.getId(), destinoIds);
+        return RoteiroResponse.de(origem, roteiro, unidades);
     }
 
     private ResultadoRota<String> caminhoMinimo(Map<String, Local> unidades,
