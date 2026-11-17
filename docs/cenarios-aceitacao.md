@@ -416,3 +416,4 @@ Então  a bolsa compatível é alocada
 > aceitação de ponta a ponta com cenário Dado/Quando/Então registrado em
 > `CenariosAceitacaoTest`. Os critérios estão cobertos parcialmente pelos testes
 > de serviço e endpoint de bolsas com filtro de validade.
+
