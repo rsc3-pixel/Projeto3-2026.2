@@ -536,6 +536,29 @@ verdes: `MatrizCompatibilidadeTest`, `SelecaoFefoTest`,
 | Telas Angular para HU-04 e HU-05 | a SPA consome a mesma API e as telas novas foram feitas no Thymeleaf, que é renderizado pelo próprio Spring; a versão Angular fica para o backlog (PI3-38, sem responsável) |
 | `Veiculo` | entidade modelada e não integrada; nenhuma história a pede, e removê-la mudaria o diagrama de domínio sem ganho funcional |
 
+## Pendências da Unidade 2, com justificativa (PI3-225, PI3-240)
+
+Registro de 17/11/2026, para a entrega final. Cada item diz por que ficou aberto e o que falta para fechar.
+
+### POO
+
+Os itens da Entrega 04 estão na tabela acima (PI3-203). Depois dela, entraram:
+
+| Item | Por quê |
+|---|---|
+| Demonstração curta (PI3-219) | o roteiro de 1 minuto está pronto em [docs/roteiro-demonstracao.md](docs/roteiro-demonstracao.md); a versão em vídeo reaproveita um trecho do screencast de uso, que ainda não foi publicado |
+| Revisão conjunta AED + POO (PI3-229) | exige reunião dos responsáveis pelas duas disciplinas; a seção 7 de [docs/U2-traducao-c-java.md](docs/U2-traducao-c-java.md) traz o roteiro e os campos a preencher |
+
+### SO
+
+| Item | Por quê |
+|---|---|
+| Validação da produção na data da apresentação (PI3-237) | só faz sentido no dia; a checagem está na seção 1 de [docs/roteiro-demonstracao.md](docs/roteiro-demonstracao.md) |
+| Ensaios da demonstração do deploy e da parte de SO (PI3-239, PI3-241) | exigem o grupo reunido; o passo a passo está em [docs/demonstracao-deploy-continuo.md](docs/demonstracao-deploy-continuo.md) |
+| Deploy por jar, não por container | a VM tem 955 MB e é compartilhada com outra aplicação; os containers somariam cerca de 510 MB. A imagem é construída e publicada no GitHub Container Registry a cada push na `main`, pronta para quando houver uma VM dedicada (cenário moderado) |
+| Banco H2 em memória, sem persistência | os dados voltam à carga inicial a cada deploy. A migração para PostgreSQL está planejada no cenário moderado de [docs/so-u2-cenarios-dimensionamento.md](docs/so-u2-cenarios-dimensionamento.md) |
+| VM única e compartilhada, sem redundância | é o ponto único de falha do ambiente. O plano de implantação da PI3-114 ([docs/plano-implantacao-migracao-pi3-114.md](docs/plano-implantacao-migracao-pi3-114.md)) propõe a migração para uma VM própria, com IP estático, por implantação paralela e troca de DNS, e mantém um registro de riscos com a mitigação de cada um |
+
 ## Documentação técnica
 
 Material de apoio, não exigido pelas entregas:
@@ -655,6 +678,7 @@ Material de apoio, não exigido pelas entregas:
 |---|---|
 | SO U2 — cenários e dimensionamento de arquitetura | [docs/so-u2-cenarios-dimensionamento.md](docs/so-u2-cenarios-dimensionamento.md) |
 | SO U2 — orçamento mensal dos três cenários | [docs/so-u2-orcamento-mensal.md](docs/so-u2-orcamento-mensal.md) |
+| SO U2: índice das entregas da disciplina | [docs/so-u2-indice.md](docs/so-u2-indice.md) |
 | SO U2: demonstração do deploy contínuo, do commit à produção | [docs/demonstracao-deploy-continuo.md](docs/demonstracao-deploy-continuo.md) |
 | AED U2: complexidade dos quatro algoritmos, em Java e em C++ | [docs/complexidade-estruturas.md](docs/complexidade-estruturas.md) |
 | EST U2 — W14: achados, interpretação e decisões | [docs/W14-relatorio-achados-est.md](docs/W14-relatorio-achados-est.md) |
