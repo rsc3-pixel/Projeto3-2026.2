@@ -210,9 +210,10 @@ jobs:
   # ---------------------------------------------------------------------------
   # FRONT-END ANGULAR - o front compila?
   #
-  # Nao depende dos jobs de Java e nenhum job depende dele: o front e o back
-  # sao construidos e publicados separadamente, entao uma quebra no Angular
-  # nao deve impedir o deploy da API, que continua no ar e funcionando.
+  # Nao depende dos jobs de Java, e o deploy da API nao depende dele: o front
+  # e o back sao construidos e publicados separadamente, entao uma quebra no
+  # Angular nao deve impedir o deploy da API, que continua no ar e
+  # funcionando. Quem depende dele e so o deploy-frontend, no fim do arquivo.
   #
   # 'npm ci' de proposito, e nao 'npm install': ele exige que o
   # package-lock.json esteja em dia com o package.json e falha quando nao
@@ -390,3 +391,93 @@ jobs:
           fi
 
           echo "Console do H2 inacessivel (HTTP $codigo). Correto."
+
+  # ---------------------------------------------------------------------------
+  # 5. DEPLOY DO FRONT-END - publica o Angular em /app/
+  #
+  # Job proprio, e nao um passo do deploy da API: se o Angular falhar, a API
+  # continua sendo publicada, e vice-versa. As mesmas duas condicoes do
+  # deploy da API: so na main e so com os segredos cadastrados.
+  #
+  # Publica o bundle que o job 'frontend' acabou de compilar e guardar, entao
+  # o que vai para a VM e exatamente o que passou no build de producao.
+  #
+  # Nao usa sudo: a pasta /var/www/rota-vital-angular/ pertence ao usuario de
+  # deploy, e o Nginx ja serve o /app/ a partir dela.
+  # ---------------------------------------------------------------------------
+  deploy-frontend:
+    name: Deploy do front-end
+    runs-on: ubuntu-latest
+    needs: frontend
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+
+    steps:
+      - name: Verificar se os segredos estao configurados
+        id: segredos
+        env:
+          VM_HOST: ${{ secrets.VM_HOST }}
+          VM_USUARIO: ${{ secrets.VM_USUARIO }}
+          VM_CHAVE_SSH: ${{ secrets.VM_CHAVE_SSH }}
+        run: |
+          if [ -z "$VM_HOST" ] || [ -z "$VM_USUARIO" ] || [ -z "$VM_CHAVE_SSH" ]; then
+            echo "configurado=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Deploy do front-end pulado: faltam os segredos da VM. Ver docs/deploy.md."
+          else
+            echo "configurado=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Baixar o bundle compilado
+        if: steps.segredos.outputs.configurado == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-angular
+          path: dist
+
+      - name: Preparar a chave SSH
+        if: steps.segredos.outputs.configurado == 'true'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VM_CHAVE_SSH }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.VM_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      # Tres passos de rsync, nesta ordem, para nunca existir um index.html
+      # apontando para um JS que ainda nao chegou:
+      #   1. os arquivos novos, menos o index.html: o site antigo continua
+      #      inteiro, porque os nomes com hash novo nao colidem com os antigos
+      #   2. o index.html, que passa a apontar para os arquivos ja presentes
+      #   3. a limpeza dos arquivos antigos que nenhum index usa mais
+      - name: Publicar na VM
+        if: steps.segredos.outputs.configurado == 'true'
+        env:
+          DESTINO: ${{ secrets.VM_USUARIO }}@${{ secrets.VM_HOST }}:/var/www/rota-vital-angular/
+        run: |
+          origem="dist/rota-vital-web/browser/"
+          test -f "${origem}index.html" || { echo "::error::Bundle sem index.html em ${origem}"; exit 1; }
+          ssh_cmd="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes"
+
+          rsync -rtz --checksum --exclude index.html -e "$ssh_cmd" "$origem" "$DESTINO"
+          rsync -rtz --checksum -e "$ssh_cmd" "${origem}index.html" "$DESTINO"
+          rsync -rtz --checksum --delete -e "$ssh_cmd" "$origem" "$DESTINO"
+
+      # Confere a pagina e tambem o JS principal que ela referencia: um
+      # index.html servido com o bundle faltando abriria em branco e passaria
+      # por uma checagem so da pagina.
+      - name: Confirmar que o front-end esta no ar (pela URL publica)
+        if: steps.segredos.outputs.configurado == 'true'
+        run: |
+          pagina=$(curl -sf --max-time 10 "${{ env.URL_PUBLICA }}/app/") \
+            || { echo "::error::/app/ nao respondeu."; exit 1; }
+
+          js=$(echo "$pagina" | grep -oE 'main-[A-Za-z0-9]+\.js' | head -1)
+          [ -n "$js" ] || { echo "::error::index.html sem referencia ao main-*.js."; exit 1; }
+
+          esperado=$(grep -oE 'main-[A-Za-z0-9]+\.js' dist/rota-vital-web/browser/index.html | head -1)
+          [ "$js" = "$esperado" ] \
+            || { echo "::error::Producao serve $js, mas o build novo e $esperado."; exit 1; }
+
+          codigo=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${{ env.URL_PUBLICA }}/app/$js")
+          [ "$codigo" = "200" ] \
+            || { echo "::error::$js respondeu HTTP $codigo."; exit 1; }
+
+          echo "Front-end no ar: /app/ servindo $js (HTTP 200)."
