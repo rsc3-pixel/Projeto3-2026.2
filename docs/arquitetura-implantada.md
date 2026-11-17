@@ -44,14 +44,14 @@ na porta 3000). Nenhuma das duas tem a máquina só para si.
 | Componente | Configuração efetiva | Fonte versionada |
 |---|---|---|
 | **VM** | Compartilhada (`flux`, us-west1-a); 2 vCPU compartilhados; ~978 MB RAM total; ~577 MB disponíveis com Flux em execução | [`deploy.md`](deploy.md), [`provisionar.sh`](../infra/provisionar.sh) |
-| **Nginx** | Proxy reverso nas portas 80/443; TLS via Certbot (Let's Encrypt); encaminha `/api/`, `/app/` e `/` para `127.0.0.1:8081`; bloqueia `/h2-console`; logs separados em `/var/log/nginx/rota-vital-*.log` | [`nginx-rota-vital.conf`](../infra/nginx-rota-vital.conf) |
+| **Nginx** | Proxy reverso nas portas 80/443; TLS via Certbot (Let's Encrypt); serve os estáticos do frontend Angular em `/app/` diretamente de `/var/www/rota-vital-angular/`; encaminha `/api/` e `/` para `127.0.0.1:8081`; bloqueia `/h2-console`; logs separados em `/var/log/nginx/rota-vital-*.log` | [`nginx-rota-vital.conf`](../infra/nginx-rota-vital.conf) |
 | **TLS** | Certificado emitido por Certbot com `--nginx`; renovação automática pelo Certbot; bloco `listen 443 ssl` gerado pelo Certbot (não versionado); porta 80 redireciona para HTTPS | [`nginx-rota-vital.conf`](../infra/nginx-rota-vital.conf), [`deploy.md § 1.5`](deploy.md) |
 | **Spring Boot** | Java 21; perfil `prod`; porta `8081`; bind em `127.0.0.1` (não em `0.0.0.0`); Actuator público restrito a `/actuator/health` | [`application-prod.properties`](../src/main/resources/application-prod.properties) |
 | **JVM** | Heap máximo 256 MiB (`-Xmx256m`); metaspace limitado a 128 MiB; SerialGC (uma thread — adequado para 2 vCPU compartilhados); RSS medido: 331 MB estável após 100 requisições | [`provisionar.sh`](../infra/provisionar.sh) |
 | **H2 em memória** | Banco embutido na JVM; sem arquivo persistente; console desligado em produção (`spring.h2.console.enabled=false`); sem driver PostgreSQL no `pom.xml` | [`application-prod.properties`](../src/main/resources/application-prod.properties), [`pom.xml`](../pom.xml) |
 | **systemd** | Serviço `rota-vital.service`; `Restart=always`; `RestartSec=10`; `ProtectSystem=strict`; `PrivateTmp=true`; `NoNewPrivileges=true`; logs via `journalctl -u rota-vital` | [`provisionar.sh`](../infra/provisionar.sh) |
 | **CI/CD** | GitHub Actions: build → testes → empacotamento → deploy por SSH/SCP; deploy somente na `main`; confirma health interno (`127.0.0.1:8081`) e externo (URL pública) | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) |
-| **Carga inicial** | `CargaInicial` popula 25 bolsas por hemocentro (100 total); semente 42; executa também em produção a cada reinício | [`CargaInicial.java`](../src/main/java/com/rotavital/config/CargaInicial.java) |
+| **Carga inicial** | `CargaInicial` popula 25 bolsas por hemocentro (100 total em 4 hemocentros) e requisições sintéticas para 6 hospitais; semente 42; executa em produção a cada reinício (`@Profile("!test")`) | [`CargaInicial.java`](../src/main/java/com/rotavital/config/CargaInicial.java) |
 
 ### 2.1 Fluxo de uma requisição
 
