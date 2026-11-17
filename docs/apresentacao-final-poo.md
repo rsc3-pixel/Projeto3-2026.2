@@ -94,7 +94,9 @@ estão nos links. Obrigado."
 
 - [x] PI3-218 · slides montados (`apresentacao/apresentacao-final-poo.html`)
 - [ ] PI3-219 · demo gravada em vídeo curto (reaproveitar o trecho de 1:00 a
-      3:30 do screencast de uso, ver `roteiro-screencasts-e04.md`)
+      3:30 do screencast de uso, ver `roteiro-screencasts-e04.md`). O roteiro
+      de 1 minuto, com cliques, falas e a checagem antes de apresentar, está
+      em [roteiro-demonstracao.md](roteiro-demonstracao.md)
 - [x] PI3-220 · slide 1 e slide 10 declaram dados sintéticos, telemetria
       simulada e compatibilidade didática
 - [ ] PI3-221 · ensaio com todos, cronometrado; anotar o tempo real aqui:
