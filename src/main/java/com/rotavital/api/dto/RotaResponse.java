@@ -6,6 +6,12 @@ import com.rotavital.dominio.enums.StatusRota;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * @param tempoEstimadoMinutos tempo do caminho calculado na malha (HU-05);
+ *                             nulo quando nao houve caminho
+ * @param caminho              ids das unidades do caminho, da origem ao
+ *                             destino; vazio quando nao houve caminho
+ */
 public record RotaResponse(
         String id,
         String hemocentroOrigemId,
@@ -15,6 +21,8 @@ public record RotaResponse(
         LocalDateTime saidaReal,
         LocalDateTime chegadaReal,
         StatusRota status,
+        Double tempoEstimadoMinutos,
+        List<String> caminho,
         List<BolsaResponse> bolsas) {
 
     public static RotaResponse de(Rota rota) {
@@ -27,6 +35,8 @@ public record RotaResponse(
                 rota.getSaidaReal(),
                 rota.getChegadaReal(),
                 rota.getStatus(),
+                rota.getTempoEstimadoMinutos(),
+                rota.getCaminho(),
                 rota.getBolsas().stream().map(BolsaResponse::de).toList());
     }
 }

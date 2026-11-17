@@ -93,16 +93,39 @@ public final class CarregadorMalha {
      * estimativa.</p>
      */
     public static Grafo<String> carregar() {
+        return carregar(UnidadeRede.TODAS);
+    }
+
+    /**
+     * Monta a malha para qualquer conjunto de unidades, com as mesmas
+     * premissas da malha das 12 reais (HU-05).
+     *
+     * <p>E o que permite a roteirizacao trabalhar sobre as unidades que estao
+     * no banco, inclusive as cadastradas pela API depois da carga inicial, em
+     * vez de uma lista fixa. Cada unidade se liga as mais proximas dentro do
+     * {@link PremissasMalha#ALCANCE_MAXIMO_KM}; uma unidade alem desse alcance
+     * de todas as outras entra como vertice isolado, e e assim que "destino
+     * inalcancavel" acontece na pratica.</p>
+     *
+     * @param unidades unidades da rede; nao pode ser nula nem conter nulo
+     */
+    public static Grafo<String> carregar(List<UnidadeRede> unidades) {
+        if (unidades == null) {
+            throw new IllegalArgumentException("Lista de unidades nao pode ser nula");
+        }
         Grafo<String> grafo = new Grafo<>();
 
         // Insere todos os vertices antes das arestas, para que a malha tenha
-        // as 12 unidades mesmo que alguma nao fosse escolhida por ninguem.
-        for (UnidadeRede unidade : UnidadeRede.TODAS) {
+        // todas as unidades mesmo que alguma nao fosse escolhida por ninguem.
+        for (UnidadeRede unidade : unidades) {
+            if (unidade == null) {
+                throw new IllegalArgumentException("Lista de unidades nao pode conter nulo");
+            }
             grafo.inserirVertice(unidade.id());
         }
 
-        for (UnidadeRede origem : UnidadeRede.TODAS) {
-            for (UnidadeRede destino : maisProximas(origem)) {
+        for (UnidadeRede origem : unidades) {
+            for (UnidadeRede destino : maisProximas(origem, unidades)) {
                 double peso = arredondarUmaCasa(tempoMinutos(distanciaKm(origem, destino)));
                 grafo.inserirAresta(origem.id(), destino.id(), peso);
                 grafo.inserirAresta(destino.id(), origem.id(), peso);
@@ -127,15 +150,17 @@ public final class CarregadorMalha {
     }
 
     /**
-     * As unidades mais proximas da informada, sem incluir ela mesma.
+     * As unidades mais proximas da informada, sem incluir ela mesma e sem as
+     * que estao alem do alcance maximo da malha.
      *
      * <p>O desempate por id mantem a malha reproduzivel: sem ele, duas
      * unidades a mesma distancia poderiam entrar em ordem diferente entre
      * execucoes e mudar as arestas geradas.</p>
      */
-    private static List<UnidadeRede> maisProximas(UnidadeRede origem) {
-        return UnidadeRede.TODAS.stream()
+    private static List<UnidadeRede> maisProximas(UnidadeRede origem, List<UnidadeRede> unidades) {
+        return unidades.stream()
                 .filter(candidata -> !candidata.id().equals(origem.id()))
+                .filter(candidata -> distanciaKm(origem, candidata) <= PremissasMalha.ALCANCE_MAXIMO_KM)
                 .sorted(Comparator
                         .comparingDouble((UnidadeRede candidata) -> distanciaKm(origem, candidata))
                         .thenComparing(UnidadeRede::id))

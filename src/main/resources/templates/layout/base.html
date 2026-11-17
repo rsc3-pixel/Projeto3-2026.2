@@ -42,6 +42,8 @@
            th:classappend="${aba == 'estoque'} ? 'ativa' : ''">ESTOQUE</a>
         <a th:href="@{'/painel/' + ${centroId} + '/fila'}"
            th:classappend="${aba == 'fila'} ? 'ativa' : ''">FILA DE SAIDA</a>
+        <a th:href="@{'/painel/' + ${centroId} + '/risco'}"
+           th:classappend="${aba == 'risco'} ? 'ativa' : ''">EM RISCO</a>
         <a th:href="@{'/painel/' + ${centroId} + '/requisicoes'}"
            th:classappend="${aba == 'requisicoes'} ? 'ativa' : ''">PEDIDOS</a>
     </nav>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<!--
+  Estoque critico: o que vence nos proximos dias (HU-04).
+
+  Duas tabelas de proposito. A primeira e acao: despachar antes que vire
+  descarte. A segunda e perda: ja venceu e ainda ocupa o estoque. Misturar as
+  duas esconderia a diferenca entre "sair hoje" e "descartar".
+
+  A janela (7, 15 ou 30 dias) e um link, nao um formulario: a tela continua
+  funcionando sem JavaScript e cada filtro tem uma URL propria.
+-->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}"
+      lang="pt-BR">
+<head>
+    <title>Estoque critico</title>
+    <th:block layout:fragment="estilos">
+        <style>
+            .area { padding: 16px 24px; }
+            .explica {
+                color: var(--texto-fraco);
+                font-size: 19px;
+                margin: 0 0 16px;
+                max-width: 900px;
+                line-height: 1.4;
+            }
+            .janelas {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+                margin-bottom: 16px;
+                font-size: 19px;
+                color: var(--texto-fraco);
+            }
+            .janelas a {
+                padding: 4px 12px;
+                border: 1px solid var(--grade);
+                color: var(--texto);
+                text-decoration: none;
+            }
+            .janelas a.ativa {
+                border-color: var(--ambar);
+                color: var(--ambar);
+            }
+            .bloco { margin-bottom: 22px; }
+            .bloco h3 {
+                font-size: 14px;
+                margin: 0 0 10px;
+                color: var(--texto);
+            }
+            .vazio {
+                color: var(--texto-fraco);
+                font-size: 19px;
+                padding: 12px 0;
+            }
+            .posicao {
+                font-family: 'Press Start 2P', monospace;
+                font-size: 12px;
+                color: var(--ambar);
+            }
+            .codigo { font-family: 'JetBrains Mono', monospace; font-size: 16px; }
+        </style>
+    </th:block>
+</head>
+<body>
+<div layout:fragment="conteudo">
+    <section class="area" th:with="p=${painelRisco}">
+        <h2>ESTOQUE CRITICO &middot; O QUE VENCE ANTES DE SAIR</h2>
+
+        <p class="explica">
+            Bolsas em estoque (disponiveis ou reservadas) que vencem dentro da
+            janela, da mais urgente para a menos. O que ja venceu aparece a parte:
+            nao e a mais critica da fila, e descarte.
+        </p>
+
+        <nav class="janelas" aria-label="janela de dias">
+            <span>vencem em ate</span>
+            <a th:each="j : ${janelas}"
+               th:href="@{'/painel/' + ${centroId} + '/risco'(dias=${j})}"
+               th:classappend="${j == p.dias()} ? 'ativa' : ''"
+               th:text="${j} + ' dias'">7 dias</a>
+        </nav>
+
+        <div class="bloco">
+            <h3 th:text="'VENCEM EM ATE ' + ${p.dias()} + ' DIAS · ' + ${p.totalEmRisco()} + ' BOLSA(S)'">
+                VENCEM EM ATE 7 DIAS
+            </h3>
+
+            <!-- Estado vazio com mensagem propria, nao tabela em branco. -->
+            <p class="vazio" th:if="${p.mensagem() != null}" th:text="${p.mensagem()}">
+                Nenhuma bolsa em risco nos proximos 7 dias
+            </p>
+
+            <div class="painel" th:if="${p.mensagem() == null}">
+                <table>
+                    <thead>
+                    <tr>
+                        <th style="width:70px">ordem</th>
+                        <th>codigo</th>
+                        <th>tipo</th>
+                        <th>componente</th>
+                        <th>vence em</th>
+                        <th>situacao</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="b, it : ${p.emRisco()}">
+                        <td class="posicao" th:text="${it.count}">1</td>
+                        <td class="codigo" th:text="${#strings.abbreviate(b.id(), 12)}">cod</td>
+                        <td th:text="${b.grupoSanguineo()}">O-</td>
+                        <td th:text="${#strings.replace(b.tipoHemocomponente(), '_', ' ')}">HEMACIAS</td>
+                        <td>
+                            <span class="etiqueta alerta"
+                                  th:text="${b.diasRestantes() == 0} ? 'hoje' : (${b.diasRestantes()} + ' dias')">3 dias</span>
+                        </td>
+                        <td th:text="${b.status()}">DISPONIVEL</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bloco">
+            <h3 th:text="'JA VENCIDAS, AINDA EM ESTOQUE · ' + ${p.totalVencidas()} + ' BOLSA(S)'">
+                JA VENCIDAS
+            </h3>
+
+            <p class="vazio" th:if="${p.vencidas().isEmpty()}">
+                nenhuma bolsa vencida em estoque
+            </p>
+
+            <div class="painel" th:if="${!p.vencidas().isEmpty()}">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>codigo</th>
+                        <th>tipo</th>
+                        <th>componente</th>
+                        <th>venceu ha</th>
+                        <th>situacao</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="b : ${p.vencidas()}">
+                        <td class="codigo" th:text="${#strings.abbreviate(b.id(), 12)}">cod</td>
+                        <td th:text="${b.grupoSanguineo()}">O-</td>
+                        <td th:text="${#strings.replace(b.tipoHemocomponente(), '_', ' ')}">HEMACIAS</td>
+                        <td>
+                            <span class="etiqueta critico"
+                                  th:text="${-b.diasRestantes()} + ' dias'">2 dias</span>
+                        </td>
+                        <td th:text="${b.status()}">DISPONIVEL</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>

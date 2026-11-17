@@ -74,6 +74,24 @@ A reciprocidade também garante que o grafo fique conectado: se A escolhe B como
 vizinho, B passa a alcançar A mesmo que B não tivesse escolhido A. Por isso
 algumas unidades acabam com mais de 4 vizinhos.
 
+### 5. Alcance máximo de um trecho: 50 km em linha reta (HU-05)
+
+Acrescentada na Entrega 04, quando a malha deixou de ser a lista fixa das 12
+unidades e passou a ser montada **a partir dos hemocentros e hospitais do
+banco**, com as coordenadas do endereço de cada um.
+
+Sem um limite, a regra dos 4 vizinhos mais próximos ligaria qualquer unidade
+à malha, por mais distante que fosse — um hospital cadastrado em São Paulo
+receberia trecho de 2.000 km e seria "alcançável". A malha é metropolitana, e
+a unidade mais afastada do HEMOPE fica a cerca de 13 km em linha reta. Uma
+unidade a mais de 50 km de todas as outras fica sem trecho, e é assim que
+"destino inalcançável" vira uma resposta tratada da roteirização, não um caso
+impossível.
+
+Nenhuma das 12 unidades reais chega perto do limite, então a malha abaixo
+continua igual. O teste `CarregadorMalhaTest.carregarComListaDasDozeReaisProduzAMesmaMalha`
+garante isso.
+
 ## A fórmula
 
 ```
@@ -119,9 +137,24 @@ demonstrado no exemplo manual de 5 unidades do documento de escopo.
 
 ## Como trocar os números
 
-Todas as premissas estão como constantes nomeadas em uma classe própria.
-Trocar a velocidade média, o fator de sinuosidade ou o número de vizinhos é
-alterar uma linha cada e rodar os testes.
+Todas as premissas estão como constantes nomeadas em uma classe própria
+(`PremissasMalha`). Trocar a velocidade média, o fator de sinuosidade, o
+número de vizinhos ou o alcance máximo é alterar uma linha cada e rodar os
+testes.
+
+## Onde a malha é usada na aplicação (Entrega 04)
+
+`RoteirizacaoServico` monta a malha a cada consulta com as unidades do banco
+e roda o Dijkstra. Dois pontos da API consomem isso:
+
+- `GET /api/v1/rotas/calcular?origemId=&destinoId=` devolve o caminho e o
+  tempo, ou `alcancavel=false` com a mensagem;
+- `POST /api/v1/rotas` sem `previsaoChegada` calcula a chegada como saída
+  mais o tempo do caminho, e registra o caminho e o tempo na rota criada.
+
+Os ids dos vértices passam a ser os ids das entidades (`HC01`, `HO04`, ou o
+UUID de uma unidade cadastrada pela API), não mais a numeração HC01–HC12 de
+`dados/unidades.py`, que continua valendo para a demonstração da PI3-61.
 
 ## Pendências para o grupo
 
