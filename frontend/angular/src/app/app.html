@@ -101,6 +101,11 @@
         <strong>{{ pageTitle() }}</strong>
       </nav>
       <div class="rv-top-actions">
+        <!-- href e nao routerLink: o routerLink navega entre as telas do
+             Angular, e o painel Thymeleaf e outra aplicacao. O "/" e absoluto,
+             entao ignora o baseHref /app/ e vai para a raiz do dominio. -->
+        <a class="rv-top-link" href="/"
+           title="Abrir o painel operacional, feito em Thymeleaf">&larr; Thymeleaf</a>
         <button class="rv-top-icon" (click)="toggleTheme()" [title]="theme() === 'dark' ? 'Modo claro' : 'Modo escuro'">
           @if (theme() === 'dark') {
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
