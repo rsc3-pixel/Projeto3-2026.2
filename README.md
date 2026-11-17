@@ -552,6 +552,7 @@ Material de apoio, não exigido pelas entregas:
 | [docs/premissas-malha-rede.md](docs/premissas-malha-rede.md) | premissas da malha de rotas, inclusive o alcance máximo e a malha montada a partir do banco (HU-05) |
 | [docs/roteiro-screencasts-e04.md](docs/roteiro-screencasts-e04.md) | roteiro dos dois screencasts da Entrega 04, minuto a minuto |
 | [docs/apresentacao-final-poo.md](docs/apresentacao-final-poo.md) | roteiro cronometrado da apresentação final de POO (8 min) |
+| [docs/roteiro-demonstracao.md](docs/roteiro-demonstracao.md) | demonstração do produto: 1 min para POO e 5 min para a entrega final, com a checagem antes de apresentar |
 
 ## Entregas anteriores
 
