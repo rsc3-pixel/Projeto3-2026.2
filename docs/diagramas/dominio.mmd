@@ -1,3 +1,6 @@
+%% Modelo de dominio atual, conferido contra src/main/java/com/rotavital/dominio
+%% em 17/11/2026. O dominio.png e o dominio.drawio sao o modelo da Entrega 01
+%% e ficam como registro historico daquela entrega.
 classDiagram
     direction TB
 
@@ -9,6 +12,7 @@ classDiagram
     }
 
     class Endereco {
+        <<embeddable>>
         -String logradouro
         -String numero
         -String bairro
@@ -22,7 +26,7 @@ classDiagram
     class Hemocentro {
         -String cnpj
         +adicionarBolsa(Bolsa)
-        +removerBolsa(Bolsa)
+        +boolean removerBolsa(Bolsa)
     }
 
     class Hospital {
@@ -34,6 +38,7 @@ classDiagram
         -String codigoRastreio
         -TipoHemocomponente tipo
         -GrupoSanguineo grupoSanguineo
+        -int volumeMl
         -LocalDate dataColeta
         -LocalDate dataValidade
         -StatusBolsa status
@@ -47,20 +52,26 @@ classDiagram
 
     class Requisicao {
         -String id
+        -PrioridadeRequisicao prioridade
         -LocalDateTime dataHoraCriacao
         -LocalDateTime prazoEntrega
+        -String observacao
         -StatusRequisicao status
         +adicionarItem(ItemRequisicao)
+        +boolean removerItem(ItemRequisicao)
         +boolean estaCompleta()
+        +recalcularStatus()
     }
 
     class ItemRequisicao {
         -String id
+        -Long versao
         -TipoHemocomponente tipo
         -GrupoSanguineo grupoSanguineo
         -int quantidadeSolicitada
         -int quantidadeAlocada
-        +void incrementarAlocada()
+        +adicionarAlocacao(Alocacao)
+        +boolean removerAlocacao(Alocacao)
         +boolean estaAtendido()
         +int quantidadePendente()
     }
@@ -69,8 +80,32 @@ classDiagram
         -String id
         -LocalDateTime dataHoraSaida
         -LocalDateTime dataHoraChegadaPrevista
+        -LocalDateTime saidaReal
+        -LocalDateTime chegadaReal
         -StatusRota status
+        -Double tempoEstimadoMinutos
+        -String caminhoIds
+        +registrarCaminho(List, double)
+        +adicionarBolsa(Bolsa)
+        +boolean removerBolsa(Bolsa)
     }
+
+    class LeituraTemperatura {
+        -String id
+        -double temperaturaCelsius
+        -Double latitude
+        -Double longitude
+        -LocalDateTime dataHora
+    }
+
+    class Veiculo {
+        -String id
+        -String placa
+        -String modelo
+        -int capacidadeMaxima
+        -boolean disponivel
+    }
+    note for Veiculo "Modelado, sem relacao com outras entidades e sem uso pelos servicos"
 
     class GrupoSanguineo {
         <<enumeration>>
@@ -90,6 +125,7 @@ classDiagram
         PLASMA_FRESCO_CONGELADO
         CONCENTRADO_PLAQUETAS
         CRIOPRECIPITADO
+        +int getValidadeDias()
         +boolean temperaturaAdequada(double)
     }
 
@@ -99,14 +135,14 @@ classDiagram
         RESERVADA
         EM_TRANSITO
         ENTREGUE
-        VENCIDA
         DESCARTADA
     }
+    note for StatusBolsa "Vencimento nao e status: e calculado por Bolsa.estaVencida(data)"
 
     class StatusRequisicao {
         <<enumeration>>
         PENDENTE
-        EM_ATENDIMENTO
+        PARCIALMENTE_ATENDIDA
         ATENDIDA
         CANCELADA
     }
@@ -114,16 +150,24 @@ classDiagram
     class StatusRota {
         <<enumeration>>
         PLANEJADA
-        EM_ANDAMENTO
+        EM_TRANSITO
         CONCLUIDA
         CANCELADA
+    }
+
+    class PrioridadeRequisicao {
+        <<enumeration>>
+        ROTINA
+        URGENTE
+        EMERGENCIA
+        +int getPrazoHoras()
     }
 
     Local <|-- Hemocentro
     Local <|-- Hospital
     Local "1" *-- "1" Endereco
 
-    Hemocentro "1" o-- "0..*" Bolsa
+    Hemocentro "1" o-- "0..*" Bolsa : origem
     Hospital "1" --> "0..*" Requisicao
 
     Requisicao "1" *-- "1..*" ItemRequisicao
@@ -131,6 +175,7 @@ classDiagram
     Bolsa "1" -- "0..1" Alocacao
     ItemRequisicao "1" -- "0..*" Alocacao
 
-    Rota "0..*" --> "1" Hemocentro
-    Rota "0..*" --> "1" Hospital
-    Rota "1" o-- "0..*" Bolsa
+    Rota "0..*" --> "1" Hemocentro : origem
+    Rota "0..*" --> "1" Hospital : destino
+    Rota "0..*" -- "0..*" Bolsa : embarca
+    LeituraTemperatura "0..*" --> "1" Rota

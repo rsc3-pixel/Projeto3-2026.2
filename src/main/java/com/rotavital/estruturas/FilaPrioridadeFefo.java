@@ -49,10 +49,11 @@ import java.util.List;
  * requisicao - passaram a ser O(1). A estrutura ficou mais cara onde o
  * estoque e abastecido e mais barata onde ele e consumido.</p>
  *
- * <p><b>Equivalencia com a versao em C.</b> Nao existe neste repositorio
- * codigo em C ou C++ de insercao ordenada: o diretorio {@code aed/} contem
- * apenas a Unidade 1, com lista encadeada, fila e pilha. O mapa abaixo e,
- * portanto, com o algoritmo classico, e nao com um arquivo do projeto:</p>
+ * <p><b>Equivalencia com a versao em C.</b> A mesma fila existe em
+ * {@code aed/unidade2/c/fila_fefo.c} e em
+ * {@code aed/unidade2/cpp/fila_fefo.cpp}; a secao 2 de
+ * {@code docs/U2-traducao-c-java.md} compara as tres versoes lado a lado. A
+ * correspondencia entre o C e esta classe:</p>
  * <ul>
  *   <li>{@code struct No { Bolsa bolsa; struct No *proximo; }} vira a classe
  *       interna {@link No};</li>

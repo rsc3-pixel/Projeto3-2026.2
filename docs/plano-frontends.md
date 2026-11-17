@@ -64,18 +64,22 @@ funcionar: ao abrir `/app/estoque` direto, o Nginx não acha esse arquivo e
 entrega o `index.html`, deixando o Angular resolver a rota. Sem isso, F5 em
 qualquer tela interna devolve 404.
 
-### Correção pendente no Nginx, independente dos fronts
+### Correção no Nginx, independente dos fronts (aplicada em 17/11)
+
+O timeout do proxy era de 30 segundos e causou os 504 observados em 29/09 e
+30/09: o cold start da JVM passava desse limite, e o Nginx desistia antes de
+a aplicação responder. Não era a aplicação que falhava, era o proxy cortando.
+
+Em 17/11 o timeout subiu para `90s` na VM, junto com a inserção do bloco
+`location /app/`:
 
 ```nginx
-proxy_read_timeout 30s;   # atual
+proxy_read_timeout    90s;
+proxy_send_timeout    90s;
 ```
 
-É esta linha que causa os 504 observados em 29/09 e 30/09. O cold start da
-JVM passa de 30 segundos, e o Nginx desiste antes de a aplicação responder.
-Não é a aplicação que falha, é o proxy cortando.
-
-Correção: subir para `90s`. Melhor ainda, somar uma chamada de aquecimento ao
-fim do deploy, para que o primeiro usuário nunca pague o cold start.
+Fica como melhoria possível somar uma chamada de aquecimento ao fim do
+deploy, para que o primeiro usuário nunca pague o cold start.
 
 ---
 

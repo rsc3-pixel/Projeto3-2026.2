@@ -308,7 +308,7 @@ PLANEJADA vai para EM_TRANSITO ou CANCELADA; EM_TRANSITO vai para CONCLUIDA ou C
 
 São observações, não propostas. Ficam aqui para que quem ler o mapa saiba onde o código e a documentação anterior não coincidem.
 
-1. **O diagrama em `docs/diagramas/dominio.mmd` está defasado em relação ao código.** Ele mostra `StatusBolsa.VENCIDA`, `StatusRequisicao.EM_ATENDIMENTO`, `StatusRota.EM_ANDAMENTO` e `ItemRequisicao.incrementarAlocada()`, que não existem; e não mostra `LeituraTemperatura`, `Veiculo`, o `@Version` do item nem `saidaReal` e `chegadaReal` da rota. Este documento segue o código.
+1. **O diagrama em `docs/diagramas/dominio.mmd` estava defasado em relação ao código.** Ele mostrava `StatusBolsa.VENCIDA`, `StatusRequisicao.EM_ATENDIMENTO`, `StatusRota.EM_ANDAMENTO` e `ItemRequisicao.incrementarAlocada()`, que não existem; e não mostrava `LeituraTemperatura`, `Veiculo`, o `@Version` do item nem `saidaReal` e `chegadaReal` da rota. Corrigido em 17/11/2026 a partir do código; o `dominio.png` continua sendo o modelo da Entrega 01.
 2. **`Veiculo` está modelado e não integrado** (seção 5.6).
 3. **As coleções inversas `Hemocentro.estoque` e `Hospital.requisicoes` não são usadas** fora do pacote `dominio`; os serviços consultam os repositórios.
 4. **`Endereco` não implementa `equals`/`hashCode`** apesar de se declarar objeto de valor.
