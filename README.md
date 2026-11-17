@@ -654,6 +654,7 @@ Material de apoio, não exigido pelas entregas:
 |---|---|
 | SO U2 — cenários e dimensionamento de arquitetura | [docs/so-u2-cenarios-dimensionamento.md](docs/so-u2-cenarios-dimensionamento.md) |
 | SO U2 — orçamento mensal dos três cenários | [docs/so-u2-orcamento-mensal.md](docs/so-u2-orcamento-mensal.md) |
+| SO U2: demonstração do deploy contínuo, do commit à produção | [docs/demonstracao-deploy-continuo.md](docs/demonstracao-deploy-continuo.md) |
 | EST U2 — W14: achados, interpretação e decisões | [docs/W14-relatorio-achados-est.md](docs/W14-relatorio-achados-est.md) |
 | **Aplicação no ar** | [rsc3-rotavital.duckdns.org](https://rsc3-rotavital.duckdns.org/api/v1/hemocentros) |
 | **API Reference (Scalar)** | [/docs](https://rsc3-rotavital.duckdns.org/docs) |
