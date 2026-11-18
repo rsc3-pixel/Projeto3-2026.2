@@ -5,6 +5,10 @@ import org.springframework.stereotype.Service;
 
 import com.rotavital.api.dto.AlocacaoRequest;
 import com.rotavital.api.dto.AlocacaoResponse;
+import com.rotavital.observabilidade.MetricasDominio;
+import com.rotavital.observabilidade.MetricasDominio.ModoAlocacao;
+import com.rotavital.observabilidade.MetricasDominio.ResultadoAlocacao;
+import io.micrometer.core.instrument.Timer;
 
 /**
  * Repete a alocacao quando outra operacao chega primeiro (PI3-108).
@@ -32,9 +36,11 @@ public class AlocacaoComRepeticao {
     private static final int TENTATIVAS = 3;
 
     private final RequisicaoServico requisicaoServico;
+    private final MetricasDominio metricas;
 
-    public AlocacaoComRepeticao(RequisicaoServico requisicaoServico) {
+    public AlocacaoComRepeticao(RequisicaoServico requisicaoServico, MetricasDominio metricas) {
         this.requisicaoServico = requisicaoServico;
+        this.metricas = metricas;
     }
 
     /**
@@ -49,13 +55,27 @@ public class AlocacaoComRepeticao {
         OptimisticLockingFailureException ultimo =
                 new OptimisticLockingFailureException("conflito nao resolvido");
 
+        Timer.Sample inicio = metricas.iniciarAlocacao();
         for (int tentativa = 1; tentativa <= TENTATIVAS; tentativa++) {
+            AlocacaoResponse alocacao;
             try {
-                return requisicaoServico.alocar(requisicaoId, itemId, dados);
+                alocacao = requisicaoServico.alocar(requisicaoId, itemId, dados);
             } catch (OptimisticLockingFailureException e) {
                 ultimo = e;
+                if (tentativa < TENTATIVAS) {
+                    metricas.repeticaoAlocacao();
+                }
+                continue;
+            } catch (RuntimeException e) {
+                metricas.alocacao(ModoAlocacao.MANUAL, ResultadoAlocacao.RECUSADA, inicio);
+                throw e;
             }
+            metricas.alocacao(ModoAlocacao.MANUAL, tentativa == 1
+                    ? ResultadoAlocacao.SUCESSO
+                    : ResultadoAlocacao.SUCESSO_APOS_REPETICAO, inicio);
+            return alocacao;
         }
+        metricas.alocacao(ModoAlocacao.MANUAL, ResultadoAlocacao.CONFLITO_CONCORRENCIA, inicio);
         throw ultimo;
     }
 }

@@ -1,0 +1,68 @@
+# Alertas do Rota Vital. Aparecem em http://localhost:9090/alerts.
+#
+# Nao ha Alertmanager neste ambiente academico: os alertas ficam visiveis no
+# Prometheus e no dashboard, sem envio de e-mail ou mensagem.
+#
+# A telemetria de temperatura e SIMULADA (PI3-112). Os limites abaixo sao
+# didaticos e nao substituem protocolo de hemoterapia.
+
+groups:
+  - name: rota-vital-disponibilidade
+    rules:
+      - alert: AlvoForaDoAr
+        expr: up == 0
+        for: 1m
+        labels:
+          severidade: critica
+        annotations:
+          resumo: "Alvo {{ $labels.job }} nao responde ao Prometheus"
+          descricao: "A coleta de {{ $labels.instance }} falha ha mais de 1 minuto."
+
+      - alert: TaxaDeErros5xxAlta
+        # Mesmo limite de SO U2 (secao 4): 5xx acima de 1% por 5 minutos.
+        expr: |
+          sum(rate(http_server_requests_seconds_count{application="rota-vital", status=~"5.."}[5m]))
+            /
+          sum(rate(http_server_requests_seconds_count{application="rota-vital"}[5m])) > 0.01
+        for: 5m
+        labels:
+          severidade: alta
+        annotations:
+          resumo: "Mais de 1% das requisicoes terminam em 5xx"
+
+      - alert: LatenciaP95Alta
+        # SO U2: p95 de consultas acima de 500 ms por 5 minutos.
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le) (rate(http_server_requests_seconds_bucket{application="rota-vital", uri!~"/actuator.*"}[5m]))
+          ) > 0.5
+        for: 5m
+        labels:
+          severidade: media
+        annotations:
+          resumo: "p95 da API acima de 500 ms"
+
+  - name: rota-vital-dominio
+    rules:
+      - alert: ExcursaoDeTemperatura
+        expr: sum by (componente) (increase(rotavital_telemetria_excursoes_total[5m])) > 0
+        labels:
+          severidade: alta
+        annotations:
+          resumo: "Leitura fora da faixa para {{ $labels.componente }} (telemetria simulada)"
+
+      - alert: BolsaVencidaNoEstoqueDisponivel
+        expr: sum by (tipo) (rotavital_estoque_vencidas_disponiveis) > 0
+        for: 5m
+        labels:
+          severidade: media
+        annotations:
+          resumo: "{{ $value }} bolsa(s) de {{ $labels.tipo }} vencida(s) ainda como DISPONIVEL"
+          descricao: "O FEFO nunca escolhe bolsa vencida, mas ela precisa ser descartada do estoque."
+
+      - alert: ConflitosDeAlocacao
+        expr: sum(increase(rotavital_alocacoes_total{resultado="conflito_concorrencia"}[10m])) > 0
+        labels:
+          severidade: baixa
+        annotations:
+          resumo: "Alocacoes perderam a disputa nas 3 tentativas (PI3-108)"

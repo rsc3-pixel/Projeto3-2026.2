@@ -1,0 +1,50 @@
+# Loki (logs) em modo monolitico, armazenamento em disco local.
+#
+# Os logs chegam pelo OTLP (/otlp/v1/logs), enviados pelo agente do
+# OpenTelemetry que roda dentro da API. Cada linha leva como "structured
+# metadata" o trace_id e o span_id da requisicao: e isso que permite ir do log
+# ao trace no Grafana (datasource Loki, campo derivado trace_id).
+
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: warn
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+limits_config:
+  # Obrigatorio para a ingestao OTLP guardar trace_id/span_id por linha.
+  allow_structured_metadata: true
+  volume_enabled: true
+  # Tres dias bastam para a janela de correcao; limita o disco.
+  retention_period: 72h
+
+compactor:
+  working_directory: /loki/compactor
+  retention_enabled: true
+  delete_request_store: filesystem
+
+analytics:
+  reporting_enabled: false

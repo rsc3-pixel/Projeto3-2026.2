@@ -8,6 +8,7 @@ import com.rotavital.dominio.LeituraTemperatura;
 import com.rotavital.dominio.Rota;
 import com.rotavital.dominio.enums.StatusRota;
 import com.rotavital.dominio.enums.TipoHemocomponente;
+import com.rotavital.observabilidade.MetricasDominio;
 import com.rotavital.repositorio.LeituraTemperaturaRepository;
 import com.rotavital.repositorio.RotaRepository;
 import com.rotavital.servico.excecao.OperacaoInvalidaException;
@@ -40,10 +41,13 @@ public class TemperaturaServico {
 
     private final RotaRepository rotas;
     private final LeituraTemperaturaRepository leituras;
+    private final MetricasDominio metricas;
 
-    public TemperaturaServico(RotaRepository rotas, LeituraTemperaturaRepository leituras) {
+    public TemperaturaServico(RotaRepository rotas, LeituraTemperaturaRepository leituras,
+                              MetricasDominio metricas) {
         this.rotas = rotas;
         this.leituras = leituras;
+        this.metricas = metricas;
     }
 
     /**
@@ -74,7 +78,13 @@ public class TemperaturaServico {
 
         leituras.save(leitura);
 
-        return avaliar(leitura);
+        LeituraTemperaturaResponse avaliacao = avaliar(leitura);
+        // Conta so as leituras novas: o historico reavalia leituras antigas
+        // e nao deve inflar o contador.
+        metricas.leituraTemperatura(avaliacao.alertas().stream()
+                .map(AlertaCadeiaFria::componente)
+                .toList());
+        return avaliacao;
     }
 
     /**

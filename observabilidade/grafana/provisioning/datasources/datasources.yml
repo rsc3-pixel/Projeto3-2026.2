@@ -1,0 +1,72 @@
+# Fontes de dados criadas automaticamente na subida do Grafana.
+# Os uids fixos sao os que os dashboards e as correlacoes referenciam.
+#
+# Correlacao entre os tres:
+#   log (Loki)    --trace_id-->        trace (Tempo)     campo derivado no Loki
+#   trace (Tempo) --service + trace--> logs (Loki)       tracesToLogsV2 no Tempo
+#   trace (Tempo) --service-->         metricas (Prom.)  tracesToMetrics no Tempo
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    uid: prometheus-rotavital
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: 15s
+
+  - name: Loki
+    uid: loki-rotavital
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: false
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        # O agente do OpenTelemetry manda o trace_id como structured metadata
+        # de cada linha: o Grafana mostra um botao que abre o trace no Tempo.
+        - name: trace_id
+          matcherType: label
+          matcherRegex: trace_id
+          datasourceUid: tempo-rotavital
+          # $$ e o escape do provisioning para um $ literal.
+          url: "$${__value.raw}"
+          urlDisplayLabel: Abrir trace no Tempo
+
+  - name: Tempo
+    uid: tempo-rotavital
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    editable: false
+    jsonData:
+      nodeGraph:
+        enabled: true
+      search:
+        hide: false
+      lokiSearch:
+        datasourceUid: loki-rotavital
+      tracesToLogsV2:
+        # Do span para as linhas de log da mesma requisicao.
+        datasourceUid: loki-rotavital
+        spanStartTimeShift: "-2m"
+        spanEndTimeShift: "2m"
+        filterByTraceID: true
+        filterBySpanID: false
+        tags:
+          - key: service.name
+            value: service_name
+      tracesToMetrics:
+        datasourceUid: prometheus-rotavital
+        spanStartTimeShift: "-5m"
+        spanEndTimeShift: "5m"
+        tags:
+          - key: service.name
+            value: application
+        queries:
+          - name: Requisicoes por segundo
+            query: sum(rate(http_server_requests_seconds_count{$$__tags}[1m]))

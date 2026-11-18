@@ -1,0 +1,39 @@
+# Tempo (traces) em modo monolitico, armazenamento em disco local.
+#
+# Recebe os spans por OTLP do agente do OpenTelemetry que roda dentro da API:
+# HTTP na 4318 (o que a API usa) e gRPC na 4317. Nenhuma das duas portas e
+# publicada no host: so a rede interna do compose alcanca o Tempo.
+
+stream_over_http_enabled: true
+
+server:
+  http_listen_port: 3200
+  log_level: warn
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        http:
+          endpoint: "0.0.0.0:4318"
+        grpc:
+          endpoint: "0.0.0.0:4317"
+
+ingester:
+  # Fecha blocos rapido: o trace aparece na busca em poucos segundos.
+  max_block_duration: 5m
+
+compactor:
+  compaction:
+    block_retention: 72h
+
+storage:
+  trace:
+    backend: local
+    wal:
+      path: /var/tempo/wal
+    local:
+      path: /var/tempo/blocks
+
+usage_report:
+  reporting_enabled: false

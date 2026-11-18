@@ -1,0 +1,16 @@
+# Carrega os dashboards versionados em observabilidade/grafana/dashboards
+# (aplicacao: rota-vital.json; infraestrutura: infraestrutura.json).
+# Os JSON sao gerados por observabilidade/grafana/gerar_dashboards.py:
+# alteracoes feitas pela interface nao sao gravadas de volta. Para mudar um
+# dashboard, edite o gerador e rode-o de novo.
+apiVersion: 1
+
+providers:
+  - name: rota-vital
+    folder: Rota Vital
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/dashboards
+      foldersFromFilesStructure: false

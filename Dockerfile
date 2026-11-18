@@ -23,6 +23,18 @@ COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
 RUN chmod +x mvnw && ./mvnw -B dependency:go-offline
 
+# Agente do OpenTelemetry: gera os traces (Tempo) e envia os logs (Loki) sem
+# mudar o código da aplicação. Versão fixa e conferida por SHA-256: um jar
+# baixado da internet roda dentro da JVM com acesso a tudo, então não pode
+# trocar sem que alguém perceba. A imagem leva o jar, mas ele só é ativado
+# quando o compose passa -javaagent (ver compose.yaml); sem isso a aplicação
+# roda exatamente como antes.
+ARG OTEL_AGENT_VERSION=2.33.1
+ARG OTEL_AGENT_SHA256=e43a270df53c6f423e0ab157be9c27ccc01d5dc3232e162fe54777573db2f149
+RUN wget -q -O opentelemetry-javaagent.jar \
+      "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${OTEL_AGENT_VERSION}/opentelemetry-javaagent.jar" \
+ && echo "${OTEL_AGENT_SHA256}  opentelemetry-javaagent.jar" | sha256sum -c -
+
 COPY src/ src/
 
 # O infra/ entra porque é insumo de teste, não só de deploy: o
@@ -51,21 +63,25 @@ RUN addgroup -S rotavital && adduser -S -G rotavital -s /sbin/nologin rotavital
 WORKDIR /app
 
 COPY --from=build --chown=rotavital:rotavital /build/target/*.jar app.jar
+COPY --from=build --chown=rotavital:rotavital /build/opentelemetry-javaagent.jar opentelemetry-javaagent.jar
 
 USER rotavital
 
-EXPOSE 8080
+# 8080: API. 8081: Actuator no perfil docker (porta de gestão, só rede interna).
+EXPOSE 8080 8081
 
 # Os mesmos limites usados na VM, chegados por medição e não por estimativa:
 # com heap de 256 MB o processo ficou em 331 MB de RSS. UseSerialGC evita as
 # threads extras do G1, que não se pagam em container pequeno.
 ENV JAVA_OPTS="-Xmx256m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC"
 
-# O healthcheck consulta o Actuator, que já está exposto. start-period generoso
-# porque a JVM leva algumas dezenas de segundos na primeira subida: sem essa
-# folga o container seria marcado como doente antes de terminar de iniciar.
+# O healthcheck consulta o Actuator. No perfil docker ele fica na porta de
+# gestão 8081; sem perfil, na mesma porta da API. Tenta as duas. start-period
+# generoso porque a JVM leva algumas dezenas de segundos na primeira subida:
+# sem essa folga o container seria marcado como doente antes de iniciar.
 HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
-    CMD wget -qO- http://localhost:8080/actuator/health | grep -q '"status":"UP"' || exit 1
+    CMD (wget -qO- http://localhost:8081/actuator/health || wget -qO- http://localhost:8080/actuator/health) \
+        | grep -q '"status":"UP"' || exit 1
 
 # Forma exec com sh -c para que $JAVA_OPTS seja expandido. Sem o shell, a
 # variável chegaria ao java como texto literal.

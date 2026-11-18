@@ -13,6 +13,7 @@ import com.rotavital.dominio.enums.GrupoSanguineo;
 import com.rotavital.dominio.enums.StatusBolsa;
 import com.rotavital.dominio.enums.StatusRota;
 import com.rotavital.dominio.enums.TipoHemocomponente;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -55,6 +57,9 @@ class TemperaturaRemessaTest {
 
     @Autowired
     private ObjectMapper json;
+
+    @Autowired
+    private MeterRegistry metricas;
 
     private MockMvc mvc;
     private String hemocentroId;
@@ -183,6 +188,27 @@ class TemperaturaRemessaTest {
 
         registrar(rota, 5.0)
                 .andExpect(jsonPath("$.alertas[0].bolsasAfetadas").value(3));
+    }
+
+    @Test
+    @DisplayName("Metricas: a excursao e contada uma vez, por componente, e o historico nao recontabiliza")
+    void excursaoContadaNasMetricas() throws Exception {
+        String rota = rotaEmTransitoCom(TipoHemocomponente.CONCENTRADO_HEMACIAS);
+        double leiturasAntes = contador("rotavital.telemetria.leituras", "resultado", "excursao");
+        double hemaciasAntes = contador("rotavital.telemetria.excursoes",
+                "componente", "CONCENTRADO_HEMACIAS");
+
+        registrar(rota, 9.0).andExpect(status().isCreated());
+        mvc.perform(get("/api/v1/rotas/" + rota + "/temperaturas")).andExpect(status().isOk());
+
+        assertThat(contador("rotavital.telemetria.leituras", "resultado", "excursao"))
+                .isEqualTo(leiturasAntes + 1);
+        assertThat(contador("rotavital.telemetria.excursoes", "componente", "CONCENTRADO_HEMACIAS"))
+                .isEqualTo(hemaciasAntes + 1);
+    }
+
+    private double contador(String nome, String... tags) {
+        return metricas.get(nome).tags(tags).counter().count();
     }
 
     @Test
