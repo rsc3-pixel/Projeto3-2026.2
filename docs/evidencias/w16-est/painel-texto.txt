@@ -1,0 +1,344 @@
+Painel · Rota Vital
+ROTA VITAL
+PAINEL
+ESTOQUE
+FILA DE SAIDA
+EM RISCO
+PEDIDOS
+operando em
+Hemocentro Recife (HEMOPE)
+ANGULAR →
+121
+bolsas em estoque
+41
+vencem em 7 dias
+1
+tipos descobertos
+1
+tipos com risco de falta >= 50%
+ESTOQUE POR TIPO
+unidade:
+bolsas e % do estoque ·
+periodo:
+estoque cadastrado ate
+18/11/2026
+tipo
+bolsas
+proporcao
+A+
+24
+O+
+19
+B-
+17
+O-
+15
+A-
+14
+AB+
+12
+B+
+11
+AB-
+9
+COBERTURA DA DEMANDA
+unidade:
+bolsas validas hoje ÷ bolsas pedidas ·
+periodo:
+todas as requisicoes registradas (
+16/11
+a
+18/11
+,
+3
+dias) ·
+alerta:
+deficit maior que zero
+tipo
+tem
+pedido
+situacao
+AB-
+9
+13
+▼
+faltam 4
+B-
+17
+14
+●
+coberto
+O+
+19
+15
+●
+coberto
+A-
+14
+10
+●
+coberto
+B+
+11
+6
+●
+coberto
+A+
+24
+10
+●
+coberto
+AB+
+12
+5
+●
+coberto
+O-
+15
+3
+●
+coberto
+RISCO DE DESABASTECIMENTO
+unidade:
+% de chance de a demanda superar o estoque valido ·
+periodo:
+demanda das requisicoes de
+16/11
+a
+18/11
+(
+3
+dias) contra o estoque de hoje ·
+modelo:
+Binomial Negativa; var/media acima de 1 e sobredispersao, e a Poisson subestimaria o risco ·
+alerta:
+risco >=
+50
+%
+tipo
+tem
+pedido
+var/media
+P(falta)
+risco
+AB-
+9
+13
+4,69
+62,0%
+(83,4)
+▲
+CRITICO
+B-
+17
+14
+3,71
+27,4%
+(17,3)
+◆
+MODERADO
+A-
+14
+10
+10,00
+23,9%
+(8,3)
+◆
+MODERADO
+O+
+19
+15
+3,20
+23,3%
+(12,5)
+◆
+MODERADO
+A+
+24
+10
+10,00
+8,7%
+(0,0)
+●
+BAIXO
+AB+
+12
+5
+5,00
+8,3%
+(0,2)
+●
+BAIXO
+B+
+11
+6
+1,50
+4,8%
+(2,0)
+●
+BAIXO
+O-
+15
+3
+1,00
+0,0%
+(0,0)
+●
+BAIXO
+DESCARTE POR COMPONENTE
+unidade:
+% das bolsas coletadas que venceram sem uso ·
+periodo:
+todas as coletas, vencimento conferido em
+18/11/2026
+·
+evitavel:
+vencidas que tiveram pedido compativel dentro da validade; sob FEFO teriam saido antes ·
+alerta:
+descarte >=
+50
+%
+componente
+coletadas
+vencidas
+descarte
+evitavel FEFO
+Concentrado de Hemacias
+30
+0
+0,0%
+0
+Plasma Fresco Congelado
+27
+0
+0,0%
+0
+Concentrado de Plaquetas
+41
+0
+0,0%
+0
+Crioprecipitado
+23
+0
+0,0%
+0
+DESCARTE POR SEMANA DE COLETA
+unidade:
+bolsas coletadas na semana e % delas vencidas ate
+18/11/2026
+·
+periodo:
+semanas ISO (segunda a domingo) pela data de coleta, as 12 mais recentes (a serie completa esta em /api/v1/indicadores/descarte/por-periodo) ·
+alerta:
+descarte >=
+50
+%
+semana
+coletadas
+vencidas
+descarte
+2026-W36
+31/08 a 06/09
+2
+0
+0,0%
+2026-W37
+07/09 a 13/09
+1
+0
+0,0%
+2026-W38
+14/09 a 20/09
+2
+0
+0,0%
+2026-W39
+21/09 a 27/09
+1
+0
+0,0%
+2026-W40
+28/09 a 04/10
+4
+0
+0,0%
+2026-W41
+05/10 a 11/10
+2
+0
+0,0%
+2026-W42
+12/10 a 18/10
+2
+0
+0,0%
+2026-W43
+19/10 a 25/10
+1
+0
+0,0%
+2026-W44
+26/10 a 01/11
+15
+0
+0,0%
+2026-W45
+02/11 a 08/11
+4
+0
+0,0%
+2026-W46
+09/11 a 15/11
+8
+0
+0,0%
+2026-W47
+16/11 a 22/11
+59
+0
+0,0%
+VALIDADE DAS BOLSAS
+unidade:
+dias ate o vencimento ·
+periodo:
+so bolsas validas em
+18/11/2026
+(
+121
+bolsas) · desvio-padrao amostral; a mediana baixa com media alta indica mistura de validades curtas e longas
+130,1
+media
+42,0
+mediana
+141,3
+desvio
+3-365
+min-max
+componente
+n
+media
+mediana
+desvio
+Concentrado de Hemacias
+30
+34,7
+38,5
+8,2
+Plasma Fresco Congelado
+27
+291,2
+315,0
+65,2
+Concentrado de Plaquetas
+41
+3,7
+4,0
+0,7
+Crioprecipitado
+23
+290,6
+296,0
+53,7
+atualizado 18/11 22:33:56
+· dados sinteticos, telemetria simulada
