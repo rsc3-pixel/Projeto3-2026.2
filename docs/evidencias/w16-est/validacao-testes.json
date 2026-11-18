@@ -1,0 +1,38 @@
+{
+  "data": "2026-11-18",
+  "total_testes": 32,
+  "suites": [
+    {
+      "name": "com.rotavital.api.IndicadorControllerTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "33.48"
+    },
+    {
+      "name": "com.rotavital.estatistica.ModeloDemandaTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.367"
+    },
+    {
+      "name": "com.rotavital.servico.IndicadorServicoDadosSinteticosTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "1.606"
+    },
+    {
+      "name": "com.rotavital.servico.IndicadorServicoTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.143"
+    }
+  ]
+}

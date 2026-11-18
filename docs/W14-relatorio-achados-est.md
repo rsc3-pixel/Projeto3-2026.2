@@ -132,6 +132,14 @@ A ordem sugerida de trabalho é conferir pedidos e saldos elegíveis, revisar os
 
 ## 6. Subtarefas para o Jira e reprodução
 
+### Consolidação final U1/U2 — PI3-233
+
+Para a apresentação de 04/12/2026, este relatório deve ser lido junto ao [sumário EST U1](evidencias-unidade-1-est.md), com [média/desvio](img/est-u1/validade-media-desvio.png), [cobertura](img/est-u1/cobertura-por-tipo.png) e [valores verificados](img/est-u1/resultados-verificados.json). A U1 fornece a linha de base descritiva; as seções 2–4 deste documento acrescentam risco probabilístico, interpretação de vencimento e decisões propostas da U2.
+
+O [índice da entrega W16](W16-entrega-final-est.md) reúne a conferência do painel/API, as fontes PI3-102/103/32, as pendências justificadas e o registro de ensaio. O [roteiro de EST](roteiro-apresentacao-est-w16.md) mantém as ressalvas sobre oportunidade FEFO e comparação entre meses. O [script `evidencias_est_u2.py`](../dados/evidencias_est_u2.py) continua sendo a conferência reproduzível desta base histórica, sem substituir seus dados pelos números atuais do painel.
+
+### Subtarefas originais da W14
+
 Todos os resumos abaixo têm até 255 caracteres:
 
 1. Conferir os resultados de desabastecimento e descarte, registrando fontes, premissas e limitações dos dados sintéticos.
