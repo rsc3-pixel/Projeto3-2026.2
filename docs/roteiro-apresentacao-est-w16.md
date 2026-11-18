@@ -2,7 +2,7 @@
 
 **Apresentação:** 04/12/2026. **Duração proposta:** 4 minutos, ainda não cronometrada com o grupo. **PI3-234:** material preparado. **PI3-236:** ensaio pendente de registro.
 
-Usar este roteiro como aprofundamento da passagem de EST do [roteiro integrado](roteiro-demonstracao.md). Se houver somente os 40 segundos reservados naquele roteiro, usar a versão curta ao final. O grupo deve atribuir nomes aos blocos antes de ensaiar; não há participantes presumidos.
+Usar este roteiro como aprofundamento da passagem de EST do [roteiro integrado](roteiro-demonstracao.md). Se houver somente os 40 segundos reservados naquele roteiro, usar a versão curta ao final. Os sete integrantes previstos estão listados no [registro W16](W16-entrega-final-est.md); o grupo deve atribuir nomes aos blocos antes de ensaiar. Fernando confirmou em 18/11/2026 que o ensaio ainda não ocorreu.
 
 ## Preparação
 

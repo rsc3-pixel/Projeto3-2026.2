@@ -58,6 +58,8 @@ O [roteiro específico de EST](roteiro-apresentacao-est-w16.md) está pronto par
 
 Este quadro é uma **auditoria do repositório**, não uma consulta autenticada ao Jira. O status administrativo atual de cada issue não foi fornecido. Ausência de confirmação não significa que uma história esteja aberta ou fechada.
 
+**Atualização informada pelo grupo em 18/11/2026:** Fernando indicou que acredita que somente a história W16 permanece aberta. A informação é preliminar, sem lista de status confirmada; a checagem final do Jira permanece necessária. Não foram identificadas outras pendências pelo relato, mas isso não certifica o fechamento administrativo das histórias abaixo.
+
 | Item | Evidência técnica | Pendência/justificativa | Responsável pela confirmação e ação |
 |---|---|---|---|
 | PI3-102 | Modelo e resultados disponíveis na main | Status Jira a confirmar | Grupo: informar status e eventuais critérios não atendidos |
@@ -74,7 +76,17 @@ Prazo de revisão dessas pendências: antes da apresentação de **04/12/2026**,
 
 ## 5. PI3-236 — registro de ensaio (pendente)
 
-**Não realizado ou não informado nesta entrega.** O roteiro preparado e o tempo estimado não substituem ensaio com o grupo.
+**Ensaio ainda não realizado**, conforme confirmação de Fernando em 18/11/2026. O roteiro preparado e o tempo estimado não substituem ensaio com o grupo.
+
+Integrantes previstos, informados pelo grupo (esta lista **não é registro de presença**):
+
+- Cauã Rego Tavares Leite Duarte
+- Fernando Andrade Leandro Peixoto
+- Gabriel Brito Ferreira Dias
+- Guilherme Alves de Souza
+- Maria Eduarda Vasconcelos
+- Renato Santos Chong
+- Victor Barros Roma
 
 | Campo | Registro a preencher após o ensaio |
 |---|---|
