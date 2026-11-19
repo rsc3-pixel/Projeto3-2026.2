@@ -15,6 +15,7 @@ import {
   StatusBolsa,
   TipoHemocomponente,
   GrupoSanguineo,
+  PrioridadeRequisicao,
   ValidadeIndicador,
 } from '../models';
 
