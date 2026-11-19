@@ -7,6 +7,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -25,6 +26,14 @@ import java.util.Map;
  */
 @RestControllerAdvice
 public class ManipuladorDeErros {
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ProblemDetail corpoIlegivel(HttpMessageNotReadableException e) {
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, "Corpo da requisicao invalido ou mal formado");
+        problema.setTitle("Requisicao invalida");
+        return problema;
+    }
 
     @ExceptionHandler(RecursoNaoEncontradoException.class)
     public ProblemDetail naoEncontrado(RecursoNaoEncontradoException e) {

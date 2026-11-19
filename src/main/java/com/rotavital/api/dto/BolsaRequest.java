@@ -25,8 +25,9 @@ public record BolsaRequest(
         @NotNull(message = "grupoSanguineo e obrigatorio")
         GrupoSanguineo grupoSanguineo,
 
+        @NotNull(message = "volumeMl e obrigatorio")
         @Positive(message = "volumeMl deve ser maior que zero")
-        int volumeMl,
+        Integer volumeMl,
 
         @NotNull(message = "dataColeta e obrigatoria")
         @PastOrPresent(message = "dataColeta nao pode ser futura")

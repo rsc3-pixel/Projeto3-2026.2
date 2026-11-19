@@ -92,7 +92,7 @@ export class RequisicoesComponent implements OnInit {
     const body = {
       hospitalId: this.form.hospitalId,
       prioridade: this.form.prioridade,
-      prazoEntrega: this.form.prazoEntrega || undefined,
+      prazoEntrega: this.form.prazoEntrega ? this.form.prazoEntrega + ':00' : undefined,
       observacao: this.form.observacao || undefined,
       itens: [{
         tipoHemocomponente: this.form.tipoHemocomponente,
