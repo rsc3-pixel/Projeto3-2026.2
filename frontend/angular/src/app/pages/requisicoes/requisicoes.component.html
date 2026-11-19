@@ -131,7 +131,7 @@
             @for (r of filtered(); track r.id) {
               <tr>
                 <td>{{ formatDate(r.dataHoraCriacao) }}</td>
-                <td class="id-cell">{{ r.hospitalId }}</td>
+                <td>{{ nomeHospital(r.hospitalId) }}</td>
                 <td><span [class]="badgePrioridade(r.prioridade)"><i></i>{{ formatPrioridade(r.prioridade) }}</span></td>
                 <td><span [class]="badgeStatus(r.status)"><i></i>{{ formatStatusReq(r.status) }}</span></td>
                 <td>{{ r.itens.length }}</td>

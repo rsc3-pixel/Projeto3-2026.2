@@ -1,7 +1,8 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { forkJoin } from 'rxjs';
 import { ApiService } from '../../services/api.service';
-import { Rota } from '../../models';
+import { Hemocentro, Hospital, Rota } from '../../models';
 
 @Component({
   selector: 'app-rotas',
@@ -14,6 +15,8 @@ export class RotasComponent implements OnInit {
   private readonly api = inject(ApiService);
 
   rotas = signal<Rota[]>([]);
+  hemocentros = signal<Hemocentro[]>([]);
+  hospitais = signal<Hospital[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
 
@@ -25,11 +28,40 @@ export class RotasComponent implements OnInit {
     return list;
   });
 
+  private hemoMap = computed(() => {
+    const m = new Map<string, string>();
+    this.hemocentros().forEach(h => m.set(h.id, h.nome));
+    return m;
+  });
+
+  private hospitalMap = computed(() => {
+    const m = new Map<string, string>();
+    this.hospitais().forEach(h => m.set(h.id, h.nome));
+    return m;
+  });
+
   ngOnInit(): void {
-    this.api.getRotas().subscribe({
-      next: (r) => { this.rotas.set(r); this.loading.set(false); },
+    forkJoin({
+      rotas: this.api.getRotas(),
+      hemocentros: this.api.getHemocentros(),
+      hospitais: this.api.getHospitais(),
+    }).subscribe({
+      next: (d) => {
+        this.rotas.set(d.rotas);
+        this.hemocentros.set(d.hemocentros);
+        this.hospitais.set(d.hospitais);
+        this.loading.set(false);
+      },
       error: () => { this.error.set('Falha ao carregar rotas.'); this.loading.set(false); },
     });
+  }
+
+  nomeOrigem(id: string): string {
+    return this.hemoMap().get(id) ?? id.slice(0, 8) + '…';
+  }
+
+  nomeDestino(id: string): string {
+    return this.hospitalMap().get(id) ?? id.slice(0, 8) + '…';
   }
 
   formatDate(d: string): string {

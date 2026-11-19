@@ -48,6 +48,16 @@ export class RequisicoesComponent implements OnInit {
     quantidadeSolicitada: 1,
   };
 
+  private hospitalMap = computed(() => {
+    const m = new Map<string, string>();
+    this.hospitais().forEach(h => m.set(h.id, h.nome));
+    return m;
+  });
+
+  nomeHospital(id: string): string {
+    return this.hospitalMap().get(id) ?? id.slice(0, 8) + '…';
+  }
+
   filtered = computed(() => {
     let list = this.requisicoes();
     if (this.filtroStatus()) list = list.filter(r => r.status === this.filtroStatus());

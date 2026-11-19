@@ -75,6 +75,16 @@ export class ApiService {
     return this.http.get<Hospital>(`${this.baseUrl}/hospitais/${id}`);
   }
 
+  postBolsa(body: {
+    hemocentroId: string;
+    tipoHemocomponente: TipoHemocomponente;
+    grupoSanguineo: GrupoSanguineo;
+    volumeMl: number;
+    dataColeta: string;
+  }): Observable<Bolsa> {
+    return this.http.post<Bolsa>(`${this.baseUrl}/bolsas`, body);
+  }
+
   postHospital(body: {
     nome: string;
     cnes: string;
