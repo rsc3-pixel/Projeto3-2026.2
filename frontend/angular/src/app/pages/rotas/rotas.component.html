@@ -21,34 +21,49 @@
     <p class="error-msg">{{ error() }}</p>
   } @else {
     <div class="rv-frame">
-    <div class="table-wrap">
-      <table class="rv-table">
-        <thead>
-          <tr>
-            <th>Origem (Hemocentro)</th>
-            <th>Destino (Hospital)</th>
-            <th>Prev. Saída</th>
-            <th>Prev. Chegada</th>
-            <th>Status</th>
-            <th>Bolsas</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (r of filtered(); track r.id) {
+      <div class="table-wrap">
+        <table class="rv-table">
+          <thead>
             <tr>
-              <td class="id-cell">{{ r.hemocentroOrigemId }}</td>
-              <td class="id-cell">{{ r.hospitalDestinoId }}</td>
-              <td>{{ formatDate(r.previsaoSaida) }}</td>
-              <td>{{ formatDate(r.previsaoChegada) }}</td>
-              <td><span [class]="badgeRota(r.status)"><i></i>{{ formatStatusRota(r.status) }}</span></td>
-              <td>{{ r.bolsas?.length ?? 0 }}</td>
+              <th>Origem</th>
+              <th>Destino</th>
+              <th>Saída Prevista</th>
+              <th>Chegada Prevista</th>
+              <th>Chegada Real</th>
+              <th>Duração</th>
+              <th>Status</th>
+              <th>Bolsas</th>
             </tr>
-          } @empty {
-            <tr><td colspan="6" class="empty-msg">Nenhuma rota encontrada.</td></tr>
-          }
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            @for (r of filtered(); track r.id) {
+              <tr>
+                <td class="id-cell">{{ r.hemocentroOrigemId }}</td>
+                <td class="id-cell">{{ r.hospitalDestinoId }}</td>
+                <td>{{ formatDate(r.previsaoSaida) }}</td>
+                <td>
+                  {{ formatDate(r.previsaoChegada) }}
+                  @if (isAtrasada(r)) {
+                    <span class="tag-atrasado">Atrasada</span>
+                  }
+                </td>
+                <td>
+                  @if (r.chegadaReal) {
+                    {{ formatDate(r.chegadaReal) }}
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+                <td>{{ duracao(r.previsaoSaida, r.previsaoChegada) }}</td>
+                <td><span [class]="badgeRota(r.status)"><i></i>{{ formatStatusRota(r.status) }}</span></td>
+                <td>{{ r.bolsas?.length ?? 0 }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="8" class="empty-msg">Nenhuma rota encontrada.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
   }
 </section>

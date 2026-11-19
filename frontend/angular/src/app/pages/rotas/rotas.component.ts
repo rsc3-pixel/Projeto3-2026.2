@@ -46,4 +46,17 @@ export class RotasComponent implements OnInit {
   badgeRota(s: string): string {
     return 'rv-status rv-status-' + s.toLowerCase().replace(/_/g, '-');
   }
+
+  duracao(saida: string, chegada: string): string {
+    const diff = new Date(chegada).getTime() - new Date(saida).getTime();
+    if (diff <= 0) return '—';
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    return h > 0 ? `${h}h ${m}min` : `${m}min`;
+  }
+
+  isAtrasada(rota: Rota): boolean {
+    if (rota.status === 'CONCLUIDA' || rota.status === 'CANCELADA') return false;
+    return new Date(rota.previsaoChegada).getTime() < Date.now();
+  }
 }

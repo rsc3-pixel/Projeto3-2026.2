@@ -1,0 +1,108 @@
+<section class="page-content">
+  <div class="page-header">
+    <h2>Hospitais</h2>
+    <button class="btn-primary" (click)="toggleFormulario()">
+      {{ mostrarFormulario() ? '✕ Cancelar' : '+ Novo Hospital' }}
+    </button>
+  </div>
+
+  @if (sucessoMsg()) {
+    <div class="alert-success">{{ sucessoMsg() }}</div>
+  }
+
+  @if (mostrarFormulario()) {
+    <div class="rv-frame form-novo-hospital">
+      <h3>Novo Hospital</h3>
+
+      @if (erroForm()) {
+        <p class="error-msg">{{ erroForm() }}</p>
+      }
+
+      <div class="form-grid">
+        <label>
+          Nome *
+          <input type="text" [(ngModel)]="form.nome" name="nome" placeholder="Ex: Hospital da Restauração" />
+        </label>
+
+        <label>
+          CNES *
+          <input type="text" [(ngModel)]="form.cnes" name="cnes" placeholder="Ex: 0000001" />
+        </label>
+
+        <label>
+          Telefone
+          <input type="text" [(ngModel)]="form.telefone" name="telefone" placeholder="Ex: (81) 3184-1000" />
+        </label>
+
+        <label>
+          Logradouro *
+          <input type="text" [(ngModel)]="form.logradouro" name="logradouro" placeholder="Ex: Av. Agamenon Magalhães" />
+        </label>
+
+        <label>
+          Número *
+          <input type="text" [(ngModel)]="form.numero" name="numero" placeholder="Ex: S/N" />
+        </label>
+
+        <label>
+          Bairro
+          <input type="text" [(ngModel)]="form.bairro" name="bairro" placeholder="Ex: Derby" />
+        </label>
+
+        <label>
+          Cidade *
+          <input type="text" [(ngModel)]="form.cidade" name="cidade" placeholder="Ex: Recife" />
+        </label>
+
+        <label>
+          UF *
+          <input type="text" [(ngModel)]="form.uf" name="uf" maxlength="2" placeholder="Ex: PE" />
+        </label>
+
+        <label>
+          CEP
+          <input type="text" [(ngModel)]="form.cep" name="cep" placeholder="Ex: 52171-011" />
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-primary" (click)="enviarHospital()" [disabled]="enviando()">
+          {{ enviando() ? 'Cadastrando...' : 'Cadastrar Hospital' }}
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="loading-msg">Carregando hospitais...</p>
+  } @else if (error()) {
+    <p class="error-msg">{{ error() }}</p>
+  } @else {
+    <div class="rv-frame">
+      <div class="table-wrap">
+        <table class="rv-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>CNES</th>
+              <th>Telefone</th>
+              <th>Cidade/UF</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (h of hospitais(); track h.id) {
+              <tr>
+                <td>{{ h.nome }}</td>
+                <td>{{ h.cnes ?? '—' }}</td>
+                <td>{{ h.telefone ?? '—' }}</td>
+                <td>{{ h.endereco ? h.endereco.cidade + '/' + h.endereco.uf : '—' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4" class="empty-msg">Nenhum hospital cadastrado.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</section>

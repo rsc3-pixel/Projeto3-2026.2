@@ -74,6 +74,15 @@ export class ApiService {
     return this.http.get<Hospital>(`${this.baseUrl}/hospitais/${id}`);
   }
 
+  postHospital(body: {
+    nome: string;
+    cnes: string;
+    telefone?: string;
+    endereco: { logradouro: string; numero: string; bairro?: string; cidade: string; uf: string; cep?: string };
+  }): Observable<Hospital> {
+    return this.http.post<Hospital>(`${this.baseUrl}/hospitais`, body);
+  }
+
   // --- Requisicoes ---
 
   getRequisicoes(): Observable<Requisicao[]> {
@@ -82,6 +91,16 @@ export class ApiService {
 
   getRequisicaoPorId(id: string): Observable<Requisicao> {
     return this.http.get<Requisicao>(`${this.baseUrl}/requisicoes/${id}`);
+  }
+
+  postRequisicao(body: {
+    hospitalId: string;
+    prioridade: PrioridadeRequisicao;
+    prazoEntrega?: string;
+    observacao?: string;
+    itens: { tipoHemocomponente: TipoHemocomponente; grupoSanguineo: GrupoSanguineo; quantidadeSolicitada: number }[];
+  }): Observable<Requisicao> {
+    return this.http.post<Requisicao>(`${this.baseUrl}/requisicoes`, body);
   }
 
   // --- Rotas ---

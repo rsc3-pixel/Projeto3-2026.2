@@ -386,6 +386,143 @@ button {
   font-weight: 500;
 }
 
+/* ── Page header com botão ───────────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.page-header h2 {
+  margin: 0;
+}
+
+/* ── Botão primário ──────────────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  background: var(--rv-primary);
+  color: var(--rv-on-primary);
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 140ms;
+  white-space: nowrap;
+}
+
+.btn-primary:hover { background: var(--rv-primary-hov); }
+.btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ── Alerta de sucesso ───────────────────────────────────────────── */
+.alert-success {
+  padding: 10px 16px;
+  background: var(--rv-ok-bg);
+  color: var(--rv-ok);
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+/* ── Formulário inline ───────────────────────────────────────────── */
+.form-nova-requisicao,
+.form-novo-hospital {
+  padding: 20px 24px;
+  margin-bottom: 1.25rem;
+}
+
+.form-nova-requisicao h3,
+.form-novo-hospital h3 {
+  margin: 0 0 1rem;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--rv-ink);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px 16px;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rv-faint);
+}
+
+.form-grid input,
+.form-grid select,
+.form-grid textarea {
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--rv-border);
+  border-radius: 7px;
+  background: var(--rv-surface);
+  font-size: 13px;
+  color: var(--rv-ink-soft);
+  outline: none;
+  font-family: inherit;
+  transition: border-color 140ms, box-shadow 140ms;
+}
+
+.form-grid textarea {
+  height: auto;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.form-grid input:focus,
+.form-grid select:focus,
+.form-grid textarea:focus {
+  border-color: var(--rv-primary);
+  box-shadow: 0 0 0 3px rgba(220,38,38,0.1);
+}
+
+.form-grid .full-width {
+  grid-column: 1 / -1;
+}
+
+.form-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Tag de vencimento próximo ───────────────────────────────────── */
+.tag-vencendo {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--rv-warn-bg);
+  color: var(--rv-warn);
+  margin-left: 6px;
+}
+
+/* ── Tag de atraso ───────────────────────────────────────────────── */
+.tag-atrasado {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--rv-bad-bg);
+  color: var(--rv-bad);
+  margin-left: 6px;
+}
+
 /* ── Bolsas críticas info ────────────────────────────────────────── */
 .criticas-info {
   display: flex;

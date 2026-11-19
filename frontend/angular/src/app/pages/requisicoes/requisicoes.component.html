@@ -1,5 +1,90 @@
 <section class="page-content">
-  <h2>Requisições</h2>
+  <div class="page-header">
+    <h2>Requisições</h2>
+    <button class="btn-primary" (click)="toggleFormulario()">
+      {{ mostrarFormulario() ? '✕ Cancelar' : '+ Nova Requisição' }}
+    </button>
+  </div>
+
+  @if (sucessoMsg()) {
+    <div class="alert-success">{{ sucessoMsg() }}</div>
+  }
+
+  @if (mostrarFormulario()) {
+    <div class="rv-frame form-nova-requisicao">
+      <h3>Nova Requisição</h3>
+
+      @if (erroForm()) {
+        <p class="error-msg">{{ erroForm() }}</p>
+      }
+
+      <div class="form-grid">
+        <label>
+          Hospital *
+          <select [(ngModel)]="form.hospitalId" name="hospitalId">
+            <option value="">Selecione...</option>
+            @for (h of hospitais(); track h.id) {
+              <option [value]="h.id">{{ h.nome }}</option>
+            }
+          </select>
+        </label>
+
+        <label>
+          Prioridade *
+          <select [(ngModel)]="form.prioridade" name="prioridade">
+            <option value="ROTINA">Rotina</option>
+            <option value="URGENTE">Urgente</option>
+            <option value="EMERGENCIA">Emergência</option>
+          </select>
+        </label>
+
+        <label>
+          Componente *
+          <select [(ngModel)]="form.tipoHemocomponente" name="tipoHemocomponente">
+            <option value="CONCENTRADO_HEMACIAS">Concentrado de Hemácias</option>
+            <option value="CONCENTRADO_PLAQUETAS">Concentrado de Plaquetas</option>
+            <option value="PLASMA_FRESCO_CONGELADO">Plasma Fresco Congelado</option>
+            <option value="CRIOPRECIPITADO">Crioprecipitado</option>
+          </select>
+        </label>
+
+        <label>
+          Grupo Sanguíneo *
+          <select [(ngModel)]="form.grupoSanguineo" name="grupoSanguineo">
+            <option value="A_POSITIVO">A+</option>
+            <option value="A_NEGATIVO">A−</option>
+            <option value="B_POSITIVO">B+</option>
+            <option value="B_NEGATIVO">B−</option>
+            <option value="AB_POSITIVO">AB+</option>
+            <option value="AB_NEGATIVO">AB−</option>
+            <option value="O_POSITIVO">O+</option>
+            <option value="O_NEGATIVO">O−</option>
+          </select>
+        </label>
+
+        <label>
+          Quantidade *
+          <input type="number" [(ngModel)]="form.quantidadeSolicitada" name="quantidade" min="1" />
+        </label>
+
+        <label>
+          Prazo de Entrega
+          <input type="datetime-local" [(ngModel)]="form.prazoEntrega" name="prazoEntrega" />
+        </label>
+
+        <label class="full-width">
+          Observação
+          <textarea [(ngModel)]="form.observacao" name="observacao" rows="2" placeholder="Opcional..."></textarea>
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-primary" (click)="enviarRequisicao()" [disabled]="enviando()">
+          {{ enviando() ? 'Enviando...' : 'Criar Requisição' }}
+        </button>
+      </div>
+    </div>
+  }
 
   <div class="filter-bar">
     <label>
@@ -30,34 +115,34 @@
     <p class="error-msg">{{ error() }}</p>
   } @else {
     <div class="rv-frame">
-    <div class="table-wrap">
-      <table class="rv-table">
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Hospital</th>
-            <th>Prioridade</th>
-            <th>Status</th>
-            <th>Itens</th>
-            <th>Prazo</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (r of filtered(); track r.id) {
+      <div class="table-wrap">
+        <table class="rv-table">
+          <thead>
             <tr>
-              <td>{{ formatDate(r.dataHoraCriacao) }}</td>
-              <td class="id-cell">{{ r.hospitalId }}</td>
-              <td><span [class]="badgePrioridade(r.prioridade)"><i></i>{{ formatPrioridade(r.prioridade) }}</span></td>
-              <td><span [class]="badgeStatus(r.status)"><i></i>{{ formatStatusReq(r.status) }}</span></td>
-              <td>{{ r.itens.length }}</td>
-              <td>{{ r.prazoEntrega ? formatDate(r.prazoEntrega) : '—' }}</td>
+              <th>Data</th>
+              <th>Hospital</th>
+              <th>Prioridade</th>
+              <th>Status</th>
+              <th>Itens</th>
+              <th>Prazo</th>
             </tr>
-          } @empty {
-            <tr><td colspan="6" class="empty-msg">Nenhuma requisição encontrada.</td></tr>
-          }
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            @for (r of filtered(); track r.id) {
+              <tr>
+                <td>{{ formatDate(r.dataHoraCriacao) }}</td>
+                <td class="id-cell">{{ r.hospitalId }}</td>
+                <td><span [class]="badgePrioridade(r.prioridade)"><i></i>{{ formatPrioridade(r.prioridade) }}</span></td>
+                <td><span [class]="badgeStatus(r.status)"><i></i>{{ formatStatusReq(r.status) }}</span></td>
+                <td>{{ r.itens.length }}</td>
+                <td>{{ r.prazoEntrega ? formatDate(r.prazoEntrega) : '—' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="empty-msg">Nenhuma requisição encontrada.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
   }
 </section>
