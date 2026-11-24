@@ -7,20 +7,18 @@ import com.rotavital.api.dto.ItemRequisicaoResponse;
 import com.rotavital.api.dto.RequisicaoRequest;
 import com.rotavital.api.dto.RequisicaoResponse;
 import com.rotavital.alocacao.SelecaoFefo;
-import com.rotavital.compatibilidade.MatrizCompatibilidade;
 import com.rotavital.dominio.Alocacao;
 import com.rotavital.dominio.Bolsa;
 import com.rotavital.dominio.Hospital;
 import com.rotavital.dominio.ItemRequisicao;
 import com.rotavital.dominio.Requisicao;
 import com.rotavital.dominio.enums.PrioridadeRequisicao;
-import com.rotavital.dominio.enums.StatusBolsa;
 import com.rotavital.dominio.enums.StatusRequisicao;
 import com.rotavital.repositorio.BolsaRepository;
 import com.rotavital.repositorio.RequisicaoRepository;
 import com.rotavital.servico.evento.BolsaAlterada;
-import com.rotavital.servico.excecao.OperacaoInvalidaException;
-import com.rotavital.servico.excecao.RecursoNaoEncontradoException;
+import com.rotavital.dominio.excecao.OperacaoInvalidaException;
+import com.rotavital.dominio.excecao.RecursoNaoEncontradoException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -143,32 +141,8 @@ public class RequisicaoServico {
                     "Somente o cancelamento pode ser feito manualmente. "
                     + "Os demais status derivam das alocacoes.");
         }
-        if (requisicao.getStatus() == StatusRequisicao.CANCELADA) {
-            return RequisicaoResponse.de(requisicao);
-        }
 
-        // O que impede o cancelamento nao e o status da requisicao, e o das
-        // bolsas: estar ATENDIDA so significa que tudo foi reservado, e
-        // reserva se desfaz. Depois que a bolsa embarca, nao.
-        boolean bolsaJaSaiu = requisicao.getItens().stream()
-                .flatMap(item -> item.getAlocacoes().stream())
-                .anyMatch(a -> a.getBolsa().getStatus() != StatusBolsa.RESERVADA);
-
-        if (bolsaJaSaiu) {
-            throw new OperacaoInvalidaException(
-                    "Ha bolsas ja despachadas para esta requisicao. Cancele a rota antes.");
-        }
-
-        // Libera as bolsas que estavam presas a esta requisicao.
-        for (ItemRequisicao item : requisicao.getItens()) {
-            for (Alocacao alocacao : List.copyOf(item.getAlocacoes())) {
-                alocacao.getBolsa().setStatus(StatusBolsa.DISPONIVEL);
-                eventos.publishEvent(new BolsaAlterada(alocacao.getBolsa()));
-                item.removerAlocacao(alocacao);
-            }
-        }
-
-        requisicao.setStatus(StatusRequisicao.CANCELADA);
+        requisicao.cancelar().forEach(this::avisarEstoque);
         return RequisicaoResponse.de(requisicoes.save(requisicao));
     }
 
@@ -186,11 +160,8 @@ public class RequisicaoServico {
     @Transactional
     public ItemRequisicaoResponse adicionarItem(String requisicaoId, ItemRequisicaoRequest dados) {
         Requisicao requisicao = buscar(requisicaoId);
-        exigirRequisicaoAberta(requisicao);
-
         ItemRequisicao item = novoItem(dados);
         requisicao.adicionarItem(item);
-        requisicao.recalcularStatus();
         requisicoes.save(requisicao);
         return ItemRequisicaoResponse.de(item);
     }
@@ -198,16 +169,7 @@ public class RequisicaoServico {
     @Transactional
     public void removerItem(String requisicaoId, String itemId) {
         Requisicao requisicao = buscar(requisicaoId);
-        exigirRequisicaoAberta(requisicao);
-
-        ItemRequisicao item = itemDe(requisicao, itemId);
-        if (item.getQuantidadeAlocada() > 0) {
-            throw new OperacaoInvalidaException(
-                    "Item possui bolsas alocadas. Desfaca as alocacoes antes de remover.");
-        }
-
-        requisicao.removerItem(item);
-        requisicao.recalcularStatus();
+        requisicao.removerItem(itemId);
         requisicoes.save(requisicao);
     }
 
@@ -217,109 +179,47 @@ public class RequisicaoServico {
 
     @Transactional(readOnly = true)
     public List<AlocacaoResponse> listarAlocacoes(String requisicaoId, String itemId) {
-        return itemDe(buscar(requisicaoId), itemId).getAlocacoes().stream()
+        return buscar(requisicaoId).item(itemId).getAlocacoes().stream()
                 .map(AlocacaoResponse::de)
                 .toList();
     }
 
     /**
-     * Vincula uma bolsa a um item. E o ponto onde estoque e demanda se
-     * encontram, entao concentra as regras de compatibilidade: bolsa
-     * disponivel, dentro da validade, mesmo hemocomponente e grupo sanguineo
-     * compativel.
-     *
-     * <p>Compativel, nao identico: a verificacao usa
-     * {@link MatrizCompatibilidade}, entao um item que pede A+ aceita bolsa
-     * O-, O+, A- ou A+. A regra varia por hemocomponente, porque plasma e
-     * crioprecipitado seguem tabela invertida em relacao as hemacias.</p>
+     * Vincula a bolsa escolhida pelo usuario a um item. As regras (bolsa
+     * disponivel, na validade, mesmo hemocomponente, grupo compativel) ficam
+     * no agregado {@link Requisicao#alocar} e na {@link Bolsa}; este metodo so
+     * carrega, delega, salva e avisa o indice de estoque.
      */
     @Transactional
     public AlocacaoResponse alocar(String requisicaoId, String itemId,
                                    AlocacaoRequest dados) {
         Requisicao requisicao = buscar(requisicaoId);
-        exigirRequisicaoAberta(requisicao);
-
-        ItemRequisicao item = itemDe(requisicao, itemId);
-        if (item.estaAtendido()) {
-            throw new OperacaoInvalidaException("Item ja esta totalmente atendido");
-        }
-
         Bolsa bolsa = bolsas.findById(dados.bolsaId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Bolsa", dados.bolsaId()));
 
-        if (bolsa.getStatus() != StatusBolsa.DISPONIVEL) {
-            throw new OperacaoInvalidaException(
-                    "Bolsa nao esta disponivel. Status atual: " + bolsa.getStatus());
-        }
-        if (bolsa.estaVencida(LocalDate.now())) {
-            throw new OperacaoInvalidaException(
-                    "Bolsa vencida em " + bolsa.getDataValidade());
-        }
-        if (bolsa.getTipo() != item.getTipo()) {
-            throw new OperacaoInvalidaException(
-                    "Hemocomponente incompativel: item pede " + item.getTipo()
-                    + " e a bolsa e " + bolsa.getTipo());
-        }
-        // A comparacao aqui e de compatibilidade transfusional, nao de
-        // igualdade. Comparar os grupos com != recusaria doacao valida: um
-        // paciente A+ pode receber de O-, O+, A- e A+, mas so A+ passaria,
-        // deixando estoque utilizavel parado.
-        //
-        // A ordem dos argumentos importa, porque a relacao nao e simetrica: a
-        // bolsa e a doadora, o item da requisicao e o receptor.
-        if (!MatrizCompatibilidade.compativel(
-                bolsa.getGrupoSanguineo(), item.getGrupoSanguineo(), item.getTipo())) {
-            throw new OperacaoInvalidaException(
-                    "Grupo sanguineo incompativel: item pede " + item.getGrupoSanguineo()
-                    + " e a bolsa e " + bolsa.getGrupoSanguineo()
-                    + ". Grupos aceitos para " + item.getTipo() + ": "
-                    + MatrizCompatibilidade.doadoresPara(
-                            item.getGrupoSanguineo(), item.getTipo()));
-        }
-
-        Alocacao alocacao = new Alocacao(
-                UUID.randomUUID().toString(), bolsa, item, LocalDateTime.now());
-
-        item.adicionarAlocacao(alocacao);
-        bolsa.setStatus(StatusBolsa.RESERVADA);
+        Alocacao alocacao = requisicao.alocar(itemId, bolsa, LocalDateTime.now());
         // A bolsa sai do indice de estoque, mas so depois do commit: se esta
         // transacao reverter, ela continua disponivel e continua indexada.
-        eventos.publishEvent(new BolsaAlterada(bolsa));
-        requisicao.recalcularStatus();
+        avisarEstoque(bolsa);
         requisicoes.save(requisicao);
-
         return AlocacaoResponse.de(alocacao);
     }
 
     /**
      * Aloca automaticamente a melhor bolsa disponivel para o item.
      *
-     * <p>E o caminho que exercita o indice de estoque por hash: em vez de o
-     * usuario escolher a bolsa e o sistema apenas validar, aqui o sistema
-     * consulta o {@link IndiceEstoqueServico}, que resolve em O(1) por grupo
-     * compativel quais bolsas existem, e aplica FEFO sobre o resultado.</p>
-     *
-     * <p>A compatibilidade ABO/Rh ja vem resolvida pelo indice, que consulta a
-     * {@code MatrizCompatibilidade} para saber quais grupos procurar. Por isso
-     * a selecao usa a sobrecarga de lista mais data da {@code SelecaoFefo}: a
-     * bolsa escolhida e a de validade mais proxima entre as compativeis e
-     * disponiveis, com desempate deterministico por codigo de rastreio.</p>
-     *
-     * <p>Depois de escolher, delega para
-     * {@link #alocar(String, String, AlocacaoRequest)}. Todas as regras de
-     * alocacao - status, validade, tipo, compatibilidade, troca de status da
-     * bolsa e recalculo da requisicao - continuam num lugar so, e as duas
-     * portas de entrada nao podem divergir.</p>
+     * <p>O {@link IndiceEstoqueServico} resolve em O(1) por grupo compativel
+     * quais bolsas existem, e a {@link SelecaoFefo} escolhe a de validade mais
+     * proxima. Depois de escolher, delega para
+     * {@link #alocar(String, String, AlocacaoRequest)}: as duas portas de
+     * entrada passam pela mesma regra do agregado.</p>
      *
      * @throws OperacaoInvalidaException se nao houver bolsa disponivel e
      *         compativel para a combinacao pedida
      */
     @Transactional
     public AlocacaoResponse alocarAutomaticamente(String requisicaoId, String itemId) {
-        Requisicao requisicao = buscar(requisicaoId);
-        exigirRequisicaoAberta(requisicao);
-
-        ItemRequisicao item = itemDe(requisicao, itemId);
+        ItemRequisicao item = buscar(requisicaoId).item(itemId);
         if (item.estaAtendido()) {
             throw new OperacaoInvalidaException("Item ja esta totalmente atendido");
         }
@@ -338,23 +238,7 @@ public class RequisicaoServico {
     @Transactional
     public void desfazerAlocacao(String requisicaoId, String itemId, String alocacaoId) {
         Requisicao requisicao = buscar(requisicaoId);
-        ItemRequisicao item = itemDe(requisicao, itemId);
-
-        Alocacao alocacao = item.getAlocacoes().stream()
-                .filter(a -> a.getId().equals(alocacaoId))
-                .findFirst()
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Alocacao", alocacaoId));
-
-        if (alocacao.getBolsa().getStatus() != StatusBolsa.RESERVADA) {
-            throw new OperacaoInvalidaException(
-                    "A bolsa ja saiu para entrega e a alocacao nao pode ser desfeita. "
-                    + "Status atual: " + alocacao.getBolsa().getStatus());
-        }
-
-        alocacao.getBolsa().setStatus(StatusBolsa.DISPONIVEL);
-        eventos.publishEvent(new BolsaAlterada(alocacao.getBolsa()));
-        item.removerAlocacao(alocacao);
-        requisicao.recalcularStatus();
+        avisarEstoque(requisicao.desfazerAlocacao(itemId, alocacaoId));
         requisicoes.save(requisicao);
     }
 
@@ -370,16 +254,7 @@ public class RequisicaoServico {
                 dados.quantidadeSolicitada());
     }
 
-    private ItemRequisicao itemDe(Requisicao requisicao, String itemId) {
-        return requisicao.getItens().stream()
-                .filter(i -> i.getId().equals(itemId))
-                .findFirst()
-                .orElseThrow(() -> new RecursoNaoEncontradoException("ItemRequisicao", itemId));
-    }
-
-    private void exigirRequisicaoAberta(Requisicao requisicao) {
-        if (requisicao.getStatus() == StatusRequisicao.CANCELADA) {
-            throw new OperacaoInvalidaException("Requisicao cancelada nao aceita alteracoes");
-        }
+    private void avisarEstoque(Bolsa bolsa) {
+        eventos.publishEvent(new BolsaAlterada(bolsa));
     }
 }

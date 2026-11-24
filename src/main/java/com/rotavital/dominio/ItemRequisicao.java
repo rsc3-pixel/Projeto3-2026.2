@@ -80,12 +80,13 @@ public class ItemRequisicao {
         return Collections.unmodifiableList(alocacoes);
     }
 
-    public void adicionarAlocacao(Alocacao alocacao) {
+    /** So a Requisicao, raiz do agregado, aloca: por isso visibilidade de pacote. */
+    void adicionarAlocacao(Alocacao alocacao) {
         alocacoes.add(alocacao);
         quantidadeAlocada++;
     }
 
-    public boolean removerAlocacao(Alocacao alocacao) {
+    boolean removerAlocacao(Alocacao alocacao) {
         boolean removeu = alocacoes.remove(alocacao);
         if (removeu) {
             quantidadeAlocada--;
