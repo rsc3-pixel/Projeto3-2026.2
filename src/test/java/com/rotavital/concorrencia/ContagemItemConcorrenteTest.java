@@ -24,9 +24,9 @@ import com.rotavital.api.dto.RequisicaoResponse;
 import com.rotavital.dominio.Bolsa;
 import com.rotavital.dominio.enums.PrioridadeRequisicao;
 import com.rotavital.dominio.enums.StatusBolsa;
-import com.rotavital.repositorio.BolsaRepository;
-import com.rotavital.servico.AlocacaoComRepeticao;
-import com.rotavital.servico.RequisicaoServico;
+import com.rotavital.dominio.repositorio.BolsaRepository;
+import com.rotavital.aplicacao.AlocacaoComRepeticao;
+import com.rotavital.aplicacao.RequisicaoServico;
 
 /**
  * Prova que a contagem de um item nao se perde sob alocacoes simultaneas

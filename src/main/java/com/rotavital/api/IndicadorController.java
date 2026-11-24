@@ -9,7 +9,7 @@ import com.rotavital.api.dto.indicadores.EstoquePorComponenteResponse;
 import com.rotavital.api.dto.indicadores.EstoquePorTipoResponse;
 import com.rotavital.api.dto.indicadores.PeriodoDescarte;
 import com.rotavital.api.dto.indicadores.ValidadeResponse;
-import com.rotavital.servico.IndicadorServico;
+import com.rotavital.aplicacao.IndicadorServico;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

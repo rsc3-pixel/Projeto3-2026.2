@@ -2,7 +2,7 @@ package com.rotavital.api.dto;
 
 import com.rotavital.dominio.Local;
 import com.rotavital.estruturas.ResultadoRota;
-import com.rotavital.servico.RoteirizacaoServico;
+import com.rotavital.aplicacao.RoteirizacaoServico;
 
 import java.util.ArrayList;
 import java.util.List;
