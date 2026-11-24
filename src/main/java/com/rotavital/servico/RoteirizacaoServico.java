@@ -15,7 +15,7 @@ import com.rotavital.rede.CarregadorMalha;
 import com.rotavital.rede.UnidadeRede;
 import com.rotavital.repositorio.HemocentroRepository;
 import com.rotavital.repositorio.HospitalRepository;
-import com.rotavital.servico.excecao.RecursoNaoEncontradoException;
+import com.rotavital.dominio.excecao.RecursoNaoEncontradoException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

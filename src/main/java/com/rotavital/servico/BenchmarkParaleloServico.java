@@ -5,7 +5,7 @@ import com.rotavital.dominio.Bolsa;
 import com.rotavital.paralelo.CalculadoraDispersaoValidade;
 import com.rotavital.paralelo.GeradorMassaBolsasSintetica;
 import com.rotavital.paralelo.ResumoValidade;
-import com.rotavital.servico.excecao.OperacaoInvalidaException;
+import com.rotavital.dominio.excecao.OperacaoInvalidaException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;

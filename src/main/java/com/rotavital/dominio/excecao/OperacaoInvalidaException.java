@@ -1,4 +1,4 @@
-package com.rotavital.servico.excecao;
+package com.rotavital.dominio.excecao;
 
 /**
  * A operacao viola uma regra de negocio: o recurso existe, mas o estado atual

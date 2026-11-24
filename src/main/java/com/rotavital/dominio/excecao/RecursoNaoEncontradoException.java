@@ -1,4 +1,4 @@
-package com.rotavital.servico.excecao;
+package com.rotavital.dominio.excecao;
 
 /**
  * Recurso pedido nao existe. Vira HTTP 404 no manipulador global.

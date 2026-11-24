@@ -6,8 +6,8 @@ import com.rotavital.dominio.Hospital;
 import com.rotavital.repositorio.HospitalRepository;
 import com.rotavital.repositorio.RequisicaoRepository;
 import com.rotavital.repositorio.RotaRepository;
-import com.rotavital.servico.excecao.OperacaoInvalidaException;
-import com.rotavital.servico.excecao.RecursoNaoEncontradoException;
+import com.rotavital.dominio.excecao.OperacaoInvalidaException;
+import com.rotavital.dominio.excecao.RecursoNaoEncontradoException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
