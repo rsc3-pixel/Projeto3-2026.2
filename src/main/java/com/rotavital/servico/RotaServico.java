@@ -10,39 +10,23 @@ import com.rotavital.dominio.Bolsa;
 import com.rotavital.dominio.Hemocentro;
 import com.rotavital.dominio.Hospital;
 import com.rotavital.dominio.Rota;
-import com.rotavital.dominio.enums.StatusBolsa;
 import com.rotavital.dominio.enums.StatusRota;
 import com.rotavital.estruturas.ResultadoRota;
 import com.rotavital.repositorio.BolsaRepository;
 import com.rotavital.repositorio.RotaRepository;
 import com.rotavital.servico.evento.BolsaAlterada;
-import com.rotavital.servico.excecao.OperacaoInvalidaException;
-import com.rotavital.servico.excecao.RecursoNaoEncontradoException;
+import com.rotavital.dominio.excecao.OperacaoInvalidaException;
+import com.rotavital.dominio.excecao.RecursoNaoEncontradoException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class RotaServico {
-
-    /**
-     * Ciclo de vida da rota. Concluida e cancelada sao estados finais.
-     */
-    private static final Map<StatusRota, Set<StatusRota>> TRANSICOES = new EnumMap<>(StatusRota.class);
-
-    static {
-        TRANSICOES.put(StatusRota.PLANEJADA, Set.of(StatusRota.EM_TRANSITO, StatusRota.CANCELADA));
-        TRANSICOES.put(StatusRota.EM_TRANSITO, Set.of(StatusRota.CONCLUIDA, StatusRota.CANCELADA));
-        TRANSICOES.put(StatusRota.CONCLUIDA, Set.of());
-        TRANSICOES.put(StatusRota.CANCELADA, Set.of());
-    }
 
     private final RotaRepository rotas;
     private final BolsaRepository bolsas;
@@ -167,39 +151,16 @@ public class RotaServico {
         if (atual == novo) {
             return RotaResponse.de(rota);
         }
-        if (!TRANSICOES.get(atual).contains(novo)) {
-            throw new OperacaoInvalidaException("Transicao invalida: " + atual + " -> " + novo);
-        }
-
         switch (novo) {
-            case EM_TRANSITO -> {
-                if (rota.getBolsas().isEmpty()) {
-                    throw new OperacaoInvalidaException("Rota sem bolsas embarcadas nao pode sair");
-                }
-                rota.setSaidaReal(dados.saidaReal() != null ? dados.saidaReal() : LocalDateTime.now());
-                rota.getBolsas().forEach(b -> {
-                    b.setStatus(StatusBolsa.EM_TRANSITO);
-                    eventos.publishEvent(new BolsaAlterada(b));
-                });
-            }
-            case CONCLUIDA -> {
-                rota.setChegadaReal(dados.chegadaReal() != null ? dados.chegadaReal() : LocalDateTime.now());
-                rota.getBolsas().forEach(b -> {
-                    b.setStatus(StatusBolsa.ENTREGUE);
-                    eventos.publishEvent(new BolsaAlterada(b));
-                });
-            }
-            case CANCELADA -> {
-                // Carga volta ao estoque: rota cancelada nao consome bolsa.
-                rota.getBolsas().forEach(b -> {
-                    b.setStatus(StatusBolsa.RESERVADA);
-                    eventos.publishEvent(new BolsaAlterada(b));
-                });
-            }
-            default -> throw new OperacaoInvalidaException("Status nao suportado: " + novo);
+            case EM_TRANSITO -> rota.sair(dados.saidaReal() != null ? dados.saidaReal() : LocalDateTime.now());
+            case CONCLUIDA -> rota.concluir(dados.chegadaReal() != null ? dados.chegadaReal() : LocalDateTime.now());
+            case CANCELADA -> rota.cancelar();
+            default -> throw new OperacaoInvalidaException("Transicao invalida: " + atual + " -> " + novo);
         }
+        // A rota ja mudou o status das bolsas; aqui so avisamos o indice de
+        // estoque, que e infraestrutura e nao pertence ao dominio.
+        rota.getBolsas().forEach(b -> eventos.publishEvent(new BolsaAlterada(b)));
 
-        rota.setStatus(novo);
         return RotaResponse.de(rotas.save(rota));
     }
 
@@ -213,29 +174,10 @@ public class RotaServico {
     @Transactional
     public BolsaResponse embarcar(String rotaId, EmbarqueBolsaRequest dados) {
         Rota rota = buscar(rotaId);
-
-        if (rota.getStatus() != StatusRota.PLANEJADA) {
-            throw new OperacaoInvalidaException(
-                    "So e possivel embarcar em rota PLANEJADA. Status atual: " + rota.getStatus());
-        }
-
         Bolsa bolsa = bolsas.findById(dados.bolsaId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Bolsa", dados.bolsaId()));
 
-        if (rota.getBolsas().contains(bolsa)) {
-            throw new OperacaoInvalidaException("Bolsa ja embarcada nesta rota");
-        }
-        if (bolsa.getStatus() != StatusBolsa.RESERVADA) {
-            throw new OperacaoInvalidaException(
-                    "So bolsa RESERVADA pode ser embarcada. Status atual: " + bolsa.getStatus());
-        }
-        if (bolsa.getHemocentroOrigem() == null
-                || !bolsa.getHemocentroOrigem().getId().equals(rota.getOrigem().getId())) {
-            throw new OperacaoInvalidaException(
-                    "A bolsa esta em outro hemocentro e nao pode sair nesta rota");
-        }
-
-        rota.adicionarBolsa(bolsa);
+        rota.embarcar(bolsa);
         rotas.save(rota);
         return BolsaResponse.de(bolsa);
     }
@@ -243,18 +185,7 @@ public class RotaServico {
     @Transactional
     public void desembarcar(String rotaId, String bolsaId) {
         Rota rota = buscar(rotaId);
-
-        if (rota.getStatus() != StatusRota.PLANEJADA) {
-            throw new OperacaoInvalidaException(
-                    "So e possivel desembarcar de rota PLANEJADA. Status atual: " + rota.getStatus());
-        }
-
-        Bolsa bolsa = rota.getBolsas().stream()
-                .filter(b -> b.getCodigoRastreio().equals(bolsaId))
-                .findFirst()
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Bolsa na rota", bolsaId));
-
-        rota.removerBolsa(bolsa);
+        rota.desembarcar(bolsaId);
         rotas.save(rota);
     }
 }
