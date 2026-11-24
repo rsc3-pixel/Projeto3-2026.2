@@ -1,0 +1,23 @@
+sequenceDiagram
+    autonumber
+    participant R as requisicao-svc (orquestrador)
+    participant E as estoque-svc
+    participant X as expedicao-svc
+    participant T as roteirizacao-svc
+    R->>R: cria requisição (PENDENTE)
+    R->>E: reservar bolsas (FEFO, compatíveis)
+    E-->>R: BolsaReservada
+    R->>R: registra alocações (ATENDIDA)
+    R->>X: RequisicaoAtendida
+    X->>T: calcular caminho
+    alt há caminho
+        T-->>X: caminho + tempo
+        X->>X: planeja e embarca, depois despacha
+        X-->>R: RemessaDespachada (sem volta)
+    else sem caminho na malha
+        T-->>X: sem rota
+        X-->>R: PlanejamentoFalhou
+        R->>R: compensa 3: desfaz alocações (PENDENTE)
+        R->>E: compensa 2: liberar bolsas
+        E-->>R: BolsaLiberada (DISPONIVEL)
+    end

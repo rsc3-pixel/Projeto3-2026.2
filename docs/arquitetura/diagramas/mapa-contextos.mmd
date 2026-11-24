@@ -1,0 +1,29 @@
+flowchart LR
+    SENS["Sensores de telemetria<br/>(externo)"]
+    PY["Dados sintéticos<br/>dados/unidades.py"]
+    CAD["Cadastro da Rede<br/><i>suporte</i>"]
+    EST["Estoque<br/><i>suporte</i>"]
+    REQ["Requisição<br/><b>core</b>"]
+    EXP["Expedição<br/><b>core</b>"]
+    ROT["Roteirização<br/><i>genérico</i>"]
+    IND["Indicadores<br/><i>suporte</i>"]
+
+    EST -- "Cliente-fornecedor<br/>(U → D)" --> REQ
+    REQ -- "Cliente-fornecedor<br/>(U → D)" --> EXP
+    ROT -- "Open Host Service" --> EXP
+    CAD -- "OHS + Published Language<br/>(ids HC01..HC12, TipoUnidade)" --> EST
+    CAD -- "OHS + PL" --> REQ
+    CAD -- "OHS + PL" --> EXP
+    SENS -- "ACL<br/>(pacote → LeituraTemperatura)" --> EXP
+    PY -- "ACL<br/>(AGENCIA_TRANSFUSIONAL → HOSPITAL)" --> ROT
+    EST -- "Conformista" --> IND
+    REQ -- "Conformista" --> IND
+
+    classDef core fill:#fde2c4,stroke:#c4610b,stroke-width:2px,color:#1d2430
+    classDef sup fill:#e6eef8,stroke:#3a6ea5,color:#1d2430
+    classDef gen fill:#eeeeee,stroke:#777,color:#1d2430
+    classDef ext fill:#ffffff,stroke:#999,stroke-dasharray:4 3,color:#1d2430
+    class REQ,EXP core
+    class EST,CAD,IND sup
+    class ROT gen
+    class SENS,PY ext
