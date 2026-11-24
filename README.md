@@ -300,7 +300,7 @@ A API está no ar, publicada automaticamente a cada push na `main`:
 | [`/painel.html`](https://rsc3-rotavital.duckdns.org/painel.html) | painel de indicadores de estoque e demanda |
 | [`/painel/HC01/risco`](https://rsc3-rotavital.duckdns.org/painel/HC01/risco) | estoque crítico do HEMOPE: o que vence em 7, 15 ou 30 dias (HU-04) |
 | [`/api/v1/bolsas/em-risco?dias=7`](https://rsc3-rotavital.duckdns.org/api/v1/bolsas/em-risco?dias=7) | o mesmo painel, em JSON |
-| [`/api/v1/rotas/calcular?origemId=HC01&destinoId=HO06`](https://rsc3-rotavital.duckdns.org/api/v1/rotas/calcular?origemId=HC01&destinoId=HO06) | caminho mais rápido do HEMOPE ao HC UFPE (HU-05) |
+| [`/api/v1/rotas/calcular?origemId=HC01&destinoId=HC06`](https://rsc3-rotavital.duckdns.org/api/v1/rotas/calcular?origemId=HC01&destinoId=HC06) | caminho mais rápido do HEMOPE ao HC UFPE (HU-05) |
 | [`/docs`](https://rsc3-rotavital.duckdns.org/docs) | API Reference interativa (Scalar) |
 | [`/api/v1/hemocentros`](https://rsc3-rotavital.duckdns.org/api/v1/hemocentros) | os hemocentros da carga inicial |
 | [`/api/v1/bolsas`](https://rsc3-rotavital.duckdns.org/api/v1/bolsas) | o estoque |
@@ -388,7 +388,7 @@ publicar (roteiro pronto). Validação com o monitor a registrar.
 
 | Artefato | Link |
 |---|---|
-| **Aplicação no ar** | [rsc3-rotavital.duckdns.org](https://rsc3-rotavital.duckdns.org/actuator/health) · [estoque crítico](https://rsc3-rotavital.duckdns.org/painel/HC01/risco) · [cálculo de rota](https://rsc3-rotavital.duckdns.org/api/v1/rotas/calcular?origemId=HC01&destinoId=HO06) |
+| **Aplicação no ar** | [rsc3-rotavital.duckdns.org](https://rsc3-rotavital.duckdns.org/actuator/health) · [estoque crítico](https://rsc3-rotavital.duckdns.org/painel/HC01/risco) · [cálculo de rota](https://rsc3-rotavital.duckdns.org/api/v1/rotas/calcular?origemId=HC01&destinoId=HC06) |
 | **API Reference (Scalar)** | [/docs](https://rsc3-rotavital.duckdns.org/docs) |
 | Histórias de usuário | [docs/historias-de-usuario.md](docs/historias-de-usuario.md) |
 | Contrato da API, com os endpoints novos | [docs/contrato_api.md](docs/contrato_api.md) |

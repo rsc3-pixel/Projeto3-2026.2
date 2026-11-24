@@ -21,6 +21,10 @@ As entidades eram anêmicas: guardavam dados e expunham `setStatus`, e as regras
 | Regra "a bolsa serve para este pedido?" em 3 lugares | `SelecaoFefo`, `RequisicaoServico.alocar` e `ServicoAlocacaoRota` |
 | Uma das cópias já divergia | o `ServicoAlocacaoRota` comparava grupos com `!=` e recusava O- para um receptor A+, que a API aceitava |
 | Requisição com status atribuível de fora | `Requisicao.setStatus` público e `recalcularStatus` chamado pelo serviço |
+| Duas classes de serviço quase iguais | `HemocentroServico` e `HospitalServico` com cerca de 90% do código igual; os dois repositórios com as mesmas três buscas |
+| Dois vocabulários para a mesma unidade | a carga inicial chamava o Real Hospital Português de `HO04`, tipo `"HOSPITAL"`; a malha, de `HC04`, tipo `"AGENCIA_TRANSFUSIONAL"`; tudo em `String` solta |
+| Código sem uso no domínio | as coleções `Hemocentro.estoque` e `Hospital.requisicoes`, que nenhuma classe lia |
+| Mesma checagem em dois lugares | "item já está totalmente atendido" no agregado e no serviço |
 
 ### O que mudou
 
@@ -33,8 +37,12 @@ As entidades eram anêmicas: guardavam dados e expunham `setStatus`, e as regras
 | `Requisicao` | `setStatus` público; o serviço mexia em itens e alocações | raiz do agregado: `alocar`, `desfazerAlocacao`, `cancelar`, `adicionarItem`, `removerItem`; `recalcularStatus` privado |
 | `ItemRequisicao` | `adicionarAlocacao` e `removerAlocacao` públicos | visibilidade de pacote: só a raiz altera |
 | Exceções de negócio | `servico.excecao` | `dominio.excecao`, porque agora quem lança é a entidade |
+| `Local` (base de `Hemocentro` e `Hospital`) | quatro setters chamados em sequência pelos serviços | `getTipo()`, `getRegistro()` (CNPJ ou CNES) e `atualizarCadastro`; o cadastro muda como uma unidade |
+| `Hemocentro`, `Hospital` | coleções inversas sem uso e setters de CNPJ e CNES | só declaram o que é deles: tipo e registro |
+| Tipo da unidade | `String` com dois vocabulários | enum `TipoUnidade` (HEMOCENTRO, HOSPITAL), usado pelas entidades e pela malha |
+| `ItemRequisicao` | a regra "item atendido" repetida fora dele | `exigirPendente()`: regra e mensagem num lugar só |
 
-Efeito nos serviços: `RequisicaoServico` caiu de 385 para 260 linhas, e `RotaServico` e `BolsaServico` perderam as tabelas de transição. O serviço passa a fazer só o papel de aplicação: carregar, chamar a operação do domínio, salvar e publicar o evento.
+Efeito nos serviços: `RequisicaoServico` caiu de 385 para 260 linhas, e `RotaServico` e `BolsaServico` perderam as tabelas de transição. `HemocentroServico` e `HospitalServico` passaram a estender `ServicoDeUnidade`, que escreve uma vez só o que era repetido (listar com filtro de endereço, buscar com 404, registro oficial único e o esqueleto da remoção); cada um ficou só com o que é dele. Os repositórios das duas unidades herdam as buscas de `UnidadeRepository`. A carga inicial passou a usar os ids da malha (`HC04` em vez de `HO04`), que são os de `dados/unidades.py`. O serviço passa a fazer só o papel de aplicação: carregar, chamar a operação do domínio, salvar e publicar o evento.
 
 O mapa completo do domínio, com entidades, agregados e ciclos de vida, está em [`mapa-dominio-ddd.md`](mapa-dominio-ddd.md), atualizado para o estado novo.
 
@@ -69,8 +77,7 @@ Pendências conhecidas, registradas para não serem esquecidas:
 
 1. **A aplicação ainda recebe e devolve DTOs de `api.dto`.** É uma seta de dentro para fora. O próximo passo é a aplicação ter os próprios comandos e resultados, e o controller converter.
 2. **Os contratos de repositório ainda estendem `JpaRepository`.** Para o domínio ficar livre do Spring Data, cada contrato passaria a ser uma interface pura, implementada na infraestrutura.
-3. **`HemocentroServico` e `HospitalServico` repetem cerca de 90% do código.**
-4. **`Veiculo` é entidade sem uso nenhum.** O grupo decidiu mantê-lo (README, seção de pendências); fica registrado que ele puxa a cobertura do domínio para baixo.
+3. **`Veiculo` é entidade sem uso nenhum.** O grupo decidiu mantê-lo (README, seção de pendências); fica registrado que ele puxa a cobertura do domínio para baixo.
 
 ---
 
@@ -86,16 +93,16 @@ Pendências conhecidas, registradas para não serem esquecidas:
 | 4 | `Requisicao` como raiz do agregado | `refactor(dominio): Requisicao como raiz do agregado` |
 | 5 | JaCoCo com trava de cobertura no CI | `build: cobertura com JaCoCo e trava no CI` |
 | 6 | Pacotes organizados em camadas | `refactor: organiza os pacotes nas camadas da Clean Architecture` |
+| 7 | Unidades da rede sem duplicação: `ServicoDeUnidade`, `UnidadeRepository`, `TipoUnidade`, ids alinhados à malha | `refactor: unifica hemocentro e hospital como unidades da rede` |
 
-O contrato da API não mudou: os testes de controller e os cenários de aceitação passam sem ajuste.
+O formato da API não mudou: os testes de controller e os cenários de aceitação passam sem ajuste. O que muda para quem usa a API são os ids dos hospitais da carga inicial (`HC04` em vez de `HO04`); os links do README e dos roteiros de demonstração foram atualizados junto.
 
 ### Próximos passos, em ordem
 
 1. Comandos e resultados próprios da camada de aplicação (pendência 1 da seção 2).
 2. `TemperaturaServico`: levar a regra "leitura só em rota EM_TRANSITO" para a `Rota`.
-3. Unificar o que é comum a `HemocentroServico` e `HospitalServico`.
-4. Contratos de repositório puros (pendência 2).
-5. Subir a meta de cobertura do domínio para 90% de linhas e 80% de ramos.
+3. Contratos de repositório puros (pendência 2).
+4. Subir a meta de cobertura do domínio para 90% de linhas e 80% de ramos.
 
 ---
 
@@ -103,26 +110,27 @@ O contrato da API não mudou: os testes de controller e os cenários de aceitaç
 
 ### Como foi feito
 
-Os testes de domínio foram escritos antes da implementação. O primeiro passo de cada entidade foi um teste que nem compilava, porque os métodos ainda não existiam (vermelho). Depois veio o código mínimo para passar (verde). Não existia nenhum teste unitário de domínio antes; agora são três classes com 39 testes, mais um no `ServicoAlocacaoRotaTest` que prova a correção da divergência:
+Os testes de domínio foram escritos antes da implementação. O primeiro passo de cada entidade foi um teste que nem compilava, porque os métodos ainda não existiam (vermelho). Depois veio o código mínimo para passar (verde). Não existia nenhum teste unitário de domínio antes; agora são quatro classes com 44 testes, mais um no `ServicoAlocacaoRotaTest` que prova a correção da divergência:
 
 | Classe de teste | O que prova |
 |---|---|
 | `BolsaTest` | caminho feliz do ciclo de vida, transições proibidas, estados finais, bolsa vencida, elegibilidade com hemácias e plasma, último dia de validade |
 | `RotaTest` | embarque válido e inválido, saída sem carga, cancelamento devolvendo a carga, estado final |
 | `RequisicaoTest` | alocação parcial e completa, bolsa incompatível, desfazer, cancelar, idempotência do cancelamento, itens |
+| `UnidadeTest` | tipo e registro de hemocentro e hospital, atualização do cadastro, identidade pelo id |
 
 Os testes antigos que montavam o cenário com `setStatus` passaram a usar `BolsasDeTeste.levarAte`, que percorre o caminho legal. Assim, nem o teste pula etapas do domínio.
 
 ### Cobertura medida com JaCoCo
 
-Suite completa: 544 testes, 0 falhas (`./mvnw clean test`). As linhas de `dominio` somam o pacote e os subpacotes (`enums`, `excecao`, `repositorio`), a mesma medida da linha de base.
+Suite completa: 549 testes, 0 falhas (`./mvnw clean test`). As linhas de `dominio` somam o pacote e os subpacotes (`enums`, `excecao`, `repositorio`), a mesma medida da linha de base.
 
 | Escopo | Antes (24/11, início) | Depois (24/11, fim) | Trava no CI |
 |---|---|---|---|
-| Total, linhas | 86,5% | 87,6% | 85% |
-| Total, ramos | 77,2% | 78,4% | 75% |
-| `dominio`, linhas | 77,1% | 84,7% | 80% |
-| `dominio`, ramos | **46,2%** | **75,2%** | 70% |
+| Total, linhas | 86,5% | 88,7% | 85% |
+| Total, ramos | 77,2% | 79,9% | 75% |
+| `dominio`, linhas | 77,1% | 87,6% | 80% |
+| `dominio`, ramos | **46,2%** | **76,6%** | 70% |
 
 O salto nos ramos do domínio é a medida mais direta do modelo rico: antes não havia decisão nas entidades para testar.
 

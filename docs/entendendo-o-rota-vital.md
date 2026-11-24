@@ -313,7 +313,7 @@ tabela LOCAL
 │ id   │ DTYPE       │ nome         │ cnpj       │ cnes    │
 ├──────┼─────────────┼──────────────┼────────────┼─────────┤
 │ HC01 │ Hemocentro  │ HEMOPE       │ 11222333…  │ (null)  │
-│ HO04 │ Hospital    │ Real Port.   │ (null)     │ 2400001 │
+│ HC04 │ Hospital    │ Real Port.   │ (null)     │ 2400001 │
 └──────┴─────────────┴──────────────┴────────────┴─────────┘
 ```
 
