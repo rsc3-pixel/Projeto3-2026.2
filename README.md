@@ -566,6 +566,7 @@ Material de apoio, não exigido pelas entregas:
 | Documento | O que cobre |
 |---|---|
 | [docs/entendendo-o-rota-vital.md](docs/entendendo-o-rota-vital.md) | guia comentado do código, do modelo de domínio ao deploy |
+| [docs/arquitetura/](docs/arquitetura/) | **Trabalho U2, Parte 2 (SO):** DDD com subdomínios e contextos, três camadas, projeção com microsserviços e saga, ADRs, três cenários com Lei de Little e orçamento com custo por pedido; PDF entregue no Classroom |
 | [docs/planejamento-refatoracao-ddd.md](docs/planejamento-refatoracao-ddd.md) | refatoração para modelo rico e Clean Architecture (PI3-247): diagnóstico, o que mudou, cobertura antes e depois, pendências |
 | [docs/mapa-dominio-ddd.md](docs/mapa-dominio-ddd.md) | mapa do domínio em linguagem de DDD: contextos, entidades, agregados e raízes, objetos de valor e serviços, nomeados a partir do código em `dominio/` |
 | [docs/tdd-no-projeto.md](docs/tdd-no-projeto.md) | como o TDD foi aplicado: o que cada teste protege, a corrida da PI3-109 reproduzida e o que o histórico do git prova |
