@@ -1,6 +1,7 @@
 package com.rotavital.alocacao;
 
 import com.rotavital.dominio.Bolsa;
+import com.rotavital.dominio.BolsasDeTeste;
 import com.rotavital.dominio.Endereco;
 import com.rotavital.dominio.Hemocentro;
 import com.rotavital.dominio.enums.GrupoSanguineo;
@@ -266,7 +267,7 @@ class PropriedadesAlocacaoTest {
         TipoHemocomponente tipo = TipoHemocomponente.CONCENTRADO_HEMACIAS;
         Bolsa criada = new Bolsa(codigo, tipo, grupo, 450,
                 validade.minusDays(tipo.getValidadeDias()), hemocentroTeste());
-        criada.setStatus(status);
+        BolsasDeTeste.levarAte(criada, status);
         return criada;
     }
 

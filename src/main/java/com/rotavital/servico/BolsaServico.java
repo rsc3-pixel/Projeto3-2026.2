@@ -13,8 +13,8 @@ import com.rotavital.repositorio.AlocacaoRepository;
 import com.rotavital.repositorio.BolsaRepository;
 import com.rotavital.servico.evento.BolsaAlterada;
 import com.rotavital.servico.evento.BolsaRemovida;
-import com.rotavital.servico.excecao.OperacaoInvalidaException;
-import com.rotavital.servico.excecao.RecursoNaoEncontradoException;
+import com.rotavital.dominio.excecao.OperacaoInvalidaException;
+import com.rotavital.dominio.excecao.RecursoNaoEncontradoException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,29 +22,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class BolsaServico {
-
-    /**
-     * Transicoes permitidas de status. Uma bolsa entregue ou descartada e
-     * estado final: nao volta. Sem esse mapa qualquer PATCH poderia
-     * "ressuscitar" uma bolsa ja descartada.
-     */
-    private static final Map<StatusBolsa, Set<StatusBolsa>> TRANSICOES = new EnumMap<>(StatusBolsa.class);
-
-    static {
-        TRANSICOES.put(StatusBolsa.DISPONIVEL, Set.of(StatusBolsa.RESERVADA, StatusBolsa.DESCARTADA));
-        TRANSICOES.put(StatusBolsa.RESERVADA, Set.of(StatusBolsa.DISPONIVEL, StatusBolsa.EM_TRANSITO, StatusBolsa.DESCARTADA));
-        TRANSICOES.put(StatusBolsa.EM_TRANSITO, Set.of(StatusBolsa.ENTREGUE, StatusBolsa.DESCARTADA));
-        TRANSICOES.put(StatusBolsa.ENTREGUE, Set.of());
-        TRANSICOES.put(StatusBolsa.DESCARTADA, Set.of());
-    }
 
     private final BolsaRepository bolsas;
     private final AlocacaoRepository alocacoes;
@@ -146,8 +128,7 @@ public class BolsaServico {
                 ? listarPorHemocentro(hemocentroId, null, null, null)
                 : listar(null, null, null, null))
                 .stream()
-                .filter(b -> b.getStatus() == StatusBolsa.DISPONIVEL
-                        || b.getStatus() == StatusBolsa.RESERVADA)
+                .filter(b -> b.getStatus().estaNoEstoque())
                 .sorted(Comparator.comparing(Bolsa::getDataValidade)
                         .thenComparing(Bolsa::getCodigoRastreio))
                 .toList();
@@ -207,12 +188,15 @@ public class BolsaServico {
         if (atual == novoStatus) {
             return bolsa;
         }
-        if (!TRANSICOES.get(atual).contains(novoStatus)) {
-            throw new OperacaoInvalidaException(
-                    "Transicao invalida: " + atual + " -> " + novoStatus);
+        // A API recebe o status de destino; o dominio recebe a intencao. A
+        // Bolsa valida a transicao, entao nao existe tabela aqui.
+        switch (novoStatus) {
+            case RESERVADA -> bolsa.reservar(LocalDate.now());
+            case DISPONIVEL -> bolsa.liberar();
+            case EM_TRANSITO -> bolsa.despachar();
+            case ENTREGUE -> bolsa.entregar();
+            case DESCARTADA -> bolsa.descartar();
         }
-
-        bolsa.setStatus(novoStatus);
         Bolsa salva = bolsas.save(bolsa);
         eventos.publishEvent(new BolsaAlterada(salva));
         return salva;

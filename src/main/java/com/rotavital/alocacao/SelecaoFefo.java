@@ -66,11 +66,7 @@ public final class SelecaoFefo {
      * {@code isAfter} - a bolsa so vence no dia seguinte a validade.</p>
      */
     public static boolean alocavel(Bolsa bolsa, LocalDate dataReferencia) {
-        if (bolsa == null) {
-            return false;
-        }
-        return !bolsa.estaVencida(dataReferencia)
-                && bolsa.getStatus() == StatusBolsa.DISPONIVEL;
+        return bolsa != null && bolsa.estaDisponivelEm(dataReferencia);
     }
 
     /**
@@ -98,11 +94,8 @@ public final class SelecaoFefo {
      */
     public static boolean alocavel(Bolsa bolsa, LocalDate dataReferencia,
                                    GrupoSanguineo receptor, TipoHemocomponente tipo) {
-        // A sobrecarga de dois argumentos ja rejeita bolsa nula, entao o
-        // curto-circuito protege o getGrupoSanguineo() abaixo.
-        return alocavel(bolsa, dataReferencia)
-                && MatrizCompatibilidade.compativel(
-                        bolsa.getGrupoSanguineo(), receptor, tipo);
+        // A regra mora na Bolsa (PI3-247): a mesma que a alocacao pela API usa.
+        return bolsa != null && bolsa.podeAtender(receptor, tipo, dataReferencia);
     }
 
     /**
