@@ -38,7 +38,7 @@ class RequisicaoTest {
     @BeforeEach
     void preparar() {
         hemope = new Hemocentro("HC01", "Hemope", "(81) 0000-0000", null, "00.000.000/0001-00");
-        Hospital imip = new Hospital("HO05", "IMIP", "(81) 0000-0001", null, "0000005");
+        Hospital imip = new Hospital("HC05", "IMIP", "(81) 0000-0001", null, "0000005");
         requisicao = new Requisicao("REQ-1", imip, PrioridadeRequisicao.URGENTE, AGORA, AGORA.plusHours(12));
         requisicao.adicionarItem(new ItemRequisicao("I-1", CONCENTRADO_HEMACIAS, A_POS, 2));
     }

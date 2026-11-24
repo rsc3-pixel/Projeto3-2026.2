@@ -1,5 +1,7 @@
 package com.rotavital.estruturas;
 
+import com.rotavital.dominio.enums.TipoUnidade;
+
 import com.rotavital.rede.CarregadorMalha;
 import com.rotavital.rede.UnidadeRede;
 import org.junit.jupiter.api.DisplayName;
@@ -302,13 +304,13 @@ class VizinhoMaisProximoTest {
 
         /**
          * Os oito hospitais da malha, ou seja, as unidades do tipo
-         * AGENCIA_TRANSFUSIONAL. Os ids saem de UnidadeRede.TODAS, nao de uma
+         * HOSPITAL. Os ids saem de UnidadeRede.TODAS, nao de uma
          * lista escrita a mao, para o teste nao desalinhar se a malha mudar.
          */
         private List<String> hospitais() {
             List<String> ids = new ArrayList<>();
             for (UnidadeRede unidade : UnidadeRede.TODAS) {
-                if ("AGENCIA_TRANSFUSIONAL".equals(unidade.tipo())) {
+                if (unidade.tipo() == TipoUnidade.HOSPITAL) {
                     ids.add(unidade.id());
                 }
             }

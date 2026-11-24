@@ -220,9 +220,7 @@ public class RequisicaoServico {
     @Transactional
     public AlocacaoResponse alocarAutomaticamente(String requisicaoId, String itemId) {
         ItemRequisicao item = buscar(requisicaoId).item(itemId);
-        if (item.estaAtendido()) {
-            throw new OperacaoInvalidaException("Item ja esta totalmente atendido");
-        }
+        item.exigirPendente();
 
         List<Bolsa> candidatas = indiceEstoque.buscarCompativeis(
                 item.getGrupoSanguineo(), item.getTipo());

@@ -2,7 +2,6 @@ package com.rotavital.api.dto;
 
 import com.rotavital.dominio.Local;
 import com.rotavital.estruturas.ResultadoRota;
-import com.rotavital.aplicacao.RoteirizacaoServico;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +38,7 @@ public record RotaCalculadaResponse(
     public record Parada(String id, String nome, String tipo) {
 
         public static Parada de(Local local) {
-            return new Parada(local.getId(), local.getNome(), RoteirizacaoServico.tipoDe(local));
+            return new Parada(local.getId(), local.getNome(), local.getTipo().name());
         }
     }
 

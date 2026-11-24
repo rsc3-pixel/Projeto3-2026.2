@@ -75,7 +75,7 @@ class ContagemItemConcorrenteTest {
 
         // Um unico item pedindo todas elas: as threads disputam o mesmo contador.
         RequisicaoResponse pedido = requisicaoServico.criar(new RequisicaoRequest(
-                "HO04",
+                "HC04",
                 PrioridadeRequisicao.ROTINA,
                 LocalDateTime.now().plusDays(1),
                 "contagem sob concorrencia",

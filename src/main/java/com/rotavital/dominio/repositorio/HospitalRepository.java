@@ -1,18 +1,12 @@
 package com.rotavital.dominio.repositorio;
 
 import com.rotavital.dominio.Hospital;
-import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
-
-public interface HospitalRepository extends JpaRepository<Hospital, String> {
-
-    List<Hospital> findByEnderecoCidadeIgnoreCase(String cidade);
-
-    List<Hospital> findByEnderecoEstadoIgnoreCase(String estado);
-
-    List<Hospital> findByEnderecoCidadeIgnoreCaseAndEnderecoEstadoIgnoreCase(
-            String cidade, String estado);
+/**
+ * Acesso aos hospitais. As buscas por endereco vem de
+ * {@link UnidadeRepository}; aqui fica so o que e do hospital.
+ */
+public interface HospitalRepository extends UnidadeRepository<Hospital> {
 
     boolean existsByCnes(String cnes);
 }

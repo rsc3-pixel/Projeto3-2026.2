@@ -120,9 +120,7 @@ public class Requisicao {
     public Alocacao alocar(String itemId, Bolsa bolsa, LocalDateTime agora) {
         exigirAberta();
         ItemRequisicao item = item(itemId);
-        if (item.estaAtendido()) {
-            throw new OperacaoInvalidaException("Item ja esta totalmente atendido");
-        }
+        item.exigirPendente();
         LocalDate hoje = agora.toLocalDate();
         bolsa.exigirQuePodeAtender(item.getGrupoSanguineo(), item.getTipo(), hoje);
         bolsa.reservar(hoje);

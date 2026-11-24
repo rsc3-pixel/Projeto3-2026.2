@@ -1,5 +1,7 @@
 package com.rotavital.rede;
 
+import com.rotavital.dominio.enums.TipoUnidade;
+
 import java.util.List;
 
 /**
@@ -16,7 +18,9 @@ import java.util.List;
  *
  * @param id         identificador da unidade, de HC01 a HC12
  * @param nome       razao social ou nome de operacao da unidade
- * @param tipo       HEMOCENTRO ou AGENCIA_TRANSFUSIONAL
+ * @param tipo       HEMOCENTRO ou HOSPITAL, o mesmo vocabulario das entidades.
+ *                   Em {@code dados/unidades.py} o hospital aparece como
+ *                   AGENCIA_TRANSFUSIONAL; a traducao e feita aqui (PI3-247)
  * @param cidade     municipio da Regiao Metropolitana do Recife
  * @param bairro     bairro da unidade
  * @param latitude   latitude em graus decimais
@@ -25,7 +29,7 @@ import java.util.List;
 public record UnidadeRede(
         String id,
         String nome,
-        String tipo,
+        TipoUnidade tipo,
         String cidade,
         String bairro,
         double latitude,
@@ -38,40 +42,40 @@ public record UnidadeRede(
      */
     public static final List<UnidadeRede> TODAS = List.of(
             new UnidadeRede("HC01", "Hemocentro Recife (HEMOPE)",
-                    "HEMOCENTRO", "Recife", "Graças",
+                    TipoUnidade.HEMOCENTRO, "Recife", "Graças",
                     -8.0528651, -34.8979716),
             new UnidadeRede("HC02", "GSH Banco de Sangue Hemato",
-                    "HEMOCENTRO", "Recife", "Boa Vista",
+                    TipoUnidade.HEMOCENTRO, "Recife", "Boa Vista",
                     -8.0597226, -34.894112),
             new UnidadeRede("HC03", "IHENE - Instituto de Hematologia do Nordeste",
-                    "HEMOCENTRO", "Recife", "Boa Vista",
+                    TipoUnidade.HEMOCENTRO, "Recife", "Boa Vista",
                     -8.0503551, -34.8928547),
             new UnidadeRede("HC04", "Real Hospital Português de Beneficência",
-                    "AGENCIA_TRANSFUSIONAL", "Recife", "Paissandu",
+                    TipoUnidade.HOSPITAL, "Recife", "Paissandu",
                     -8.0640504, -34.8981508),
             new UnidadeRede("HC05", "IMIP - Instituto de Medicina Integral Prof. Fernando Figueira",
-                    "AGENCIA_TRANSFUSIONAL", "Recife", "Boa Vista",
+                    TipoUnidade.HOSPITAL, "Recife", "Boa Vista",
                     -8.0669066, -34.8902756),
             new UnidadeRede("HC06", "Hospital das Clínicas UFPE",
-                    "AGENCIA_TRANSFUSIONAL", "Recife", "Cidade Universitária",
+                    TipoUnidade.HOSPITAL, "Recife", "Cidade Universitária",
                     -8.0474352, -34.9463152),
             new UnidadeRede("HC07", "Hospital do Tricentenário",
-                    "AGENCIA_TRANSFUSIONAL", "Olinda", "Bairro Novo",
+                    TipoUnidade.HOSPITAL, "Olinda", "Bairro Novo",
                     -8.0104411, -34.8443412),
             new UnidadeRede("HC08", "Hemolab Laboratório",
-                    "HEMOCENTRO", "Olinda", "Rio Doce",
+                    TipoUnidade.HEMOCENTRO, "Olinda", "Rio Doce",
                     -7.9619962, -34.8434754),
             new UnidadeRede("HC09", "Hospital Nossa Senhora de Lourdes",
-                    "AGENCIA_TRANSFUSIONAL", "Jaboatão dos Guararapes", "Cavaleiro",
+                    TipoUnidade.HOSPITAL, "Jaboatão dos Guararapes", "Cavaleiro",
                     -8.0991939, -34.9703409),
             new UnidadeRede("HC10", "Hospital e Policlínica Jaboatão Prazeres",
-                    "AGENCIA_TRANSFUSIONAL", "Jaboatão dos Guararapes", "Cajueiro Seco",
+                    TipoUnidade.HOSPITAL, "Jaboatão dos Guararapes", "Cajueiro Seco",
                     -8.1661755, -34.923622),
             new UnidadeRede("HC11", "Hospital Guararapes (Memorial)",
-                    "AGENCIA_TRANSFUSIONAL", "Jaboatão dos Guararapes", "Prazeres",
+                    TipoUnidade.HOSPITAL, "Jaboatão dos Guararapes", "Prazeres",
                     -8.1657849, -34.932821),
             new UnidadeRede("HC12", "Hospital Memorial Jaboatão",
-                    "AGENCIA_TRANSFUSIONAL", "Jaboatão dos Guararapes", "Engenho Velho",
+                    TipoUnidade.HOSPITAL, "Jaboatão dos Guararapes", "Engenho Velho",
                     -8.1121248, -35.0118295)
     );
 }

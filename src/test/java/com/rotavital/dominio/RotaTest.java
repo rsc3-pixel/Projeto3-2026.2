@@ -33,7 +33,7 @@ class RotaTest {
     @BeforeEach
     void preparar() {
         hemope = new Hemocentro("HC01", "Hemope", "(81) 0000-0000", null, "00.000.000/0001-00");
-        Hospital imip = new Hospital("HO05", "IMIP", "(81) 0000-0001", null, "0000005");
+        Hospital imip = new Hospital("HC05", "IMIP", "(81) 0000-0001", null, "0000005");
         rota = new Rota("R-1", hemope, imip, SAIDA, SAIDA.plusHours(1));
     }
 

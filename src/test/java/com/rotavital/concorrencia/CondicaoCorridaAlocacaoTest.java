@@ -149,6 +149,6 @@ class CondicaoCorridaAlocacaoTest {
 
     /** O hospital nao importa para a disputa: qualquer um da carga serve. */
     private String hospitalQualquer() {
-        return "HO04";
+        return "HC04";
     }
 }

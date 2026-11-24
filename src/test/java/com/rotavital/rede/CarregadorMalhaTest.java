@@ -1,5 +1,7 @@
 package com.rotavital.rede;
 
+import com.rotavital.dominio.enums.TipoUnidade;
+
 import com.rotavital.estruturas.Dijkstra;
 import com.rotavital.estruturas.Grafo;
 import com.rotavital.estruturas.ResultadoRota;
@@ -191,7 +193,7 @@ class CarregadorMalhaTest {
     @Test
     void unidadeAlemDoAlcanceMaximoFicaIsolada() {
         UnidadeRede saoPaulo = new UnidadeRede("SP01", "Hospital em Sao Paulo",
-                "AGENCIA_TRANSFUSIONAL", "Sao Paulo", "Bela Vista", -23.5614, -46.6559);
+                TipoUnidade.HOSPITAL, "Sao Paulo", "Bela Vista", -23.5614, -46.6559);
         List<UnidadeRede> unidades = new java.util.ArrayList<>(UnidadeRede.TODAS);
         unidades.add(saoPaulo);
 
@@ -216,10 +218,10 @@ class CarregadorMalhaTest {
      */
     @Test
     void dentroDoAlcanceLigaSoAsQueEstaoAoAlcance() {
-        UnidadeRede a = new UnidadeRede("A", "A", "HEMOCENTRO", "X", "x", -8.00, -34.90);
-        UnidadeRede b = new UnidadeRede("B", "B", "HEMOCENTRO", "X", "x", -8.01, -34.90);
-        UnidadeRede c = new UnidadeRede("C", "C", "HEMOCENTRO", "X", "x", -8.02, -34.90);
-        UnidadeRede longe = new UnidadeRede("L", "L", "HEMOCENTRO", "X", "x", -9.50, -34.90);
+        UnidadeRede a = new UnidadeRede("A", "A", TipoUnidade.HEMOCENTRO, "X", "x", -8.00, -34.90);
+        UnidadeRede b = new UnidadeRede("B", "B", TipoUnidade.HEMOCENTRO, "X", "x", -8.01, -34.90);
+        UnidadeRede c = new UnidadeRede("C", "C", TipoUnidade.HEMOCENTRO, "X", "x", -8.02, -34.90);
+        UnidadeRede longe = new UnidadeRede("L", "L", TipoUnidade.HEMOCENTRO, "X", "x", -9.50, -34.90);
 
         Grafo<String> malha = CarregadorMalha.carregar(List.of(a, b, c, longe));
 

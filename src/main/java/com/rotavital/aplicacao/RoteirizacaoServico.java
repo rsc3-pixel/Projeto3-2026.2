@@ -147,7 +147,7 @@ public class RoteirizacaoServico {
             lista.add(new UnidadeRede(
                     local.getId(),
                     local.getNome(),
-                    tipoDe(local),
+                    local.getTipo(),
                     endereco.getCidade(),
                     endereco.getBairro(),
                     endereco.getLatitude(),
@@ -156,10 +156,6 @@ public class RoteirizacaoServico {
         return lista;
     }
 
-    /** Vocabulario da API: HEMOCENTRO ou HOSPITAL, como os proprios recursos. */
-    public static String tipoDe(Local local) {
-        return local instanceof Hemocentro ? "HEMOCENTRO" : "HOSPITAL";
-    }
 
     private static Local unidadeOuErro(Map<String, Local> unidades, String id) {
         Local local = id == null ? null : unidades.get(id);
