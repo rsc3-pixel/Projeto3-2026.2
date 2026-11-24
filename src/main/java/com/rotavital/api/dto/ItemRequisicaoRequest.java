@@ -12,6 +12,7 @@ public record ItemRequisicaoRequest(
         @NotNull(message = "grupoSanguineo e obrigatorio")
         GrupoSanguineo grupoSanguineo,
 
+        @NotNull(message = "quantidadeSolicitada e obrigatoria")
         @Positive(message = "quantidadeSolicitada deve ser maior que zero")
-        int quantidadeSolicitada) {
+        Integer quantidadeSolicitada) {
 }
