@@ -1,7 +1,7 @@
 # Rota Vital: planejamento da remodelagem (Trabalho U2, Parte 2)
 
 **Infraestrutura de Software · ADS · CESAR School · 2026.2**
-**Squad:** Rota Vital (Projeto Integrador 3)
+**Squad:** Squad 2 · projeto Rota Vital (Projeto Integrador 3)
 **Integrantes:** Cauã Rego Tavares Leite Duarte, Fernando Andrade Leandro Peixoto, Gabriel Brito Ferreira Dias, Guilherme Alves de Souza, Lucas Ferreira Torres de Albuquerque, Maria Eduarda Vasconcelos, Renato Santos Chong, Victor Barros Roma
 **Repositório:** https://github.com/rsc3-pixel/Projeto3-2026.2 · **Aplicação no ar:** https://rsc3-rotavital.duckdns.org
 **Data:** 24/11/2026
