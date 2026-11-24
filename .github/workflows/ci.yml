@@ -89,8 +89,19 @@ jobs:
       - name: Garantir permissao de execucao do mvnw
         run: chmod +x ./mvnw
 
-      - name: Rodar os testes
+      - name: Rodar os testes e conferir a cobertura
+        # O JaCoCo roda na fase test: cobertura abaixo do limite do pom.xml
+        # reprova este job, e o deploy nao acontece.
         run: ./mvnw --batch-mode test
+
+      - name: Publicar relatorio de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-cobertura
+          path: target/site/jacoco/
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Publicar relatorio dos testes
         # Roda mesmo quando os testes falham: e justamente quando o

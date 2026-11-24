@@ -229,7 +229,7 @@ Então  o resultado traz ao menos um grupo sanguíneo com contagem e média calc
 ```
 
 **Teste que implementa:**
-- Classe: [`IndicadorServicoDadosSinteticosTest`](../src/test/java/com/rotavital/servico/IndicadorServicoDadosSinteticosTest.java)
+- Classe: [`IndicadorServicoDadosSinteticosTest`](../src/test/java/com/rotavital/aplicacao/IndicadorServicoDadosSinteticosTest.java)
 
 ---
 

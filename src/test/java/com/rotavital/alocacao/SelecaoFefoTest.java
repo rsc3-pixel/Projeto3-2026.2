@@ -1,6 +1,7 @@
 package com.rotavital.alocacao;
 
 import com.rotavital.dominio.Bolsa;
+import com.rotavital.dominio.BolsasDeTeste;
 import com.rotavital.dominio.Endereco;
 import com.rotavital.dominio.Hemocentro;
 import com.rotavital.dominio.enums.GrupoSanguineo;
@@ -77,7 +78,7 @@ class SelecaoFefoTest {
 
         for (StatusBolsa status : indisponiveis) {
             Bolsa comprometida = bolsaQueVenceEm("B001", HOJE.plusDays(1));
-            comprometida.setStatus(status);
+            BolsasDeTeste.levarAte(comprometida, status);
             Bolsa disponivel = bolsaQueVenceEm("B002", HOJE.plusDays(30));
 
             Optional<Bolsa> escolhida =
@@ -152,7 +153,7 @@ class SelecaoFefoTest {
     void ordenarDevolveAlocaveisEmOrdemDeValidadeEOmiteAsDemais() {
         Bolsa vencida = bolsaQueVenceEm("B001", HOJE.minusDays(2));
         Bolsa reservada = bolsaQueVenceEm("B002", HOJE.plusDays(1));
-        reservada.setStatus(StatusBolsa.RESERVADA);
+        BolsasDeTeste.levarAte(reservada, StatusBolsa.RESERVADA);
         Bolsa terceira = bolsaQueVenceEm("B003", HOJE.plusDays(30));
         Bolsa primeira = bolsaQueVenceEm("B004", HOJE.plusDays(2));
         Bolsa segunda = bolsaQueVenceEm("B005", HOJE.plusDays(10));

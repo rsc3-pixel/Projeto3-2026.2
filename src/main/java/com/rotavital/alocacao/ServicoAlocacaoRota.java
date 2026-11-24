@@ -1,5 +1,6 @@
 package com.rotavital.alocacao;
 
+import com.rotavital.compatibilidade.MatrizCompatibilidade;
 import com.rotavital.dominio.Bolsa;
 import com.rotavital.dominio.enums.GrupoSanguineo;
 import com.rotavital.dominio.enums.TipoHemocomponente;
@@ -51,8 +52,10 @@ import java.util.Map;
  * consulta sobre dado compartilhado. A malha recebida nao deve ser alterada
  * apos a construcao.</p>
  *
- * <p>A busca e por grupo sanguineo identico, sem tabela de compatibilidade
- * ABO/Rh - mesma decisao ja registrada na {@link SelecaoFefo}.</p>
+ * <p>A busca e por grupo sanguineo compativel, nao identico (PI3-247): a
+ * regra e a mesma {@link Bolsa#podeAtender} usada na alocacao pela API. Antes
+ * esta classe comparava grupos com {@code !=} e recusava, por exemplo, O- para
+ * um receptor A+, divergindo do restante do sistema.</p>
  *
  * <p><b>Complexidade</b> por chamada, com B bolsas no estoque, V unidades e E
  * arestas: O(B) para levantar e filtrar candidatas, O((V + E) log V) para o
@@ -96,8 +99,8 @@ public final class ServicoAlocacaoRota {
      *
      * @param unidadeSolicitante id da unidade que pede a bolsa, o mesmo usado
      *                           como vertice da malha
-     * @param grupo              grupo sanguineo pedido, casado de forma
-     *                           identica
+     * @param grupo              grupo sanguineo do receptor; aceita qualquer
+     *                           doador compativel
      * @param tipo               tipo de hemocomponente pedido
      * @param dataReferencia     data usada para julgar a validade das bolsas
      * @return sucesso com bolsa, unidade, rota e tempo; ou falha com
@@ -123,11 +126,12 @@ public final class ServicoAlocacaoRota {
 
         for (Map.Entry<String, List<Bolsa>> unidade : estoquePorUnidade.entrySet()) {
             for (Bolsa bolsa : unidade.getValue()) {
-                if (bolsa.getGrupoSanguineo() != grupo || bolsa.getTipo() != tipo) {
+                if (bolsa.getTipo() != tipo
+                        || !MatrizCompatibilidade.compativel(bolsa.getGrupoSanguineo(), grupo, tipo)) {
                     continue;
                 }
                 existeDaCombinacao = true;
-                if (SelecaoFefo.alocavel(bolsa, dataReferencia)) {
+                if (bolsa.podeAtender(grupo, tipo, dataReferencia)) {
                     alocaveis.add(new Candidata(unidade.getKey(), bolsa));
                 }
             }

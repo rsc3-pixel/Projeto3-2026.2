@@ -1,19 +1,18 @@
 package com.rotavital.dominio;
 
+import com.rotavital.dominio.enums.TipoUnidade;
 import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
+/**
+ * Unidade que coleta e estoca hemocomponentes. O estoque nao e uma colecao
+ * aqui: cada Bolsa aponta para o hemocentro de origem e e consultada pelo
+ * repositorio. A colecao inversa que existia nao era usada por ninguem e foi
+ * removida (PI3-247).
+ */
 @Entity
 public class Hemocentro extends Local {
 
     private String cnpj;
-
-    @OneToMany(mappedBy = "hemocentroOrigem")
-    private final List<Bolsa> estoque = new ArrayList<>();
 
     protected Hemocentro() {
         // Construtor sem argumentos exigido pelo JPA. Nao usar no codigo.
@@ -25,17 +24,13 @@ public class Hemocentro extends Local {
     }
 
     public String getCnpj() { return cnpj; }
-    public void setCnpj(String cnpj) { this.cnpj = cnpj; }
 
-    public List<Bolsa> getEstoque() {
-        return Collections.unmodifiableList(estoque);
-    }
+    @Override
+    public TipoUnidade getTipo() { return TipoUnidade.HEMOCENTRO; }
 
-    public void adicionarBolsa(Bolsa bolsa) {
-        estoque.add(bolsa);
-    }
+    @Override
+    public String getRegistro() { return cnpj; }
 
-    public boolean removerBolsa(Bolsa bolsa) {
-        return estoque.remove(bolsa);
-    }
+    @Override
+    protected void definirRegistro(String registro) { this.cnpj = registro; }
 }

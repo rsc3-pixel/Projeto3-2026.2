@@ -1,19 +1,17 @@
 package com.rotavital.dominio;
 
+import com.rotavital.dominio.enums.TipoUnidade;
 import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
+/**
+ * Unidade que solicita hemocomponentes. As requisicoes apontam para o
+ * hospital e sao consultadas pelo repositorio; a colecao inversa que existia
+ * nao era usada e foi removida (PI3-247).
+ */
 @Entity
 public class Hospital extends Local {
 
     private String cnes;
-
-    @OneToMany(mappedBy = "hospital")
-    private final List<Requisicao> requisicoes = new ArrayList<>();
 
     protected Hospital() {
         // Construtor sem argumentos exigido pelo JPA. Nao usar no codigo.
@@ -25,13 +23,13 @@ public class Hospital extends Local {
     }
 
     public String getCnes() { return cnes; }
-    public void setCnes(String cnes) { this.cnes = cnes; }
 
-    public List<Requisicao> getRequisicoes() {
-        return Collections.unmodifiableList(requisicoes);
-    }
+    @Override
+    public TipoUnidade getTipo() { return TipoUnidade.HOSPITAL; }
 
-    public void adicionarRequisicao(Requisicao requisicao) {
-        requisicoes.add(requisicao);
-    }
+    @Override
+    public String getRegistro() { return cnes; }
+
+    @Override
+    protected void definirRegistro(String registro) { this.cnes = registro; }
 }

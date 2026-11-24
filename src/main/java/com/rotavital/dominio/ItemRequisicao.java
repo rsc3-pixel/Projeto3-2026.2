@@ -2,6 +2,7 @@ package com.rotavital.dominio;
 
 import com.rotavital.dominio.enums.GrupoSanguineo;
 import com.rotavital.dominio.enums.TipoHemocomponente;
+import com.rotavital.dominio.excecao.OperacaoInvalidaException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -80,17 +81,28 @@ public class ItemRequisicao {
         return Collections.unmodifiableList(alocacoes);
     }
 
-    public void adicionarAlocacao(Alocacao alocacao) {
+    /** So a Requisicao, raiz do agregado, aloca: por isso visibilidade de pacote. */
+    void adicionarAlocacao(Alocacao alocacao) {
         alocacoes.add(alocacao);
         quantidadeAlocada++;
     }
 
-    public boolean removerAlocacao(Alocacao alocacao) {
+    boolean removerAlocacao(Alocacao alocacao) {
         boolean removeu = alocacoes.remove(alocacao);
         if (removeu) {
             quantidadeAlocada--;
         }
         return removeu;
+    }
+
+    /**
+     * Recusa nova alocacao em item ja atendido. A regra e a mensagem moram
+     * aqui; a Requisicao e a alocacao automatica so a chamam (PI3-247).
+     */
+    public void exigirPendente() {
+        if (estaAtendido()) {
+            throw new OperacaoInvalidaException("Item ja esta totalmente atendido");
+        }
     }
 
     public boolean estaAtendido() {

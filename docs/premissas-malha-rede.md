@@ -152,7 +152,7 @@ e roda o Dijkstra. Dois pontos da API consomem isso:
 - `POST /api/v1/rotas` sem `previsaoChegada` calcula a chegada como saída
   mais o tempo do caminho, e registra o caminho e o tempo na rota criada.
 
-Os ids dos vértices passam a ser os ids das entidades (`HC01`, `HO04`, ou o
+Os ids dos vértices passam a ser os ids das entidades (`HC01`, `HC04`, ou o
 UUID de uma unidade cadastrada pela API), não mais a numeração HC01–HC12 de
 `dados/unidades.py`, que continua valendo para a demonstração da PI3-61.
 

@@ -23,8 +23,8 @@ O fluxo de chamada segue sempre a mesma direção: `Controller → Servico → R
 **Referências:**
 
 - [`api/BolsaController.java`](../src/main/java/com/rotavital/api/BolsaController.java)
-- [`servico/BolsaServico.java`](../src/main/java/com/rotavital/servico/BolsaServico.java)
-- [`repositorio/BolsaRepository.java`](../src/main/java/com/rotavital/repositorio/BolsaRepository.java)
+- [`servico/BolsaServico.java`](../src/main/java/com/rotavital/aplicacao/BolsaServico.java)
+- [`repositorio/BolsaRepository.java`](../src/main/java/com/rotavital/dominio/repositorio/BolsaRepository.java)
 
 ---
 
@@ -46,10 +46,10 @@ Isso permite trocar o banco de dados (H2 em dev, PostgreSQL em prod) sem alterar
 
 **Referências:**
 
-- [`repositorio/BolsaRepository.java`](../src/main/java/com/rotavital/repositorio/BolsaRepository.java)
-- [`repositorio/RotaRepository.java`](../src/main/java/com/rotavital/repositorio/RotaRepository.java)
-- [`repositorio/HemocentroRepository.java`](../src/main/java/com/rotavital/repositorio/HemocentroRepository.java)
-- [`repositorio/HospitalRepository.java`](../src/main/java/com/rotavital/repositorio/HospitalRepository.java)
+- [`repositorio/BolsaRepository.java`](../src/main/java/com/rotavital/dominio/repositorio/BolsaRepository.java)
+- [`repositorio/RotaRepository.java`](../src/main/java/com/rotavital/dominio/repositorio/RotaRepository.java)
+- [`repositorio/HemocentroRepository.java`](../src/main/java/com/rotavital/dominio/repositorio/HemocentroRepository.java)
+- [`repositorio/HospitalRepository.java`](../src/main/java/com/rotavital/dominio/repositorio/HospitalRepository.java)
 
 ---
 
@@ -104,7 +104,7 @@ Os estados `CONCLUIDA` e `CANCELADA` têm conjuntos de transição vazios — s�
 
 **Referências:**
 
-- [`servico/RotaServico.java`](../src/main/java/com/rotavital/servico/RotaServico.java) — linhas 34–40 e 117–128
+- [`servico/RotaServico.java`](../src/main/java/com/rotavital/aplicacao/RotaServico.java) — linhas 34–40 e 117–128
 - [`dominio/enums/StatusRota.java`](../src/main/java/com/rotavital/dominio/enums/StatusRota.java)
 
 ---
@@ -128,9 +128,9 @@ public RotaServico(RotaRepository rotas,
 
 **Referências:**
 
-- [`servico/RotaServico.java`](../src/main/java/com/rotavital/servico/RotaServico.java) — construtor
-- [`servico/BolsaServico.java`](../src/main/java/com/rotavital/servico/BolsaServico.java) — construtor
-- [`servico/IndicadorServico.java`](../src/main/java/com/rotavital/servico/IndicadorServico.java) — construtor
+- [`servico/RotaServico.java`](../src/main/java/com/rotavital/aplicacao/RotaServico.java) — construtor
+- [`servico/BolsaServico.java`](../src/main/java/com/rotavital/aplicacao/BolsaServico.java) — construtor
+- [`servico/IndicadorServico.java`](../src/main/java/com/rotavital/aplicacao/IndicadorServico.java) — construtor
 
 ---
 

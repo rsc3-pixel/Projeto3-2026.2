@@ -313,7 +313,7 @@ tabela LOCAL
 │ id   │ DTYPE       │ nome         │ cnpj       │ cnes    │
 ├──────┼─────────────┼──────────────┼────────────┼─────────┤
 │ HC01 │ Hemocentro  │ HEMOPE       │ 11222333…  │ (null)  │
-│ HO04 │ Hospital    │ Real Port.   │ (null)     │ 2400001 │
+│ HC04 │ Hospital    │ Real Port.   │ (null)     │ 2400001 │
 └──────┴─────────────┴──────────────┴────────────┴─────────┘
 ```
 
@@ -2418,7 +2418,7 @@ infra/
 src/main/resources/
 └── application-prod.properties   perfil de produção
 
-src/test/java/com/rotavital/config/
+src/test/java/com/rotavital/infraestrutura/
 └── PerfilProducaoTest.java        trava as decisões de segurança
 
 docs/deploy.md                     passo a passo operacional

@@ -27,8 +27,8 @@ import com.rotavital.dominio.enums.GrupoSanguineo;
 import com.rotavital.dominio.enums.PrioridadeRequisicao;
 import com.rotavital.dominio.enums.StatusBolsa;
 import com.rotavital.dominio.enums.TipoHemocomponente;
-import com.rotavital.repositorio.BolsaRepository;
-import com.rotavital.servico.RequisicaoServico;
+import com.rotavital.dominio.repositorio.BolsaRepository;
+import com.rotavital.aplicacao.RequisicaoServico;
 
 /**
  * Prova que duas alocacoes simultaneas nao conseguem reservar a mesma bolsa
@@ -149,6 +149,6 @@ class CondicaoCorridaAlocacaoTest {
 
     /** O hospital nao importa para a disputa: qualquer um da carga serve. */
     private String hospitalQualquer() {
-        return "HO04";
+        return "HC04";
     }
 }
