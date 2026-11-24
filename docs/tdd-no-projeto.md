@@ -26,7 +26,7 @@ A mensagem do commit `79fa503` (24/10/2026), que fecha PI3-30, PI3-108 e PI3-109
 2. **O teste de contagem achou a corrida real.** O segundo teste ([ContagemItemConcorrenteTest](../src/test/java/com/rotavital/concorrencia/ContagemItemConcorrenteTest.java)) aloca bolsas **diferentes** ao **mesmo** item, ao mesmo tempo. Cada thread lia `quantidadeAlocada`, somava um e gravava. Duas liam o mesmo valor, e a segunda escrita apagava a primeira. Resultado medido: duas alocações aceitas, uma registrada. Na operação, o sistema acharia o item menos atendido do que estava e alocaria mais sangue do que o hospital pediu.
 3. **A primeira correção acertou a contagem e criou outro problema.** `@Version` em `ItemRequisicao` faz a segunda transação falhar em vez de sobrescrever. A contagem ficou exata, mas só uma alocação passava por rodada.
 4. **A tentativa de repetir dentro do serviço não gravava nada.** Chamar um método `@Transactional` de dentro da própria classe não passa pelo proxy do Spring, e a transação não acontece. Nessa fase o teste também revelou uma fraqueza própria: com zero aceitas e zero registradas, a igualdade valia e o teste passava sem provar nada. Por isso ele ganhou um piso, `alocadas > 0`, com o comentário que explica o motivo.
-5. **A repetição foi para uma classe separada.** [AlocacaoComRepeticao](../src/main/java/com/rotavital/servico/AlocacaoComRepeticao.java) refaz a alocação sobre o estado novo, até três vezes, e é o caminho que a API usa.
+5. **A repetição foi para uma classe separada.** [AlocacaoComRepeticao](../src/main/java/com/rotavital/aplicacao/AlocacaoComRepeticao.java) refaz a alocação sobre o estado novo, até três vezes, e é o caminho que a API usa.
 
 Progressão medida, como registrada no commit:
 
@@ -158,12 +158,12 @@ A suíte tem 39 classes de teste. Na execução completa de 10/11/2026 sobre a `
 
 | Teste | O que protege |
 |---|---|
-| [IndicadorServicoTest](../src/test/java/com/rotavital/servico/IndicadorServicoTest.java), [IndicadorControllerTest](../src/test/java/com/rotavital/api/IndicadorControllerTest.java) | os cálculos de estoque, cobertura, descarte e validade, e os endpoints que os expõem |
-| [IndicadorServicoDadosSinteticosTest](../src/test/java/com/rotavital/servico/IndicadorServicoDadosSinteticosTest.java) | que o Java reproduz, campo a campo, a análise em Python sobre as 2.000 bolsas oficiais (seção 4.6) |
+| [IndicadorServicoTest](../src/test/java/com/rotavital/aplicacao/IndicadorServicoTest.java), [IndicadorControllerTest](../src/test/java/com/rotavital/api/IndicadorControllerTest.java) | os cálculos de estoque, cobertura, descarte e validade, e os endpoints que os expõem |
+| [IndicadorServicoDadosSinteticosTest](../src/test/java/com/rotavital/aplicacao/IndicadorServicoDadosSinteticosTest.java) | que o Java reproduz, campo a campo, a análise em Python sobre as 2.000 bolsas oficiais (seção 4.6) |
 | [ModeloDemandaTest](../src/test/java/com/rotavital/estatistica/ModeloDemandaTest.java) | as distribuições Binomial Negativa e Poisson do risco de desabastecimento |
 | [IndiceEstoqueTest](../src/test/java/com/rotavital/estruturas/IndiceEstoqueTest.java) | busca por chave composta, contrato de `equals` e `hashCode`, e hash sem colisão e estável entre execuções |
 | `ListaEstoqueTest`, `FilaRequisicoesTest`, `PilhaHistoricoTest` | as estruturas feitas à mão da AED, espelhadas da versão em C |
-| [PerfilProducaoTest](../src/test/java/com/rotavital/config/PerfilProducaoTest.java) | as decisões de segurança de produção: console do H2 desligado, sem stack trace, actuator só com health, sem senha no arquivo, porta e timeout alinhados ao Nginx |
+| [PerfilProducaoTest](../src/test/java/com/rotavital/infraestrutura/PerfilProducaoTest.java) | as decisões de segurança de produção: console do H2 desligado, sem stack trace, actuator só com health, sem senha no arquivo, porta e timeout alinhados ao Nginx |
 | `CalculadoraDispersaoValidadeTest`, `BenchmarkParaleloServicoTest`, `BenchmarkControllerTest` | o cálculo paralelo de dispersão e o endpoint de benchmark |
 | `MedicaoDesempenhoTest`, `MedicaoParalelismoTest` | medições de tempo; servem de evidência, não de regra de negócio |
 | `RotaVitalApplicationTests` | que o contexto do Spring sobe |

@@ -566,6 +566,7 @@ Material de apoio, não exigido pelas entregas:
 | Documento | O que cobre |
 |---|---|
 | [docs/entendendo-o-rota-vital.md](docs/entendendo-o-rota-vital.md) | guia comentado do código, do modelo de domínio ao deploy |
+| [docs/planejamento-refatoracao-ddd.md](docs/planejamento-refatoracao-ddd.md) | refatoração para modelo rico e Clean Architecture (PI3-247): diagnóstico, o que mudou, cobertura antes e depois, pendências |
 | [docs/mapa-dominio-ddd.md](docs/mapa-dominio-ddd.md) | mapa do domínio em linguagem de DDD: contextos, entidades, agregados e raízes, objetos de valor e serviços, nomeados a partir do código em `dominio/` |
 | [docs/tdd-no-projeto.md](docs/tdd-no-projeto.md) | como o TDD foi aplicado: o que cada teste protege, a corrida da PI3-109 reproduzida e o que o histórico do git prova |
 | [docs/plano-frontends.md](docs/plano-frontends.md) | plano dos dois front-ends: Thymeleaf e Angular |

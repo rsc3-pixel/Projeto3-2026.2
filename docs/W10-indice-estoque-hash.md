@@ -18,7 +18,7 @@ estoque inteiro, O(n) por consulta. Com a chave composta, a consulta cai direto 
 combinação.
 
 Quem o mantém vivo é o
-[`IndiceEstoqueServico`](../src/main/java/com/rotavital/servico/IndiceEstoqueServico.java), que
+[`IndiceEstoqueServico`](../src/main/java/com/rotavital/aplicacao/IndiceEstoqueServico.java), que
 guarda apenas bolsas `DISPONIVEL` e sincroniza com o banco depois do commit. Quem o consulta é a
 **alocação automática**, `POST /api/v1/requisicoes/{id}/itens/{itemId}/alocacoes/automatica`, que
 busca as compatíveis por hash e escolhe por FEFO. Ambos foram entregues na PI3-131.
