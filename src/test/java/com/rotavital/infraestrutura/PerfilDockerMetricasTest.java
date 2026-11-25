@@ -1,4 +1,4 @@
-package com.rotavital.config;
+package com.rotavital.infraestrutura;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

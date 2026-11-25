@@ -2,7 +2,7 @@ package com.rotavital.observabilidade;
 
 import com.rotavital.dominio.enums.StatusBolsa;
 import com.rotavital.dominio.enums.TipoHemocomponente;
-import com.rotavital.repositorio.BolsaRepository;
+import com.rotavital.dominio.repositorio.BolsaRepository;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;

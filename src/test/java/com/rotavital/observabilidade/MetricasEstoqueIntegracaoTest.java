@@ -4,10 +4,9 @@ import com.rotavital.dominio.Bolsa;
 import com.rotavital.dominio.Endereco;
 import com.rotavital.dominio.Hemocentro;
 import com.rotavital.dominio.enums.GrupoSanguineo;
-import com.rotavital.dominio.enums.StatusBolsa;
 import com.rotavital.dominio.enums.TipoHemocomponente;
-import com.rotavital.repositorio.BolsaRepository;
-import com.rotavital.repositorio.HemocentroRepository;
+import com.rotavital.dominio.repositorio.BolsaRepository;
+import com.rotavital.dominio.repositorio.HemocentroRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -97,7 +96,7 @@ class MetricasEstoqueIntegracaoTest {
         double disponivelAntes = gauge(MetricasEstoque.BOLSAS, disponivel);
         double descartadaAntes = gauge(MetricasEstoque.BOLSAS, descartada);
 
-        crio.setStatus(StatusBolsa.DESCARTADA);
+        crio.descartar();
         bolsas.save(crio);
 
         assertThat(gauge(MetricasEstoque.BOLSAS, disponivel)).isEqualTo(disponivelAntes - 1);

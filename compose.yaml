@@ -92,10 +92,14 @@ services:
       OTEL_LOGS_EXPORTER: otlp
       OTEL_METRICS_EXPORTER: none
       OTEL_INSTRUMENTATION_MICROMETER_ENABLED: "false"
+      # Desde a versao 2.0 o agente nao cria span para o metodo do controller
+      # (so renomeia o span HTTP). Ligado para o trace mostrar a camada
+      # controller e a excecao do erro proposital.
+      OTEL_INSTRUMENTATION_COMMON_EXPERIMENTAL_CONTROLLER_TELEMETRY_ENABLED: "true"
       # Spans dos serviços de domínio, entre o controller e o banco: um fluxo
       # como "alocar bolsa" vira controller -> serviço -> consultas SQL.
       OTEL_INSTRUMENTATION_METHODS_INCLUDE: >-
-        com.rotavital.servico.RequisicaoServico[criar,alocar,alocarAutomaticamente];com.rotavital.servico.AlocacaoComRepeticao[alocar];com.rotavital.servico.TemperaturaServico[registrar,historico];com.rotavital.servico.RotaServico[criar,embarcar,atualizarStatus];com.rotavital.servico.BolsaServico[criar,filaFefo];com.rotavital.servico.RoteirizacaoServico[calcular];com.rotavital.servico.IndicadorServico[estoquePorTipoSanguineo,bolsasProximasDoVencimento]
+        com.rotavital.aplicacao.RequisicaoServico[criar,alocar,alocarAutomaticamente];com.rotavital.aplicacao.AlocacaoComRepeticao[alocar];com.rotavital.aplicacao.TemperaturaServico[registrar,historico];com.rotavital.aplicacao.RotaServico[criar,embarcar,atualizarStatus];com.rotavital.aplicacao.BolsaServico[criar,listar,filaFefo];com.rotavital.aplicacao.RoteirizacaoServico[calcular];com.rotavital.aplicacao.IndicadorServico[estoquePorTipoSanguineo,bolsasProximasDoVencimento]
     ports:
       - "${API_PORT:-8080}:8080"
       # Actuator (porta de gestão do perfil docker): só no 127.0.0.1 do host,

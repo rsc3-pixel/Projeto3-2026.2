@@ -2,7 +2,7 @@ package com.rotavital.observabilidade;
 
 import com.rotavital.dominio.enums.StatusBolsa;
 import com.rotavital.dominio.enums.TipoHemocomponente;
-import com.rotavital.repositorio.BolsaRepository;
+import com.rotavital.dominio.repositorio.BolsaRepository;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

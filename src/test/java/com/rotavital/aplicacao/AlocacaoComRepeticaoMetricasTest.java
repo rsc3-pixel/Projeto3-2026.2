@@ -1,9 +1,9 @@
-package com.rotavital.servico;
+package com.rotavital.aplicacao;
 
 import com.rotavital.api.dto.AlocacaoRequest;
 import com.rotavital.api.dto.AlocacaoResponse;
 import com.rotavital.observabilidade.MetricasDominio;
-import com.rotavital.servico.excecao.OperacaoInvalidaException;
+import com.rotavital.dominio.excecao.OperacaoInvalidaException;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
