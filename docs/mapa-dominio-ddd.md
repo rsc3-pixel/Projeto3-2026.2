@@ -2,7 +2,9 @@
 
 **Projeto:** Rota Vital — rede de distribuição de hemocomponentes
 **Fonte:** o código em [`src/main/java/com/rotavital/dominio`](../src/main/java/com/rotavital/dominio) e os serviços que operam sobre ele
-**Natureza:** descritivo. Este documento nomeia, com o vocabulário do DDD (Domain-Driven Design), o que já está implementado. Não propõe modelo novo. Onde o código diverge de um livro-texto, o documento registra a divergência em vez de corrigi-la.
+**Natureza:** descritivo. Este documento nomeia, com o vocabulário do DDD (Domain-Driven Design), o que já está implementado. Onde o código diverge de um livro-texto, o documento registra a divergência.
+
+**Atualizado em 24/11/2026 (PI3-247):** as divergências registradas na versão anterior (regra de status espalhada por três serviços, elegibilidade da bolsa em três cópias, `setStatus` público) foram corrigidas pela refatoração para modelo rico. O plano e o antes e depois estão em [`planejamento-refatoracao-ddd.md`](planejamento-refatoracao-ddd.md).
 
 ---
 
@@ -27,7 +29,7 @@ No sentido estrito, o código tem **um único contexto delimitado**: um modelo, 
 
 | Contexto | Vocabulário | Classes de domínio | Serviços e estruturas | Persistência |
 |---|---|---|---|---|
-| **Cadastro da rede** | unidade, hemocentro, hospital, CNPJ, CNES, endereço, cidade/UF | `Local`, `Hemocentro`, `Hospital`, `Endereco` | `HemocentroServico`, `HospitalServico` | `HemocentroRepository`, `HospitalRepository` |
+| **Cadastro da rede** | unidade, hemocentro, hospital, CNPJ, CNES, endereço, cidade/UF | `Local`, `Hemocentro`, `Hospital`, `Endereco`, `TipoUnidade` | `ServicoDeUnidade` e as especializações `HemocentroServico`, `HospitalServico` | `UnidadeRepository` e as especializações `HemocentroRepository`, `HospitalRepository` |
 | **Estoque** | bolsa, código de rastreio, hemocomponente, grupo sanguíneo, coleta, validade, status, FEFO, descarte | `Bolsa`, `StatusBolsa`, `TipoHemocomponente`, `GrupoSanguineo` | `BolsaServico`, `IndiceEstoqueServico`, `IngestaoConcorrenteServico`; `IndiceEstoque`, `FilaPrioridadeFefo`; eventos `BolsaAlterada`, `BolsaRemovida` | `BolsaRepository` |
 | **Requisição e alocação** | requisição, item, quantidade solicitada/alocada, prioridade, prazo, alocação, reserva, doador/receptor, compatibilidade | `Requisicao`, `ItemRequisicao`, `Alocacao`, `StatusRequisicao`, `PrioridadeRequisicao` | `RequisicaoServico`, `AlocacaoComRepeticao`; `MatrizCompatibilidade`, `SelecaoFefo` | `RequisicaoRepository`, `AlocacaoRepository` (só consulta) |
 | **Distribuição (rotas e cadeia fria)** | rota, remessa, origem/destino, caminho e tempo estimado (HU-05), embarque, saída e chegada previstas e reais, leitura, excursão, alerta de cadeia fria | `Rota`, `StatusRota`, `LeituraTemperatura`, `Veiculo` | `RotaServico`, `RoteirizacaoServico` (malha das unidades do banco + `Dijkstra`), `TemperaturaServico` | `RotaRepository`, `LeituraTemperaturaRepository` |
@@ -47,7 +49,7 @@ Relações como estão implementadas:
 | Distribuição → Estoque | `RotaServico.embarcar` exige bolsa RESERVADA do mesmo hemocentro de origem. `atualizarStatus` arrasta as bolsas para EM_TRANSITO, ENTREGUE ou de volta a RESERVADA. | dois agregados alterados numa só transação; evento para o índice |
 | Estoque, Requisição e Distribuição → Cadastro | `Bolsa.hemocentroOrigem`, `Requisicao.hospital`, `Rota.origem` e `Rota.destino` são referências JPA à unidade | referência por objeto entre agregados |
 | Cadastro ← os três acima | `HemocentroServico.remover` e `HospitalServico.remover` recusam a exclusão se houver bolsas, requisições ou rotas apontando para a unidade | consistência entre agregados verificada por consulta de contagem |
-| Malha ↔ Cadastro | a malha tem modelo próprio da unidade (`UnidadeRede`, record com id HC01 a HC12, tipo e coordenadas) e não usa `Local`. A tradução entre os dois é pelo id. Na `CargaInicial` os hospitais recebem ids `HO04`, `HO05`, … enquanto a malha usa `HC04`, `HC05`, … para as mesmas unidades. | dois modelos do mesmo conceito; tradução por id, hoje incompleta |
+| Malha ↔ Cadastro | a malha tem modelo próprio da unidade (`UnidadeRede`, record com id HC01 a HC12, tipo e coordenadas) e não usa `Local`. A tradução entre os dois é pelo id, e desde 24/11/2026 os ids e o tipo (`TipoUnidade`) são os mesmos nos dois modelos. Em produção a malha é montada a partir das próprias entidades. | dois modelos do mesmo conceito, com vocabulário único |
 | Malha → Estoque | `ServicoAlocacaoRota` recebe `Map<String, List<Bolsa>>` chaveado pelo id da unidade e lê `Bolsa` sem JPA | compartilha a entidade `Bolsa` |
 | Malha → Requisição | nenhuma. `ServicoAlocacaoRota`, `Dijkstra`, `VizinhoMaisProximo` e `CarregadorMalha` não são chamados por nenhum controlador ou serviço Spring; são exercitados por testes. | implementado, não integrado ao fluxo da API |
 | Indicadores → Estoque e Requisição | `IndicadorServico` é `@Transactional(readOnly = true)` e só lê repositórios | só leitura |
@@ -161,29 +163,32 @@ Evidência da fronteira:
 - `Requisicao.itens` tem `cascade = ALL` e `orphanRemoval = true`; `ItemRequisicao.alocacoes` também.
 - `ItemRequisicao.setRequisicao` é de pacote: só `Requisicao.adicionarItem` amarra o lado dono.
 - Não existe `ItemRequisicaoRepository`. `AlocacaoRepository` existe, mas tem um único método de consulta (`existsByBolsaCodigoRastreio`), usado por `BolsaServico.remover`. Ninguém salva `Alocacao` diretamente.
-- `RequisicaoServico` segue sempre o mesmo caminho: `buscar(requisicaoId)`, `itemDe(requisicao, itemId)`, altera, `requisicoes.save(requisicao)`.
+- `ItemRequisicao.adicionarAlocacao` e `removerAlocacao` são de pacote: só a raiz mexe nas alocações.
+- `RequisicaoServico` segue sempre o mesmo caminho: `buscar(requisicaoId)`, chama uma operação da raiz (`alocar`, `desfazerAlocacao`, `cancelar`, `adicionarItem`, `removerItem`), `requisicoes.save(requisicao)`.
 
 Invariantes e onde cada um mora:
 
 | Invariante | Onde |
 |---|---|
 | `quantidadeAlocada` é a quantidade de alocações do item | `ItemRequisicao.adicionarAlocacao` e `removerAlocacao` (entidade) |
-| status da requisição deriva dos itens: ATENDIDA se todos atendidos e há itens; PARCIALMENTE_ATENDIDA se algum item tem alocação; senão PENDENTE; CANCELADA não muda | `Requisicao.recalcularStatus` (entidade) |
+| status da requisição deriva dos itens: ATENDIDA se todos atendidos e há itens; PARCIALMENTE_ATENDIDA se algum item tem alocação; senão PENDENTE; CANCELADA não muda | `Requisicao.recalcularStatus`, privado; não existe `setStatus` |
 | duas alocações simultâneas ao mesmo item não perdem a contagem | `@Version` em `ItemRequisicao`; a segunda transação falha com `OptimisticLockingFailureException` e `AlocacaoComRepeticao` repete até três vezes |
-| requisição cancelada não aceita alteração | `RequisicaoServico.exigirRequisicaoAberta` |
-| só o cancelamento é manual | `RequisicaoServico.atualizarStatus` |
-| cancelamento barrado se alguma bolsa alocada já saiu (status diferente de RESERVADA) | `RequisicaoServico.atualizarStatus` |
-| item com bolsa alocada não é removido | `RequisicaoServico.removerItem` |
-| alocação exige bolsa DISPONIVEL, na validade, do mesmo componente e de grupo compatível | `RequisicaoServico.alocar` |
-| alocação só se desfaz enquanto a bolsa está RESERVADA | `RequisicaoServico.desfazerAlocacao` |
+| requisição cancelada não aceita alteração | `Requisicao.exigirAberta` |
+| só o cancelamento é manual | `RequisicaoServico.atualizarStatus` (tradução da API) |
+| cancelamento barrado se alguma bolsa alocada já saiu (status diferente de RESERVADA) | `Requisicao.cancelar` |
+| item com bolsa alocada não é removido | `Requisicao.removerItem` |
+| alocação exige bolsa DISPONIVEL, na validade, do mesmo componente e de grupo compatível | `Requisicao.alocar` delega a `Bolsa.exigirQuePodeAtender` |
+| alocação só se desfaz enquanto a bolsa está RESERVADA | `Requisicao.desfazerAlocacao` |
 
 Referência a outro agregado: `Alocacao.bolsa` aponta para `Bolsa`, que é raiz de outro agregado. A alocação muda `Bolsa.status` dentro da transação da requisição e publica `BolsaAlterada`.
 
 ### 5.2 `Bolsa`
 
-Agregado de uma entidade só. Invariantes no construtor: `dataValidade = dataColeta + validadeDias`, status inicial DISPONIVEL. Comportamento próprio: `estaVencida(data)`.
+Agregado de uma entidade só. Invariantes no construtor: `dataValidade = dataColeta + validadeDias`, status inicial DISPONIVEL.
 
-O status é mudado por três serviços. A tabela de transições em `BolsaServico.TRANSICOES` é aplicada só no caminho do PATCH (`atualizarStatus`); `RequisicaoServico` e `RotaServico` chamam `setStatus` diretamente. Outras regras: a bolsa não nasce vencida (`BolsaServico.criar`); só é removida se nenhuma `Alocacao` a referencia e se está DISPONIVEL ou DESCARTADA (`BolsaServico.remover`). Toda mudança publica `BolsaAlterada` ou `BolsaRemovida`.
+O status só muda pelas operações da própria bolsa: `reservar(data)` (recusa bolsa vencida), `liberar`, `despachar`, `entregar`, `retornarAoHemocentro` e `descartar`. Cada uma consulta `StatusBolsa.podeIrPara` e lança `OperacaoInvalidaException` na transição proibida. Não existe `setStatus`.
+
+A elegibilidade para um pedido também mora aqui, em um lugar só: `podeAtender(receptor, tipo, data)`, `motivoDeRecusa` e `exigirQuePodeAtender`. A alocação pela API, a `SelecaoFefo` e o `ServicoAlocacaoRota` usam essa mesma regra. Outras regras: a bolsa não nasce vencida (`BolsaServico.criar`); só é removida se nenhuma `Alocacao` a referencia e se está DISPONIVEL ou DESCARTADA (`BolsaServico.remover`). Toda mudança publica `BolsaAlterada` ou `BolsaRemovida`.
 
 `Bolsa` **não** faz parte do agregado `Hemocentro`. `Hemocentro.estoque` é o lado inverso (`mappedBy`); o lado dono é `Bolsa.hemocentroOrigem`. Nenhum serviço chama `Hemocentro.adicionarBolsa`, `removerBolsa` ou `getEstoque`; o estoque de um hemocentro é obtido por `BolsaRepository.findByHemocentroOrigemId`.
 
@@ -191,7 +196,7 @@ O status é mudado por três serviços. A tabela de transições em `BolsaServic
 
 Raiz de uma entidade só. `Rota.bolsas` é `@ManyToMany` sem cascade: referência, não posse. As bolsas continuam raízes do próprio agregado.
 
-Regras em `RotaServico`: chegada prevista depois da saída prevista (`criar`); transições pela tabela `TRANSICOES`; sair EM_TRANSITO exige ao menos uma bolsa; embarque e desembarque só em rota PLANEJADA; embarque exige bolsa RESERVADA, ainda não embarcada, e do mesmo hemocentro de origem da rota; a mudança de status da rota propaga para as bolsas (EM_TRANSITO, ENTREGUE, ou de volta a RESERVADA no cancelamento). `Veiculo` não é referenciado.
+Operações da própria rota: `embarcar` e `desembarcar` (só em PLANEJADA; embarque exige bolsa RESERVADA, ainda não embarcada, do hemocentro de origem), `sair` (exige carga), `concluir` e `cancelar`. Transições por `StatusRota.podeIrPara`. A rota arrasta as bolsas: `sair` chama `Bolsa.despachar`, `concluir` chama `entregar` e `cancelar` chama `retornarAoHemocentro`. No `RotaServico` ficam só a regra de previsão de chegada (`criar`, que depende da roteirização) e a publicação de `BolsaAlterada`. `Veiculo` não é referenciado.
 
 ### 5.4 `LeituraTemperatura`
 
@@ -201,7 +206,7 @@ Regra: leitura só é aceita em rota EM_TRANSITO (`TemperaturaServico.registrar`
 
 ### 5.5 `Hemocentro` e `Hospital`
 
-Cada um é raiz do próprio agregado, com `Endereco` como objeto de valor embutido. Unicidade de CNPJ e CNES verificada por `existsByCnpj` e `existsByCnes` nos serviços. A exclusão é guardada por consultas de contagem sobre os outros agregados: hemocentro com bolsas ou rotas de origem não sai; hospital com requisições ou rotas de destino não sai. As coleções inversas (`estoque`, `requisicoes`) e seus métodos `adicionar...` não são usados fora do pacote `dominio`.
+Cada um é raiz do próprio agregado, com `Endereco` como objeto de valor embutido. O que é comum mora em `Local`: identidade pelo id, `getTipo()` (`TipoUnidade`), `getRegistro()` (CNPJ ou CNES) e `atualizarCadastro`, que substituiu os setters. A unicidade do registro e a exclusão são verificadas por `ServicoDeUnidade`: hemocentro com bolsas ou rotas de origem não sai; hospital com requisições ou rotas de destino não sai. As coleções inversas (`estoque`, `requisicoes`) foram removidas por não terem uso.
 
 ### 5.6 `Veiculo`
 
@@ -217,20 +222,21 @@ Entidade declarada (o `ddl-auto` cria a tabela), sem repositório, serviço, con
 |---|---|---|---|
 | `MatrizCompatibilidade` | `compativel(doador, receptor, tipo)`, `doadoresPara(receptor, tipo)` | ABO/Rh por componente. Hemácias e plaquetas usam a tabela de hemácias; plasma e crioprecipitado usam a tabela invertida. Argumento nulo devolve falso ou conjunto vazio | Requisição e alocação |
 | `SelecaoFefo` | `alocavel`, `ordenar`, `escolher` (sobrecargas com e sem receptor, e sobre `IndiceEstoque`) | filtro antes da ordenação: vencida, indisponível e incompatível nunca entram na fila. Ordem por validade, desempate por código de rastreio, via `FilaPrioridadeFefo` | Requisição e alocação |
-| `ServicoAlocacaoRota` | `alocar(unidade, grupo, tipo, data)` → `ResultadoAlocacao` | candidatas por unidade, Dijkstra a partir da solicitante, descarte das inalcançáveis, FEFO entre as que sobram. Falha com motivo na ordem SEM_ESTOQUE, TODAS_VENCIDAS, SEM_CAMINHO. **Casa grupo idêntico**, sem `MatrizCompatibilidade` (registrado no próprio javadoc). Não muda status de bolsa | Malha e roteirização |
+| `ServicoAlocacaoRota` | `alocar(unidade, grupo, tipo, data)` → `ResultadoAlocacao` | candidatas por unidade, Dijkstra a partir da solicitante, descarte das inalcançáveis, FEFO entre as que sobram. Falha com motivo na ordem SEM_ESTOQUE, TODAS_VENCIDAS, SEM_CAMINHO. Aceita grupo compatível pela mesma `Bolsa.podeAtender` da API (antes de 24/11 casava só o grupo idêntico). Não muda status de bolsa | Malha e roteirização |
 | `Dijkstra<T>` | `calcularDistancias`, `calcularRota` → `ResultadoRota` | caminho mínimo em minutos; pesos não negativos garantidos pelo `Grafo` na inserção | Malha e roteirização |
 | `VizinhoMaisProximo<T>` | roteiro → `ResultadoRoteiro` | heurística gulosa sobre o caminho mínimo; desempate determinístico pela ordem de entrada | Malha e roteirização |
 | `CarregadorMalha` | monta `Grafo<String>` e `indicePorId()` | fábrica da malha a partir de `UnidadeRede` e `PremissasMalha` | Malha e roteirização |
 | `ModeloDemanda` | probabilidade excedente por binomial negativa e por Poisson | demanda como variável aleatória; usado por `IndicadorServico.probabilidadeDesabastecimento` | Indicadores |
 
-Comportamentos que moram nas entidades e nos VOs, e por isso não são serviços: `Bolsa.estaVencida`, `TipoHemocomponente.temperaturaAdequada`, `Requisicao.recalcularStatus` e `estaCompleta`, `ItemRequisicao.estaAtendido` e `quantidadePendente`.
+Comportamentos que moram nas entidades e nos VOs, e por isso não são serviços: ciclo de vida e elegibilidade da `Bolsa`; embarque e viagem da `Rota`; alocação, cancelamento e itens da `Requisicao`; `StatusBolsa.podeIrPara` e `StatusRota.podeIrPara`; `TipoHemocomponente.temperaturaAdequada`; `ItemRequisicao.estaAtendido` e `quantidadePendente`.
 
 ### 6.2 Serviços de aplicação (`@Service`, transacionais)
 
 | Serviço | Responsabilidade |
 |---|---|
-| `HemocentroServico`, `HospitalServico` | CRUD das unidades, unicidade de CNPJ e CNES, bloqueio de exclusão |
-| `BolsaServico` | CRUD da bolsa, tabela de transições de status, publicação de eventos |
+| `ServicoDeUnidade` | o comum a toda unidade: listar com filtro de endereço, buscar, registro oficial único, esqueleto da remoção (Template Method) |
+| `HemocentroServico`, `HospitalServico` | só o que é de cada um: CNPJ ou CNES e o que impede a exclusão |
+| `BolsaServico` | CRUD da bolsa, tradução do PATCH de status em operação da `Bolsa`, publicação de eventos |
 | `IngestaoConcorrenteServico` | cadastro de lote em paralelo, cada bolsa na própria transação |
 | `RequisicaoServico` | ciclo completo da requisição: itens, alocação manual e automática, desfazer, cancelar |
 | `AlocacaoComRepeticao` | repete `RequisicaoServico.alocar` em conflito de bloqueio otimista |
@@ -240,29 +246,21 @@ Comportamentos que moram nas entidades e nos VOs, e por isso não são serviços
 | `IndicadorServico` | indicadores de estoque, cobertura, descarte, validade e desabastecimento, só leitura |
 | `BenchmarkParaleloServico` | mede o cálculo paralelo de dispersão de validade; apoio, não regra de negócio |
 
-Regras de domínio que hoje moram nesses serviços, e não nas entidades:
+Regras de domínio que ainda moram nos serviços, e não nas entidades:
 
-| Regra | Onde mora |
-|---|---|
-| transições válidas de `StatusBolsa` | `BolsaServico.TRANSICOES` |
-| bolsa não nasce vencida | `BolsaServico.criar` |
-| bolsa alocada, ou fora de DISPONIVEL e DESCARTADA, não é removida | `BolsaServico.remover` |
-| transições válidas de `StatusRota` | `RotaServico.TRANSICOES` |
-| chegada prevista depois da saída prevista | `RotaServico.criar` |
-| rota só sai com carga; embarque só em PLANEJADA, só bolsa RESERVADA do hemocentro de origem | `RotaServico.atualizarStatus`, `RotaServico.embarcar` |
-| status da bolsa acompanha o da rota | `RotaServico.atualizarStatus` |
-| leitura só em rota EM_TRANSITO; alerta por componente embarcado | `TemperaturaServico.registrar`, `avaliar` |
-| alocação exige bolsa DISPONIVEL, na validade, mesmo componente, grupo compatível | `RequisicaoServico.alocar` |
-| só o cancelamento é manual; demais status derivam das alocações | `RequisicaoServico.atualizarStatus` com `Requisicao.recalcularStatus` |
-| cancelamento barrado se alguma bolsa já saiu | `RequisicaoServico.atualizarStatus` |
-| requisição cancelada não aceita alteração | `RequisicaoServico.exigirRequisicaoAberta` |
-| item com bolsa alocada não é removido | `RequisicaoServico.removerItem` |
-| alocação só se desfaz com a bolsa RESERVADA | `RequisicaoServico.desfazerAlocacao` |
-| CNPJ e CNES únicos; unidade referenciada não é removida | `HemocentroServico`, `HospitalServico` |
+| Regra | Onde mora | Por que ainda está aí |
+|---|---|---|
+| bolsa não nasce vencida | `BolsaServico.criar` | candidata a ir para o construtor da `Bolsa` |
+| bolsa alocada, ou fora de DISPONIVEL e DESCARTADA, não é removida | `BolsaServico.remover` | depende de consulta a outro agregado (`AlocacaoRepository`) |
+| chegada prevista depois da saída prevista | `RotaServico.criar` | depende do cálculo de caminho da roteirização |
+| leitura só em rota EM_TRANSITO; alerta por componente embarcado | `TemperaturaServico.registrar`, `avaliar` | próximo candidato a modelo rico |
+| registro oficial único; unidade referenciada não é removida | `ServicoDeUnidade`, com o detalhe em `HemocentroServico` e `HospitalServico` | dependem de consulta ao repositório |
+
+As regras de transição de status, embarque, alocação, cancelamento e itens saíram dos serviços em 24/11/2026 e estão nas seções 5.1 a 5.3.
 
 ### 6.3 Eventos de domínio
 
-`BolsaAlterada(Bolsa)` e `BolsaRemovida(Bolsa)`, records no pacote `servico.evento`. Publicados por `BolsaServico`, `RequisicaoServico` e `RotaServico` pelo `ApplicationEventPublisher` sempre que o status de uma bolsa muda ou ela é excluída. Consumidos por `IndiceEstoqueServico` com `@TransactionalEventListener(phase = AFTER_COMMIT)`: se a transação reverte, o índice não muda. Carregam a entidade inteira para que o ouvinte decida pelo status atual sem voltar ao banco. Há um único consumidor.
+`BolsaAlterada(Bolsa)` e `BolsaRemovida(Bolsa)`, records no pacote `aplicacao.evento`. Publicados por `BolsaServico`, `RequisicaoServico` e `RotaServico` pelo `ApplicationEventPublisher` sempre que o status de uma bolsa muda ou ela é excluída. Consumidos por `IndiceEstoqueServico` com `@TransactionalEventListener(phase = AFTER_COMMIT)`: se a transação reverte, o índice não muda. Carregam a entidade inteira para que o ouvinte decida pelo status atual sem voltar ao banco. Há um único consumidor.
 
 ### 6.4 Modelo de leitura
 
@@ -270,7 +268,7 @@ Regras de domínio que hoje moram nesses serviços, e não nas entidades:
 
 ### 6.5 Repositórios e fábricas
 
-Sete repositórios Spring Data, um por raiz: `HemocentroRepository`, `HospitalRepository`, `BolsaRepository`, `RequisicaoRepository`, `RotaRepository`, `LeituraTemperaturaRepository`, e `AlocacaoRepository`, que só serve consulta. Não há repositório para `ItemRequisicao`, `Alocacao` como escrita, nem `Veiculo`.
+Sete repositórios Spring Data no pacote `dominio.repositorio`, um por raiz, mais a base `UnidadeRepository` (`@NoRepositoryBean`) com as buscas por endereço comuns a hemocentro e hospital: `HemocentroRepository`, `HospitalRepository`, `BolsaRepository`, `RequisicaoRepository`, `RotaRepository`, `LeituraTemperaturaRepository`, e `AlocacaoRepository`, que só serve consulta. Não há repositório para `ItemRequisicao`, `Alocacao` como escrita, nem `Veiculo`.
 
 Não há fábricas de entidade: os serviços geram o id com `UUID.randomUUID()` e chamam o construtor; a `CargaInicial` usa ids fixos. As fábricas que existem são de objetos de valor (`ResultadoAlocacao.alocada` e `falha`, `ResultadoRota.semCaminho`, `AlertaCadeiaFria.de`) e da malha (`CarregadorMalha`).
 
@@ -280,18 +278,18 @@ Não há fábricas de entidade: os serviços geram o id com `UUID.randomUUID()` 
 
 ### `StatusBolsa`
 
-Tabela de `BolsaServico.TRANSICOES` e quem executa cada transição:
+Tabela de `StatusBolsa.podeIrPara` e quem executa cada transição:
 
 | De | Para | Quem |
 |---|---|---|
-| DISPONIVEL | RESERVADA | `RequisicaoServico.alocar`; PATCH |
+| DISPONIVEL | RESERVADA | `Requisicao.alocar`; PATCH |
 | DISPONIVEL | DESCARTADA | PATCH |
-| RESERVADA | DISPONIVEL | `RequisicaoServico.desfazerAlocacao`, cancelamento da requisição; PATCH |
-| RESERVADA | EM_TRANSITO | `RotaServico.atualizarStatus` para EM_TRANSITO; PATCH |
+| RESERVADA | DISPONIVEL | `Requisicao.desfazerAlocacao`, `Requisicao.cancelar`; PATCH |
+| RESERVADA | EM_TRANSITO | `Rota.sair`; PATCH |
 | RESERVADA | DESCARTADA | PATCH |
-| EM_TRANSITO | ENTREGUE | `RotaServico.atualizarStatus` para CONCLUIDA; PATCH |
+| EM_TRANSITO | ENTREGUE | `Rota.concluir`; PATCH |
 | EM_TRANSITO | DESCARTADA | PATCH |
-| EM_TRANSITO | RESERVADA | `RotaServico.atualizarStatus` para CANCELADA. **Não está na tabela de `BolsaServico`**; o serviço de rota a executa por `setStatus` |
+| EM_TRANSITO | RESERVADA | `Rota.cancelar`; PATCH. Antes de 24/11 ficava fora da tabela e era feita por `setStatus` |
 | ENTREGUE, DESCARTADA | nenhum | estados finais |
 
 ### `StatusRequisicao`
@@ -300,7 +298,7 @@ PENDENTE, PARCIALMENTE_ATENDIDA e ATENDIDA são derivados por `Requisicao.recalc
 
 ### `StatusRota`
 
-PLANEJADA vai para EM_TRANSITO ou CANCELADA; EM_TRANSITO vai para CONCLUIDA ou CANCELADA; CONCLUIDA e CANCELADA são finais. Tabela em `RotaServico.TRANSICOES`.
+PLANEJADA vai para EM_TRANSITO ou CANCELADA; EM_TRANSITO vai para CONCLUIDA ou CANCELADA; CONCLUIDA e CANCELADA são finais. Tabela em `StatusRota.podeIrPara`.
 
 ---
 
@@ -310,12 +308,12 @@ São observações, não propostas. Ficam aqui para que quem ler o mapa saiba on
 
 1. **O diagrama em `docs/diagramas/dominio.mmd` estava defasado em relação ao código.** Ele mostrava `StatusBolsa.VENCIDA`, `StatusRequisicao.EM_ATENDIMENTO`, `StatusRota.EM_ANDAMENTO` e `ItemRequisicao.incrementarAlocada()`, que não existem; e não mostrava `LeituraTemperatura`, `Veiculo`, o `@Version` do item nem `saidaReal` e `chegadaReal` da rota. Corrigido em 17/11/2026 a partir do código; o `dominio.png` continua sendo o modelo da Entrega 01.
 2. **`Veiculo` está modelado e não integrado** (seção 5.6).
-3. **As coleções inversas `Hemocentro.estoque` e `Hospital.requisicoes` não são usadas** fora do pacote `dominio`; os serviços consultam os repositórios.
+3. **As coleções inversas `Hemocentro.estoque` e `Hospital.requisicoes` não eram usadas. Removidas em 24/11/2026 (PI3-247).** O estoque e as requisições são consultados pelos repositórios.
 4. **`Endereco` não implementa `equals`/`hashCode`** apesar de se declarar objeto de valor.
-5. **Os ids dos hospitais divergem entre a carga inicial (`HO04`…) e a malha (`HC04`…)** para as mesmas unidades reais. Os hemocentros coincidem (`HC01`, `HC02`, `HC03`, `HC08`).
-6. **Há dois caminhos de alocação com regras diferentes.** O caminho da API (`RequisicaoServico`, com `IndiceEstoqueServico` e `SelecaoFefo`) aplica compatibilidade ABO/Rh; o caminho em memória (`ServicoAlocacaoRota`) casa grupo idêntico e considera a malha. Os dois reusam `SelecaoFefo.alocavel` e `FilaPrioridadeFefo`. O segundo não é chamado pela API.
+5. **Os ids dos hospitais divergiam entre a carga inicial (`HO04`…) e a malha (`HC04`…). Corrigido em 24/11/2026 (PI3-247):** a carga inicial usa os ids da malha, que são os de `dados/unidades.py`, e o tipo da unidade virou o enum `TipoUnidade` (HEMOCENTRO, HOSPITAL) nos dois modelos.
+6. **Havia dois caminhos de alocação com regras diferentes. Corrigido em 24/11/2026 (PI3-247).** O caminho da API aplicava compatibilidade ABO/Rh e o `ServicoAlocacaoRota` casava grupo idêntico. Agora os dois usam `Bolsa.podeAtender`; o teste `grupoCompativelServeMesmoSendoDiferente` cobre o caso O- para A+.
 7. **`AlertaCadeiaFria` vive em `api.dto`**, não no domínio: é calculado a cada consulta e não é persistido.
-8. **A transição EM_TRANSITO → RESERVADA, feita no cancelamento da rota, não consta na tabela de `BolsaServico`** (seção 7).
+8. **A transição EM_TRANSITO → RESERVADA, feita no cancelamento da rota, não constava na tabela de `BolsaServico`. Corrigido em 24/11/2026 (PI3-247):** a tabela mudou para `StatusBolsa.podeIrPara` e inclui a transição, executada por `Bolsa.retornarAoHemocentro`.
 
 ---
 

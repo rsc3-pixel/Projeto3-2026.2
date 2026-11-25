@@ -327,7 +327,7 @@ A API está no ar, publicada automaticamente a cada push na `main`:
 | [`/painel.html`](https://rsc3-rotavital.duckdns.org/painel.html) | painel de indicadores de estoque e demanda |
 | [`/painel/HC01/risco`](https://rsc3-rotavital.duckdns.org/painel/HC01/risco) | estoque crítico do HEMOPE: o que vence em 7, 15 ou 30 dias (HU-04) |
 | [`/api/v1/bolsas/em-risco?dias=7`](https://rsc3-rotavital.duckdns.org/api/v1/bolsas/em-risco?dias=7) | o mesmo painel, em JSON |
-| [`/api/v1/rotas/calcular?origemId=HC01&destinoId=HO06`](https://rsc3-rotavital.duckdns.org/api/v1/rotas/calcular?origemId=HC01&destinoId=HO06) | caminho mais rápido do HEMOPE ao HC UFPE (HU-05) |
+| [`/api/v1/rotas/calcular?origemId=HC01&destinoId=HC06`](https://rsc3-rotavital.duckdns.org/api/v1/rotas/calcular?origemId=HC01&destinoId=HC06) | caminho mais rápido do HEMOPE ao HC UFPE (HU-05) |
 | [`/docs`](https://rsc3-rotavital.duckdns.org/docs) | API Reference interativa (Scalar) |
 | [`/api/v1/hemocentros`](https://rsc3-rotavital.duckdns.org/api/v1/hemocentros) | os hemocentros da carga inicial |
 | [`/api/v1/bolsas`](https://rsc3-rotavital.duckdns.org/api/v1/bolsas) | o estoque |
@@ -415,7 +415,7 @@ publicar (roteiro pronto). Validação com o monitor a registrar.
 
 | Artefato | Link |
 |---|---|
-| **Aplicação no ar** | [rsc3-rotavital.duckdns.org](https://rsc3-rotavital.duckdns.org/actuator/health) · [estoque crítico](https://rsc3-rotavital.duckdns.org/painel/HC01/risco) · [cálculo de rota](https://rsc3-rotavital.duckdns.org/api/v1/rotas/calcular?origemId=HC01&destinoId=HO06) |
+| **Aplicação no ar** | [rsc3-rotavital.duckdns.org](https://rsc3-rotavital.duckdns.org/actuator/health) · [estoque crítico](https://rsc3-rotavital.duckdns.org/painel/HC01/risco) · [cálculo de rota](https://rsc3-rotavital.duckdns.org/api/v1/rotas/calcular?origemId=HC01&destinoId=HC06) |
 | **API Reference (Scalar)** | [/docs](https://rsc3-rotavital.duckdns.org/docs) |
 | Histórias de usuário | [docs/historias-de-usuario.md](docs/historias-de-usuario.md) |
 | Contrato da API, com os endpoints novos | [docs/contrato_api.md](docs/contrato_api.md) |
@@ -593,6 +593,8 @@ Material de apoio, não exigido pelas entregas:
 | Documento | O que cobre |
 |---|---|
 | [docs/entendendo-o-rota-vital.md](docs/entendendo-o-rota-vital.md) | guia comentado do código, do modelo de domínio ao deploy |
+| [docs/arquitetura/](docs/arquitetura/) | **Trabalho U2, Parte 2 (SO):** DDD com subdomínios e contextos, três camadas, projeção com microsserviços e saga, ADRs, três cenários com Lei de Little e orçamento com custo por pedido; PDF entregue no Classroom |
+| [docs/planejamento-refatoracao-ddd.md](docs/planejamento-refatoracao-ddd.md) | refatoração para modelo rico e Clean Architecture (PI3-247): diagnóstico, o que mudou, cobertura antes e depois, pendências |
 | [docs/mapa-dominio-ddd.md](docs/mapa-dominio-ddd.md) | mapa do domínio em linguagem de DDD: contextos, entidades, agregados e raízes, objetos de valor e serviços, nomeados a partir do código em `dominio/` |
 | [docs/tdd-no-projeto.md](docs/tdd-no-projeto.md) | como o TDD foi aplicado: o que cada teste protege, a corrida da PI3-109 reproduzida e o que o histórico do git prova |
 | [docs/plano-frontends.md](docs/plano-frontends.md) | plano dos dois front-ends: Thymeleaf e Angular |

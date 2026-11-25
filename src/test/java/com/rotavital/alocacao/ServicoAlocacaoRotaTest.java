@@ -85,12 +85,29 @@ class ServicoAlocacaoRotaTest {
     }
 
     @Test
-    void grupoETipoSaoCasadosDeFormaIdentica() {
+    void grupoCompativelServeMesmoSendoDiferente() {
+        // PI3-247: antes o casamento era por grupo identico e O- nao servia
+        // para A+, divergindo da alocacao pela API. Agora a regra e a mesma.
+        Grafo<String> malha = new Grafo<>();
+        malha.inserirVertice("A");
+        Bolsa doadoraUniversal = new Bolsa("B001", TipoHemocomponente.CONCENTRADO_HEMACIAS,
+                GrupoSanguineo.O_NEG, 450, HOJE.minusDays(1), hemocentro());
+        ServicoAlocacaoRota servico = new ServicoAlocacaoRota(
+                malha, Map.of("A", List.of(doadoraUniversal)));
+
+        ResultadoAlocacao resultado = servico.alocar(
+                "A", GrupoSanguineo.A_POS, TipoHemocomponente.CONCENTRADO_HEMACIAS, HOJE);
+
+        assertTrue(resultado.sucesso());
+        assertEquals("B001", resultado.bolsa().getCodigoRastreio());
+    }
+
+    @Test
+    void grupoIncompativelNaoServe() {
         Grafo<String> malha = new Grafo<>();
         malha.inserirVertice("A");
 
-        // O+ disponivel nao serve para quem pediu O-: o casamento e identico,
-        // sem tabela de compatibilidade.
+        // O+ disponivel nao serve para quem pediu O-: o receptor O- so recebe O-.
         Bolsa outroGrupo = new Bolsa("B001", TipoHemocomponente.CONCENTRADO_HEMACIAS,
                 GrupoSanguineo.O_POS, 450, HOJE.minusDays(1), hemocentro());
         ServicoAlocacaoRota servico = new ServicoAlocacaoRota(

@@ -11,7 +11,7 @@ import com.rotavital.dominio.enums.GrupoSanguineo;
 import com.rotavital.dominio.enums.PrioridadeRequisicao;
 import com.rotavital.dominio.enums.StatusBolsa;
 import com.rotavital.dominio.enums.TipoHemocomponente;
-import com.rotavital.servico.IndiceEstoqueServico;
+import com.rotavital.aplicacao.IndiceEstoqueServico;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -78,13 +78,13 @@ class AlocacaoAutomaticaTest {
     private IndiceEstoqueServico indiceEstoque;
 
     @Autowired
-    private com.rotavital.repositorio.BolsaRepository bolsas;
+    private com.rotavital.dominio.repositorio.BolsaRepository bolsas;
 
     @Autowired
-    private com.rotavital.repositorio.RequisicaoRepository requisicoes;
+    private com.rotavital.dominio.repositorio.RequisicaoRepository requisicoes;
 
     @Autowired
-    private com.rotavital.repositorio.RotaRepository rotas;
+    private com.rotavital.dominio.repositorio.RotaRepository rotas;
 
     private MockMvc mvc;
     private String hemocentroId;

@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import com.rotavital.dominio.Hemocentro;
 import com.rotavital.dominio.Hospital;
-import com.rotavital.servico.HemocentroServico;
-import com.rotavital.servico.HospitalServico;
+import com.rotavital.aplicacao.HemocentroServico;
+import com.rotavital.aplicacao.HospitalServico;
 import com.rotavital.web.dto.PontoMapa;
 
 /**

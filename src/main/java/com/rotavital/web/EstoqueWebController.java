@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.rotavital.api.dto.BolsasEmRiscoResponse;
 import com.rotavital.dominio.Bolsa;
-import com.rotavital.servico.BolsaServico;
-import com.rotavital.servico.BolsaServico.FilaFefo;
-import com.rotavital.servico.HemocentroServico;
-import com.rotavital.servico.RequisicaoServico;
+import com.rotavital.aplicacao.BolsaServico;
+import com.rotavital.aplicacao.BolsaServico.FilaFefo;
+import com.rotavital.aplicacao.HemocentroServico;
+import com.rotavital.aplicacao.RequisicaoServico;
 
 /**
  * Telas internas de um hemocentro: estoque, fila FEFO, estoque critico e

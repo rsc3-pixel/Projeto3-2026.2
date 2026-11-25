@@ -17,9 +17,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.rotavital.api.dto.BolsaRequest;
 import com.rotavital.dominio.enums.GrupoSanguineo;
 import com.rotavital.dominio.enums.TipoHemocomponente;
-import com.rotavital.repositorio.BolsaRepository;
-import com.rotavital.servico.IngestaoConcorrenteServico;
-import com.rotavital.servico.IngestaoConcorrenteServico.ResultadoIngestao;
+import com.rotavital.dominio.repositorio.BolsaRepository;
+import com.rotavital.aplicacao.IngestaoConcorrenteServico;
+import com.rotavital.aplicacao.IngestaoConcorrenteServico.ResultadoIngestao;
 
 /**
  * Entrada concorrente de bolsas no estoque (PI3-30).

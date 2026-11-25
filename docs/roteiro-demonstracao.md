@@ -33,7 +33,7 @@ Mostra as histórias da Entrega 04 e a ligação entre os dois front-ends.
 |---|---|---|---|
 | 0:00 | `/painel/HC01/risco` (HU-04) | Clicar em 7, depois em 30 dias | "O estoque crítico do HEMOPE: o que vence em 7 dias, da bolsa mais urgente para a menos. Mudo a janela para 30 dias e a lista cresce." |
 | 0:20 | mesma tela | Apontar a contagem | "Hoje são `N` bolsas vencendo em 7 dias. Bolsa já vencida não aparece misturada: ela é descarte, não urgência." |
-| 0:30 | `/docs` → `GET /api/v1/rotas/calcular` (HU-05) | `origemId=HC01`, `destinoId=HO06` | "Antes de despachar, o sistema calcula o caminho mais rápido na malha. Do HEMOPE ao Hospital das Clínicas: cerca de 18 minutos." |
+| 0:30 | `/docs` → `GET /api/v1/rotas/calcular` (HU-05) | `origemId=HC01`, `destinoId=HC06` | "Antes de despachar, o sistema calcula o caminho mais rápido na malha. Do HEMOPE ao Hospital das Clínicas: cerca de 18 minutos." |
 | 0:50 | qualquer tela do Thymeleaf | Clicar em **ANGULAR →** | "A mesma API alimenta dois front-ends: este painel em Thymeleaf e um painel de gestão em Angular, a um clique." |
 | 1:00 | fim | | |
 
@@ -50,7 +50,7 @@ Uma passagem por disciplina, na ordem do caminho de uma bolsa: entra no estoque,
 | 0:00 | POO | `/` | Mostrar o mapa | "A rede: quatro hemocentros em cima, seis hospitais embaixo. Cada linha é um trecho da malha." |
 | 0:30 | EST | `/painel/HC01` | Rolar pelos indicadores | "O painel do HEMOPE: estoque, cobertura, descarte e risco de desabastecimento por tipo sanguíneo, cada número com unidade e período." |
 | 1:10 | AED | `/painel/HC01/fila` | Mostrar a fila | "A fila de saída é FEFO: quem vence antes sai antes. Por baixo, uma lista encadeada com inserção ordenada." |
-| 1:40 | AED | `/docs` → `GET /api/v1/rotas/roteiro` | `origemId=HC01`, `destinos=HO04,HO05,HO06` | "Para várias entregas numa saída, o vizinho mais próximo monta a ordem de visita. É uma heurística: bom roteiro, não necessariamente o ótimo." **Só depois do PR #107 entrar na main.** |
+| 1:40 | AED | `/docs` → `GET /api/v1/rotas/roteiro` | `origemId=HC01`, `destinos=HC04,HC05,HC06` | "Para várias entregas numa saída, o vizinho mais próximo monta a ordem de visita. É uma heurística: bom roteiro, não necessariamente o ótimo." **Só depois do PR #107 entrar na main.** |
 | 2:20 | POO | `/painel/HC01/risco` | Clicar em 7 e 30 dias | (fala do roteiro de 1 minuto) |
 | 2:50 | POO | **ANGULAR →** | Mostrar `/app/bolsas` e os filtros | "O mesmo dado no painel de gestão em Angular." |
 | 3:20 | RSD | (só fala) | Citar a telemetria | "Os veículos mandam temperatura e GPS por HTTPS, como um sensor real. É simulado: não há caminhão nem sensor." |

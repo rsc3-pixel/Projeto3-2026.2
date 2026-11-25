@@ -17,8 +17,8 @@ import com.rotavital.api.dto.indicadores.DescartePeriodoResponse;
 import com.rotavital.api.dto.indicadores.EstoquePorTipoResponse;
 import com.rotavital.api.dto.indicadores.PeriodoDescarte;
 import com.rotavital.api.dto.indicadores.ValidadeResponse;
-import com.rotavital.servico.HemocentroServico;
-import com.rotavital.servico.IndicadorServico;
+import com.rotavital.aplicacao.HemocentroServico;
+import com.rotavital.aplicacao.IndicadorServico;
 
 /**
  * Telas do painel operacional, renderizadas pelo servidor (PI3-133).

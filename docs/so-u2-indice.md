@@ -6,6 +6,12 @@ Ponto de entrada para tudo o que a disciplina de SO entregou na Unidade 2. Cada 
 
 ---
 
+## 0. Parte 2: planejamento da remodelagem
+
+| O que prova | Onde |
+|---|---|
+| Documento da Parte 2 (DDD, três camadas, microsserviços, ADRs, cenários com Lei de Little e orçamento) | [arquitetura/planejamento-u2-parte2.pdf](arquitetura/planejamento-u2-parte2.pdf) e a pasta [arquitetura/](arquitetura/) |
+
 ## 1. Arquitetura implantada
 
 | O que prova | Onde |

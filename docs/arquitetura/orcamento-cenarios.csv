@@ -1,0 +1,31 @@
+cenario,item,quantidade,unidade,preco_unitario_usd,custo_mensal_usd,regiao,fonte,data_consulta
+baixo,VM e2-micro (host integral),730,VM-hora,0.008376428,6.11,us-west1 (Oregon),https://cloud.google.com/products/compute/pricing/general-purpose?hl=en,2026-10-19
+baixo,Disco pd-standard,14600,GiB-hora,0.000054795,0.80,us-west1 (Oregon),https://cloud.google.com/compute/disks-image-pricing?hl=en,2026-10-19
+baixo,IPv4 público em uso,730,IP-hora,0.005,3.65,us-west1 (Oregon),https://cloud.google.com/vpc/network-pricing,2026-10-19
+baixo,Saída Premium para América do Sul,11,GiB,por faixas,2.09,us-west1 (Oregon),https://cloud.google.com/vpc/network-pricing,2026-10-19
+moderado,CPU aplicação e banco (e2-custom-2-4096),1460,vCPU-hora,0.02290217,33.44,us-west1 (Oregon),https://cloud.google.com/products/compute/pricing/general-purpose?hl=en,2026-10-19
+moderado,RAM aplicação e banco (e2-custom-2-4096),2920,GiB-hora,0.003069707,8.96,us-west1 (Oregon),https://cloud.google.com/products/compute/pricing/general-purpose?hl=en,2026-10-19
+moderado,Disco pd-balanced,29200,GiB-hora,0.000136986,4.00,us-west1 (Oregon),https://cloud.google.com/compute/disks-image-pricing?hl=en,2026-10-19
+moderado,IPv4 público em uso,730,IP-hora,0.005,3.65,us-west1 (Oregon),https://cloud.google.com/vpc/network-pricing,2026-10-19
+moderado,Backup: cópias ativas,10950,GiB-hora,0.000027397,0.30,us-west1 (Oregon),https://cloud.google.com/storage/pricing?hl=en,2026-10-19
+moderado,Backup: cópias em soft delete,25550,GiB-hora,0.000027397,0.70,us-west1 (Oregon),https://cloud.google.com/storage/pricing?hl=en,2026-10-19
+moderado,Backup: operações classe A,10,1000 operações,0.005,0.05,us-west1 (Oregon),https://cloud.google.com/storage/pricing?hl=en,2026-10-19
+moderado,Backup: operações classe B,10,1000 operações,0.0004,0.00,us-west1 (Oregon),https://cloud.google.com/storage/pricing?hl=en,2026-10-19
+moderado,Saída Premium para América do Sul,63,GiB,por faixas,11.97,us-west1 (Oregon),https://cloud.google.com/vpc/network-pricing,2026-10-19
+alto,CPU aplicação (e2-custom-4-8192),2920,vCPU-hora,0.02290217,66.87,us-west1 (Oregon),https://cloud.google.com/products/compute/pricing/general-purpose?hl=en,2026-10-19
+alto,RAM aplicação (e2-custom-4-8192),5840,GiB-hora,0.003069707,17.93,us-west1 (Oregon),https://cloud.google.com/products/compute/pricing/general-purpose?hl=en,2026-10-19
+alto,CPU banco privado (e2-custom-2-4096),1460,vCPU-hora,0.02290217,33.44,us-west1 (Oregon),https://cloud.google.com/products/compute/pricing/general-purpose?hl=en,2026-10-19
+alto,RAM banco privado (e2-custom-2-4096),2920,GiB-hora,0.003069707,8.96,us-west1 (Oregon),https://cloud.google.com/products/compute/pricing/general-purpose?hl=en,2026-10-19
+alto,Disco pd-balanced,116800,GiB-hora,0.000136986,16.00,us-west1 (Oregon),https://cloud.google.com/compute/disks-image-pricing?hl=en,2026-10-19
+alto,IPv4 público em uso,730,IP-hora,0.005,3.65,us-west1 (Oregon),https://cloud.google.com/vpc/network-pricing,2026-10-19
+alto,Backup: cópias ativas,131400,GiB-hora,0.000027397,3.60,us-west1 (Oregon),https://cloud.google.com/storage/pricing?hl=en,2026-10-19
+alto,Backup: cópias em soft delete,306600,GiB-hora,0.000027397,8.40,us-west1 (Oregon),https://cloud.google.com/storage/pricing?hl=en,2026-10-19
+alto,Backup: operações classe A,10,1000 operações,0.005,0.05,us-west1 (Oregon),https://cloud.google.com/storage/pricing?hl=en,2026-10-19
+alto,Backup: operações classe B,10,1000 operações,0.0004,0.00,us-west1 (Oregon),https://cloud.google.com/storage/pricing?hl=en,2026-10-19
+alto,Saída Premium para América do Sul,396,GiB,por faixas,75.24,us-west1 (Oregon),https://cloud.google.com/vpc/network-pricing,2026-10-19
+baixo,TOTAL mensal,,,,12.65,,,
+baixo,Custo por pedido (5 pedidos/dia x 30 = 150/mes),,,,0.0844,,,
+moderado,TOTAL mensal,,,,63.07,,,
+moderado,Custo por pedido (50 pedidos/dia x 30 = 1500/mes),,,,0.0420,,,
+alto,TOTAL mensal,,,,234.15,,,
+alto,Custo por pedido (500 pedidos/dia x 30 = 15000/mes),,,,0.0156,,,

@@ -51,7 +51,7 @@ na porta 3000). Nenhuma das duas tem a máquina só para si.
 | **H2 em memória** | Banco embutido na JVM; sem arquivo persistente; console desligado em produção (`spring.h2.console.enabled=false`); sem driver PostgreSQL no `pom.xml` | [`application-prod.properties`](../src/main/resources/application-prod.properties), [`pom.xml`](../pom.xml) |
 | **systemd** | Serviço `rota-vital.service`; `Restart=always`; `RestartSec=10`; `ProtectSystem=strict`; `PrivateTmp=true`; `NoNewPrivileges=true`; logs via `journalctl -u rota-vital` | [`provisionar.sh`](../infra/provisionar.sh) |
 | **CI/CD** | GitHub Actions: build → testes → empacotamento → deploy por SSH/SCP; deploy somente na `main`; confirma health interno (`127.0.0.1:8081`) e externo (URL pública) | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) |
-| **Carga inicial** | `CargaInicial` popula 25 bolsas por hemocentro (100 total em 4 hemocentros) e requisições sintéticas para 6 hospitais; semente 42; executa em produção a cada reinício (`@Profile("!test")`) | [`CargaInicial.java`](../src/main/java/com/rotavital/config/CargaInicial.java) |
+| **Carga inicial** | `CargaInicial` popula 25 bolsas por hemocentro (100 total em 4 hemocentros) e requisições sintéticas para 6 hospitais; semente 42; executa em produção a cada reinício (`@Profile("!test")`) | [`CargaInicial.java`](../src/main/java/com/rotavital/infraestrutura/CargaInicial.java) |
 
 ### 2.1 Fluxo de uma requisição
 

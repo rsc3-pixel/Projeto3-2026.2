@@ -1,4 +1,5 @@
 package com.rotavital.dominio;
+import com.rotavital.dominio.enums.TipoUnidade;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
@@ -35,9 +36,24 @@ public abstract class Local {
     public String getTelefone()   { return telefone; }
     public Endereco getEndereco() { return endereco; }
 
-    public void setNome(String nome)           { this.nome = nome; }
-    public void setTelefone(String telefone)   { this.telefone = telefone; }
-    public void setEndereco(Endereco endereco) { this.endereco = endereco; }
+    /** Hemocentro ou hospital: cada especializacao responde por si. */
+    public abstract TipoUnidade getTipo();
+
+    /** Registro oficial da unidade: CNPJ do hemocentro, CNES do hospital. */
+    public abstract String getRegistro();
+
+    protected abstract void definirRegistro(String registro);
+
+    /**
+     * Atualiza o cadastro inteiro de uma vez. Substitui os quatro setters que
+     * cada servico chamava em sequencia: o cadastro muda como uma unidade.
+     */
+    public void atualizarCadastro(String nome, String telefone, Endereco endereco, String registro) {
+        this.nome = nome;
+        this.telefone = telefone;
+        this.endereco = endereco;
+        definirRegistro(registro);
+    }
 
     @Override
     public boolean equals(Object o) {
