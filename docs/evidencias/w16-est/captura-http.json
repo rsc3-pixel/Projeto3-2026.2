@@ -1,0 +1,2036 @@
+{
+  "inicio_fortaleza": "2026-11-18T19:33:59.682837-03:00",
+  "fim_fortaleza": "2026-11-18T19:34:11.467356-03:00",
+  "base": "https://rsc3-rotavital.duckdns.org",
+  "observacao": "GETs sequenciais; não constituem snapshot transacional. Valores podem mudar entre chamadas.",
+  "resultados": [
+    {
+      "path": "/actuator/health",
+      "status": 200,
+      "resposta": {
+        "groups": [
+          "liveness",
+          "readiness"
+        ],
+        "status": "UP"
+      }
+    },
+    {
+      "path": "/painel/HC01",
+      "status": 200,
+      "conteudo": "painel-texto.txt"
+    },
+    {
+      "path": "/api/v1/indicadores/estoque-por-tipo",
+      "status": 200,
+      "resposta": [
+        {
+          "grupoSanguineo": "A_POS",
+          "quantidade": 24,
+          "percentual": 19.8
+        },
+        {
+          "grupoSanguineo": "O_POS",
+          "quantidade": 19,
+          "percentual": 15.7
+        },
+        {
+          "grupoSanguineo": "B_NEG",
+          "quantidade": 17,
+          "percentual": 14.0
+        },
+        {
+          "grupoSanguineo": "O_NEG",
+          "quantidade": 15,
+          "percentual": 12.4
+        },
+        {
+          "grupoSanguineo": "A_NEG",
+          "quantidade": 14,
+          "percentual": 11.6
+        },
+        {
+          "grupoSanguineo": "AB_POS",
+          "quantidade": 12,
+          "percentual": 9.9
+        },
+        {
+          "grupoSanguineo": "B_POS",
+          "quantidade": 11,
+          "percentual": 9.1
+        },
+        {
+          "grupoSanguineo": "AB_NEG",
+          "quantidade": 9,
+          "percentual": 7.4
+        }
+      ]
+    },
+    {
+      "path": "/api/v1/indicadores/estoque-por-componente",
+      "status": 200,
+      "resposta": [
+        {
+          "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+          "quantidade": 41,
+          "percentual": 33.9
+        },
+        {
+          "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+          "quantidade": 30,
+          "percentual": 24.8
+        },
+        {
+          "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+          "quantidade": 27,
+          "percentual": 22.3
+        },
+        {
+          "tipoHemocomponente": "CRIOPRECIPITADO",
+          "quantidade": 23,
+          "percentual": 19.0
+        }
+      ]
+    },
+    {
+      "path": "/api/v1/indicadores/cobertura",
+      "status": 200,
+      "resposta": [
+        {
+          "grupoSanguineo": "AB_NEG",
+          "disponivel": 9,
+          "demandado": 13,
+          "coberturaPercentual": 69.2,
+          "deficit": 4
+        },
+        {
+          "grupoSanguineo": "B_NEG",
+          "disponivel": 17,
+          "demandado": 14,
+          "coberturaPercentual": 121.4,
+          "deficit": 0
+        },
+        {
+          "grupoSanguineo": "O_POS",
+          "disponivel": 19,
+          "demandado": 15,
+          "coberturaPercentual": 126.7,
+          "deficit": 0
+        },
+        {
+          "grupoSanguineo": "A_NEG",
+          "disponivel": 14,
+          "demandado": 10,
+          "coberturaPercentual": 140.0,
+          "deficit": 0
+        },
+        {
+          "grupoSanguineo": "B_POS",
+          "disponivel": 11,
+          "demandado": 6,
+          "coberturaPercentual": 183.3,
+          "deficit": 0
+        },
+        {
+          "grupoSanguineo": "A_POS",
+          "disponivel": 24,
+          "demandado": 10,
+          "coberturaPercentual": 240.0,
+          "deficit": 0
+        },
+        {
+          "grupoSanguineo": "AB_POS",
+          "disponivel": 12,
+          "demandado": 5,
+          "coberturaPercentual": 240.0,
+          "deficit": 0
+        },
+        {
+          "grupoSanguineo": "O_NEG",
+          "disponivel": 15,
+          "demandado": 3,
+          "coberturaPercentual": 500.0,
+          "deficit": 0
+        }
+      ]
+    },
+    {
+      "path": "/api/v1/indicadores/criticas",
+      "status": 200,
+      "resposta": {
+        "limiteDias": 7,
+        "quantidade": 41,
+        "percentualDoEstoqueValido": 33.9,
+        "bolsas": [
+          {
+            "id": "BOL00001",
+            "hemocentroId": "HC01",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "A_POS",
+            "volumeMl": 301,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00003",
+            "hemocentroId": "HC01",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "A_POS",
+            "volumeMl": 271,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00007",
+            "hemocentroId": "HC01",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "O_NEG",
+            "volumeMl": 366,
+            "dataColeta": "2026-11-17",
+            "dataValidade": "2026-11-22",
+            "status": "ENTREGUE"
+          },
+          {
+            "id": "BOL00012",
+            "hemocentroId": "HC01",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "A_POS",
+            "volumeMl": 313,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00018",
+            "hemocentroId": "HC01",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "B_NEG",
+            "volumeMl": 352,
+            "dataColeta": "2026-11-17",
+            "dataValidade": "2026-11-22",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00027",
+            "hemocentroId": "HC02",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "AB_NEG",
+            "volumeMl": 283,
+            "dataColeta": "2026-11-17",
+            "dataValidade": "2026-11-22",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00028",
+            "hemocentroId": "HC02",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "B_POS",
+            "volumeMl": 294,
+            "dataColeta": "2026-11-17",
+            "dataValidade": "2026-11-22",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00030",
+            "hemocentroId": "HC02",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "B_NEG",
+            "volumeMl": 239,
+            "dataColeta": "2026-11-17",
+            "dataValidade": "2026-11-22",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00031",
+            "hemocentroId": "HC02",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "A_NEG",
+            "volumeMl": 222,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00033",
+            "hemocentroId": "HC02",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "O_POS",
+            "volumeMl": 286,
+            "dataColeta": "2026-11-17",
+            "dataValidade": "2026-11-22",
+            "status": "ENTREGUE"
+          },
+          {
+            "id": "BOL00035",
+            "hemocentroId": "HC02",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "AB_NEG",
+            "volumeMl": 303,
+            "dataColeta": "2026-11-17",
+            "dataValidade": "2026-11-22",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00038",
+            "hemocentroId": "HC02",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "B_POS",
+            "volumeMl": 349,
+            "dataColeta": "2026-11-17",
+            "dataValidade": "2026-11-22",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00040",
+            "hemocentroId": "HC02",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "O_NEG",
+            "volumeMl": 398,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "ENTREGUE"
+          },
+          {
+            "id": "BOL00054",
+            "hemocentroId": "HC03",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "B_POS",
+            "volumeMl": 201,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00055",
+            "hemocentroId": "HC03",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "B_NEG",
+            "volumeMl": 354,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00056",
+            "hemocentroId": "HC03",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "B_NEG",
+            "volumeMl": 301,
+            "dataColeta": "2026-11-17",
+            "dataValidade": "2026-11-22",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00057",
+            "hemocentroId": "HC03",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "A_POS",
+            "volumeMl": 369,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00058",
+            "hemocentroId": "HC03",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "AB_NEG",
+            "volumeMl": 210,
+            "dataColeta": "2026-11-17",
+            "dataValidade": "2026-11-22",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00063",
+            "hemocentroId": "HC03",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "A_NEG",
+            "volumeMl": 242,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00065",
+            "hemocentroId": "HC03",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "O_NEG",
+            "volumeMl": 216,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "ENTREGUE"
+          },
+          {
+            "id": "BOL00067",
+            "hemocentroId": "HC03",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "AB_POS",
+            "volumeMl": 355,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00071",
+            "hemocentroId": "HC03",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "B_NEG",
+            "volumeMl": 374,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00074",
+            "hemocentroId": "HC03",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "A_POS",
+            "volumeMl": 277,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00076",
+            "hemocentroId": "HC08",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "O_POS",
+            "volumeMl": 341,
+            "dataColeta": "2026-11-17",
+            "dataValidade": "2026-11-22",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00077",
+            "hemocentroId": "HC08",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "O_NEG",
+            "volumeMl": 369,
+            "dataColeta": "2026-11-17",
+            "dataValidade": "2026-11-22",
+            "status": "ENTREGUE"
+          },
+          {
+            "id": "BOL00083",
+            "hemocentroId": "HC08",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "O_NEG",
+            "volumeMl": 349,
+            "dataColeta": "2026-11-17",
+            "dataValidade": "2026-11-22",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00085",
+            "hemocentroId": "HC08",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "AB_POS",
+            "volumeMl": 367,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00086",
+            "hemocentroId": "HC08",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "A_POS",
+            "volumeMl": 380,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00090",
+            "hemocentroId": "HC08",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "AB_NEG",
+            "volumeMl": 357,
+            "dataColeta": "2026-11-17",
+            "dataValidade": "2026-11-22",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00092",
+            "hemocentroId": "HC08",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "O_POS",
+            "volumeMl": 305,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "ENTREGUE"
+          },
+          {
+            "id": "BOL00093",
+            "hemocentroId": "HC08",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "B_NEG",
+            "volumeMl": 353,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00095",
+            "hemocentroId": "HC08",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "AB_POS",
+            "volumeMl": 321,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00097",
+            "hemocentroId": "HC08",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "AB_POS",
+            "volumeMl": 369,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00099",
+            "hemocentroId": "HC08",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "AB_NEG",
+            "volumeMl": 391,
+            "dataColeta": "2026-11-16",
+            "dataValidade": "2026-11-21",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "BOL00100",
+            "hemocentroId": "HC08",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "AB_POS",
+            "volumeMl": 363,
+            "dataColeta": "2026-11-17",
+            "dataValidade": "2026-11-22",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "a08eaf7a-d58e-405b-b62b-a83e9176ceae",
+            "hemocentroId": "HC03",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "O_POS",
+            "volumeMl": 250,
+            "dataColeta": "2026-11-18",
+            "dataValidade": "2026-11-23",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "12c42c02-e399-4d9a-8b27-9a82fff59b82",
+            "hemocentroId": "HC02",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "O_POS",
+            "volumeMl": 250,
+            "dataColeta": "2026-11-18",
+            "dataValidade": "2026-11-23",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "093d03fd-afb0-49f4-9d2f-b74f1ef55812",
+            "hemocentroId": "HC01",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "O_POS",
+            "volumeMl": 250,
+            "dataColeta": "2026-11-18",
+            "dataValidade": "2026-11-23",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "7ec63387-41d9-4322-9a36-7c3181fbd587",
+            "hemocentroId": "HC08",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "O_POS",
+            "volumeMl": 250,
+            "dataColeta": "2026-11-18",
+            "dataValidade": "2026-11-23",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "1487574d-4817-48de-a196-7a8e558a550b",
+            "hemocentroId": "HC02",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "O_NEG",
+            "volumeMl": 250,
+            "dataColeta": "2026-11-18",
+            "dataValidade": "2026-11-23",
+            "status": "DISPONIVEL"
+          },
+          {
+            "id": "182fdfe9-dac3-4cba-9c00-fe152f132872",
+            "hemocentroId": "HC02",
+            "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+            "grupoSanguineo": "O_POS",
+            "volumeMl": 250,
+            "dataColeta": "2026-11-18",
+            "dataValidade": "2026-11-23",
+            "status": "DISPONIVEL"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/api/v1/indicadores/validade",
+      "status": 200,
+      "resposta": {
+        "n": 121,
+        "mediaDias": 130.1,
+        "medianaDias": 42.0,
+        "desvioPadraoDias": 141.3,
+        "minimoDias": 3,
+        "maximoDias": 365,
+        "porComponente": {
+          "CONCENTRADO_HEMACIAS": {
+            "n": 30,
+            "mediaDias": 34.7,
+            "medianaDias": 38.5,
+            "desvioPadraoDias": 8.2
+          },
+          "PLASMA_FRESCO_CONGELADO": {
+            "n": 27,
+            "mediaDias": 291.2,
+            "medianaDias": 315.0,
+            "desvioPadraoDias": 65.2
+          },
+          "CONCENTRADO_PLAQUETAS": {
+            "n": 41,
+            "mediaDias": 3.7,
+            "medianaDias": 4.0,
+            "desvioPadraoDias": 0.7
+          },
+          "CRIOPRECIPITADO": {
+            "n": 23,
+            "mediaDias": 290.6,
+            "medianaDias": 296.0,
+            "desvioPadraoDias": 53.7
+          }
+        }
+      }
+    },
+    {
+      "path": "/api/v1/indicadores/desabastecimento",
+      "status": 200,
+      "resposta": {
+        "dataReferencia": "2026-11-18",
+        "inicioDemanda": "2026-11-16",
+        "fimDemanda": "2026-11-18",
+        "diasObservados": 3,
+        "distribuicao": "Binomial Negativa parametrizada pela media e pela variancia da serie diaria de requisicoes; Poisson calculada so como referencia, porque supoe variancia igual a media",
+        "porTipo": [
+          {
+            "grupoSanguineo": "AB_NEG",
+            "estoqueValido": 9,
+            "demandaEsperada": 13,
+            "varianciaDemanda": 61.0,
+            "indiceDispersao": 4.69,
+            "coberturaPercentual": 69.2,
+            "deficit": 4,
+            "probabilidadePercentual": 62.0,
+            "probabilidadePoissonPercentual": 83.4,
+            "nivelRisco": "CRITICO"
+          },
+          {
+            "grupoSanguineo": "B_NEG",
+            "estoqueValido": 17,
+            "demandaEsperada": 14,
+            "varianciaDemanda": 52.0,
+            "indiceDispersao": 3.71,
+            "coberturaPercentual": 121.4,
+            "deficit": 0,
+            "probabilidadePercentual": 27.4,
+            "probabilidadePoissonPercentual": 17.3,
+            "nivelRisco": "MODERADO"
+          },
+          {
+            "grupoSanguineo": "A_NEG",
+            "estoqueValido": 14,
+            "demandaEsperada": 10,
+            "varianciaDemanda": 100.0,
+            "indiceDispersao": 10.0,
+            "coberturaPercentual": 140.0,
+            "deficit": 0,
+            "probabilidadePercentual": 23.9,
+            "probabilidadePoissonPercentual": 8.3,
+            "nivelRisco": "MODERADO"
+          },
+          {
+            "grupoSanguineo": "O_POS",
+            "estoqueValido": 19,
+            "demandaEsperada": 15,
+            "varianciaDemanda": 48.0,
+            "indiceDispersao": 3.2,
+            "coberturaPercentual": 126.7,
+            "deficit": 0,
+            "probabilidadePercentual": 23.3,
+            "probabilidadePoissonPercentual": 12.5,
+            "nivelRisco": "MODERADO"
+          },
+          {
+            "grupoSanguineo": "A_POS",
+            "estoqueValido": 24,
+            "demandaEsperada": 10,
+            "varianciaDemanda": 100.0,
+            "indiceDispersao": 10.0,
+            "coberturaPercentual": 240.0,
+            "deficit": 0,
+            "probabilidadePercentual": 8.7,
+            "probabilidadePoissonPercentual": 0.0,
+            "nivelRisco": "BAIXO"
+          },
+          {
+            "grupoSanguineo": "AB_POS",
+            "estoqueValido": 12,
+            "demandaEsperada": 5,
+            "varianciaDemanda": 25.0,
+            "indiceDispersao": 5.0,
+            "coberturaPercentual": 240.0,
+            "deficit": 0,
+            "probabilidadePercentual": 8.3,
+            "probabilidadePoissonPercentual": 0.2,
+            "nivelRisco": "BAIXO"
+          },
+          {
+            "grupoSanguineo": "B_POS",
+            "estoqueValido": 11,
+            "demandaEsperada": 6,
+            "varianciaDemanda": 9.0,
+            "indiceDispersao": 1.5,
+            "coberturaPercentual": 183.3,
+            "deficit": 0,
+            "probabilidadePercentual": 4.8,
+            "probabilidadePoissonPercentual": 2.0,
+            "nivelRisco": "BAIXO"
+          },
+          {
+            "grupoSanguineo": "O_NEG",
+            "estoqueValido": 15,
+            "demandaEsperada": 3,
+            "varianciaDemanda": 3.0,
+            "indiceDispersao": 1.0,
+            "coberturaPercentual": 500.0,
+            "deficit": 0,
+            "probabilidadePercentual": 0.0,
+            "probabilidadePoissonPercentual": 0.0,
+            "nivelRisco": "BAIXO"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/api/v1/indicadores/descarte",
+      "status": 200,
+      "resposta": [
+        {
+          "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+          "total": 30,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "descarteEvitavelFefo": 0,
+          "percentualEvitavelFefo": 0.0
+        },
+        {
+          "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+          "total": 27,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "descarteEvitavelFefo": 0,
+          "percentualEvitavelFefo": 0.0
+        },
+        {
+          "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+          "total": 41,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "descarteEvitavelFefo": 0,
+          "percentualEvitavelFefo": 0.0
+        },
+        {
+          "tipoHemocomponente": "CRIOPRECIPITADO",
+          "total": 23,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "descarteEvitavelFefo": 0,
+          "percentualEvitavelFefo": 0.0
+        }
+      ]
+    },
+    {
+      "path": "/api/v1/indicadores/descarte/por-periodo",
+      "status": 200,
+      "resposta": [
+        {
+          "periodo": "2026-W21",
+          "inicio": "2026-05-18",
+          "fim": "2026-05-24",
+          "total": 1,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W22",
+          "inicio": "2026-05-25",
+          "fim": "2026-05-31",
+          "total": 3,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 2,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W23",
+          "inicio": "2026-06-01",
+          "fim": "2026-06-07",
+          "total": 4,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 4,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W24",
+          "inicio": "2026-06-08",
+          "fim": "2026-06-14",
+          "total": 1,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W25",
+          "inicio": "2026-06-15",
+          "fim": "2026-06-21",
+          "total": 1,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W29",
+          "inicio": "2026-07-13",
+          "fim": "2026-07-19",
+          "total": 2,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W30",
+          "inicio": "2026-07-20",
+          "fim": "2026-07-26",
+          "total": 1,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W31",
+          "inicio": "2026-07-27",
+          "fim": "2026-08-02",
+          "total": 1,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W32",
+          "inicio": "2026-08-03",
+          "fim": "2026-08-09",
+          "total": 3,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 3,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W33",
+          "inicio": "2026-08-10",
+          "fim": "2026-08-16",
+          "total": 1,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W34",
+          "inicio": "2026-08-17",
+          "fim": "2026-08-23",
+          "total": 2,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W36",
+          "inicio": "2026-08-31",
+          "fim": "2026-09-06",
+          "total": 2,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W37",
+          "inicio": "2026-09-07",
+          "fim": "2026-09-13",
+          "total": 1,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W38",
+          "inicio": "2026-09-14",
+          "fim": "2026-09-20",
+          "total": 2,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W39",
+          "inicio": "2026-09-21",
+          "fim": "2026-09-27",
+          "total": 1,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W40",
+          "inicio": "2026-09-28",
+          "fim": "2026-10-04",
+          "total": 4,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 4,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W41",
+          "inicio": "2026-10-05",
+          "fim": "2026-10-11",
+          "total": 2,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W42",
+          "inicio": "2026-10-12",
+          "fim": "2026-10-18",
+          "total": 2,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W43",
+          "inicio": "2026-10-19",
+          "fim": "2026-10-25",
+          "total": 1,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W44",
+          "inicio": "2026-10-26",
+          "fim": "2026-11-01",
+          "total": 15,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 8,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 2,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 5,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W45",
+          "inicio": "2026-11-02",
+          "fim": "2026-11-08",
+          "total": 4,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 3,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W46",
+          "inicio": "2026-11-09",
+          "fim": "2026-11-15",
+          "total": 8,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 5,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 3,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-W47",
+          "inicio": "2026-11-16",
+          "fim": "2026-11-22",
+          "total": 59,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 14,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 3,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 41,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/api/v1/indicadores/descarte/por-periodo?granularidade=MES",
+      "status": 200,
+      "resposta": [
+        {
+          "periodo": "2026-05",
+          "inicio": "2026-05-01",
+          "fim": "2026-05-31",
+          "total": 4,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 2,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 2,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-06",
+          "inicio": "2026-06-01",
+          "fim": "2026-06-30",
+          "total": 6,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 5,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-07",
+          "inicio": "2026-07-01",
+          "fim": "2026-07-31",
+          "total": 3,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 1,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 2,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-08",
+          "inicio": "2026-08-01",
+          "fim": "2026-08-31",
+          "total": 8,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 2,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 6,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-09",
+          "inicio": "2026-09-01",
+          "fim": "2026-09-30",
+          "total": 8,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 5,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 3,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-10",
+          "inicio": "2026-10-01",
+          "fim": "2026-10-31",
+          "total": 20,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 8,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 6,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 0,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 6,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        },
+        {
+          "periodo": "2026-11",
+          "inicio": "2026-11-01",
+          "fim": "2026-11-30",
+          "total": 72,
+          "vencidas": 0,
+          "taxaDescarte": 0.0,
+          "porComponente": [
+            {
+              "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+              "total": 22,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "PLASMA_FRESCO_CONGELADO",
+              "total": 6,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+              "total": 41,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            },
+            {
+              "tipoHemocomponente": "CRIOPRECIPITADO",
+              "total": 3,
+              "vencidas": 0,
+              "taxaDescarte": 0.0,
+              "descarteEvitavelFefo": 0,
+              "percentualEvitavelFefo": 0.0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

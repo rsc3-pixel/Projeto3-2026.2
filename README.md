@@ -711,6 +711,7 @@ Material de apoio, não exigido pelas entregas:
 | SO U2: demonstração do deploy contínuo, do commit à produção | [docs/demonstracao-deploy-continuo.md](docs/demonstracao-deploy-continuo.md) |
 | AED U2: complexidade dos quatro algoritmos, em Java e em C++ | [docs/complexidade-estruturas.md](docs/complexidade-estruturas.md) |
 | EST U2 — W14: achados, interpretação e decisões | [docs/W14-relatorio-achados-est.md](docs/W14-relatorio-achados-est.md) |
+| EST W16 — integração, roteiro e pendências (PI3-232 a PI3-236) | [docs/W16-entrega-final-est.md](docs/W16-entrega-final-est.md) |
 | **Aplicação no ar** | [rsc3-rotavital.duckdns.org](https://rsc3-rotavital.duckdns.org/api/v1/hemocentros) |
 | **API Reference (Scalar)** | [/docs](https://rsc3-rotavital.duckdns.org/docs) |
 | Contrato da API | [contrato_api.md](https://github.com/rsc3-pixel/Projeto3-2026.2/blob/main/docs/contrato_api.md) |
