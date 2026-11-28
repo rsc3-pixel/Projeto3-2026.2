@@ -96,15 +96,42 @@ Unidade 2 · entrega em grupo · os **integrantes** estão na seção [Equipe](#
 ```bash
 git clone https://github.com/rsc3-pixel/Projeto3-2026.2.git
 cd Projeto3-2026.2
-cp .env.example .env          # defina DB_PASSWORD
+cp .env.example .env          # troque todas as senhas (banco, Grafana admin e Viewer)
 docker compose up -d --build
 ```
 
-Sobe a API e o PostgreSQL. Nada precisa estar instalado antes: nem Java, nem
-Maven, nem banco. A aplicação responde em `http://localhost:8080`.
+Sobe a API e o PostgreSQL com a pilha de observabilidade completa: Prometheus,
+Grafana, Loki (logs), Tempo (traces), Node Exporter e cAdvisor, mais uma carga
+contínua para os gráficos terem dados. Nada precisa estar instalado antes além
+do Docker (com ~3 GB de memória livre): nem Java, nem Maven, nem banco.
+
+| Serviço | Endereço |
+|---|---|
+| API | `http://localhost:8080` |
+| Grafana (dashboards de aplicação e infraestrutura, logs e traces) | `http://localhost:3000` |
+| Prometheus (alvos e alertas) | `http://localhost:9090` (só local) |
+| Métricas do Actuator | `http://localhost:8081/actuator/prometheus` (só local) |
+
+**Métricas de negócio** (Micrometer, tag `application=rota-vital`):
+
+| Métrica | Tipo | O que mede |
+|---|---|---|
+| `rotavital_estoque_bolsas` | gauge | Bolsas por tipo de hemocomponente e status |
+| `rotavital_estoque_vencendo` | gauge | Bolsas disponíveis que vencem em até 3 dias |
+| `rotavital_estoque_vencidas_disponiveis` | gauge | Bolsas vencidas ainda como DISPONÍVEL |
+| `rotavital_telemetria_leituras_total` | counter | Leituras de temperatura (simulada), dentro da faixa × excursão |
+| `rotavital_telemetria_excursoes_total` | counter | Excursões de temperatura por componente |
+| `rotavital_alocacoes_total` | counter | Alocações por modo e resultado |
+| `rotavital_alocacoes_repeticoes_total` | counter | Repetições por conflito de concorrência |
+| `rotavital_alocacoes_duracao_seconds` | timer | Tempo de uma alocação (média e p95) |
+
+Acesso remoto ao Grafana (só ele, por Cloudflare Tunnel, com usuário Viewer):
+`docker compose --profile remoto up -d`. Arquitetura, correlação log → trace,
+segurança e o roteiro de evidências estão em
+[docs/observabilidade.md](docs/observabilidade.md).
 
 ```bash
-docker compose ps             # os dois serviços devem estar healthy
+docker compose ps             # tudo running/healthy (tempo-init e grafana-usuarios saem com 0)
 docker compose logs -f api    # acompanhar a subida
 docker compose down           # parar, mantendo os dados no volume
 docker compose down -v        # parar e apagar os dados

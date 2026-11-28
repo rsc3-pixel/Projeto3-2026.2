@@ -1,13 +1,24 @@
-# Rota Vital — ambiente completo em container
+# Rota Vital — ambiente completo em container, com observabilidade
 #
+#   cp .env.example .env          # preencha as senhas
 #   docker compose up -d --build
 #
-# Sobe a API e o banco do zero, em qualquer máquina com Docker. Nada precisa
-# estar instalado antes: nem Java, nem Maven, nem PostgreSQL.
+# Sobe tudo do zero, em qualquer máquina com Docker. Nada precisa estar
+# instalado antes: nem Java, nem Maven, nem PostgreSQL.
 #
-# Antes da primeira subida, copie o modelo de configuração:
+#   API          http://localhost:8080        aplicação (rede pública do host)
+#   Grafana      http://localhost:3000        dashboards, logs e traces
+#   Prometheus   http://localhost:9090        só 127.0.0.1
+#   Actuator     http://localhost:8081/actuator/prometheus   só 127.0.0.1
 #
-#   cp .env.example .env
+# Loki, Tempo, Node Exporter e cAdvisor não publicam porta: só o Prometheus e o
+# Grafana os alcançam, pela rede interna. Arquitetura e decisões em
+# docs/observabilidade.md.
+#
+# Acesso remoto (só o Grafana, por túnel da Cloudflare, sem abrir porta):
+#
+#   docker compose --profile remoto up -d
+#   docker compose logs tunel | grep trycloudflare
 #
 # O .env não vai para o repositório, e é onde ficam as senhas.
 
@@ -52,6 +63,12 @@ services:
         # tentaria conectar enquanto o Postgres ainda inicializa, falharia e
         # entraria em laço de reinício.
         condition: service_healthy
+      # Destinos dos traces e logs. Só "started": se Loki ou Tempo atrasarem,
+      # o agente guarda e reenvia; a API não deve esperar por eles.
+      tempo:
+        condition: service_started
+      loki:
+        condition: service_started
     environment:
       SPRING_PROFILES_ACTIVE: docker
       DB_HOST: banco
@@ -59,14 +76,251 @@ services:
       DB_NAME: ${DB_NAME:-rotavital}
       DB_USER: ${DB_USER:-rotavital}
       DB_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD no .env}
+      # Agente do OpenTelemetry ligado (o jar já está na imagem). Metaspace
+      # maior que o da VM porque o agente carrega suas próprias classes.
+      JAVA_OPTS: >-
+        -Xmx256m -XX:MaxMetaspaceSize=256m -XX:+UseSerialGC
+        -javaagent:/app/opentelemetry-javaagent.jar
+      OTEL_SERVICE_NAME: rota-vital
+      OTEL_RESOURCE_ATTRIBUTES: deployment.environment=docker
+      # Traces para o Tempo e logs para o Loki, ambos por OTLP/HTTP. As
+      # métricas continuam saindo pelo Actuator (Prometheus), não pelo agente.
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://tempo:4318/v1/traces
+      OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: http://loki:3100/otlp/v1/logs
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: none
+      OTEL_INSTRUMENTATION_MICROMETER_ENABLED: "false"
+      # Desde a versao 2.0 o agente nao cria span para o metodo do controller
+      # (so renomeia o span HTTP). Ligado para o trace mostrar a camada
+      # controller e a excecao do erro proposital.
+      OTEL_INSTRUMENTATION_COMMON_EXPERIMENTAL_CONTROLLER_TELEMETRY_ENABLED: "true"
+      # Spans dos serviços de domínio, entre o controller e o banco: um fluxo
+      # como "alocar bolsa" vira controller -> serviço -> consultas SQL.
+      OTEL_INSTRUMENTATION_METHODS_INCLUDE: >-
+        com.rotavital.aplicacao.RequisicaoServico[criar,alocar,alocarAutomaticamente];com.rotavital.aplicacao.AlocacaoComRepeticao[alocar];com.rotavital.aplicacao.TemperaturaServico[registrar,historico];com.rotavital.aplicacao.RotaServico[criar,embarcar,atualizarStatus];com.rotavital.aplicacao.BolsaServico[criar,listar,filaFefo];com.rotavital.aplicacao.RoteirizacaoServico[calcular];com.rotavital.aplicacao.IndicadorServico[estoquePorTipoSanguineo,bolsasProximasDoVencimento]
     ports:
       - "${API_PORT:-8080}:8080"
+      # Actuator (porta de gestão do perfil docker): só no 127.0.0.1 do host,
+      # para o curl de quem está na máquina. Nunca na internet.
+      - "127.0.0.1:${MANAGEMENT_PORT:-8081}:8081"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health | grep -q '\"status\":\"UP\"'"]
       interval: 15s
       timeout: 5s
-      start_period: 60s
+      start_period: 90s
       retries: 5
+    networks:
+      - rotavital
+    restart: unless-stopped
+
+  # ------------------------------------------------------------ métricas
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: rotavital-prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      # Uma semana basta para acompanhar a correção; limita o disco usado.
+      - --storage.tsdb.retention.time=7d
+    volumes:
+      - ./observabilidade/prometheus:/etc/prometheus:ro
+      - dados-prometheus:/prometheus
+    ports:
+      # Só no localhost: o Prometheus não tem autenticação.
+      - "127.0.0.1:9090:9090"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - rotavital
+    restart: unless-stopped
+
+  # Host: CPU, memória, disco, rede e load average. No Docker Desktop
+  # (Windows/macOS) o "host" é a VM do Docker, não o computador.
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: rotavital-node-exporter
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --path.rootfs=/rootfs
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - rotavital
+    restart: unless-stopped
+
+  # Contêineres: CPU, memória e rede de cada um. privileged e os volumes do
+  # host são exigência do cAdvisor para ler os cgroups.
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: rotavital-cadvisor
+    privileged: true
+    devices:
+      - /dev/kmsg
+    command:
+      - --docker_only=true
+      - --housekeeping_interval=15s
+      - --store_container_labels=false
+      - --whitelisted_container_labels=com.docker.compose.service
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - rotavital
+    restart: unless-stopped
+
+  # --------------------------------------------------------- logs e traces
+  loki:
+    image: grafana/loki:3.5.9
+    container_name: rotavital-loki
+    command: ["-config.file=/etc/loki/loki.yml"]
+    volumes:
+      - ./observabilidade/loki/loki.yml:/etc/loki/loki.yml:ro
+      - dados-loki:/loki
+    networks:
+      - rotavital
+    restart: unless-stopped
+
+  # O Tempo roda como usuário 10001 e o volume nasce de root: este passo único
+  # acerta o dono antes (receita da própria documentação do Tempo).
+  tempo-init:
+    image: grafana/tempo:2.8.4
+    user: root
+    entrypoint: ["chown", "-R", "10001:10001", "/var/tempo"]
+    volumes:
+      - dados-tempo:/var/tempo
+    restart: "no"
+
+  tempo:
+    image: grafana/tempo:2.8.4
+    container_name: rotavital-tempo
+    depends_on:
+      tempo-init:
+        condition: service_completed_successfully
+    command: ["-config.file=/etc/tempo/tempo.yml"]
+    volumes:
+      - ./observabilidade/tempo/tempo.yml:/etc/tempo/tempo.yml:ro
+      - dados-tempo:/var/tempo
+    networks:
+      - rotavital
+    restart: unless-stopped
+
+  # ----------------------------------------------------------- visualização
+  grafana:
+    image: grafana/grafana:12.1.0
+    container_name: rotavital-grafana
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      loki:
+        condition: service_started
+      tempo:
+        condition: service_started
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      # Nunca o admin/admin padrão: a senha vem do .env.
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?defina GRAFANA_ADMIN_PASSWORD no .env}
+      # Sem acesso anônimo: com o túnel, a URL é pública. Quem avalia entra com
+      # o usuário Viewer criado pelo serviço grafana-usuarios.
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_USERS_AUTO_ASSIGN_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/rota-vital.json
+      # Opcionais, para túnel com domínio fixo (ver docs/observabilidade.md).
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3000}
+      GF_SECURITY_CSRF_TRUSTED_ORIGINS: ${GRAFANA_TRUSTED_ORIGIN:-}
+    volumes:
+      # Fontes de dados e dashboards versionados no repositório (provisioning):
+      # o Grafana sobe já configurado, sem cliques.
+      - ./observabilidade/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observabilidade/grafana/dashboards:/etc/grafana/dashboards:ro
+      - dados-grafana:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks:
+      - rotavital
+    restart: unless-stopped
+
+  # Passo único: cria o usuário de leitura (Viewer) a partir do .env.
+  grafana-usuarios:
+    image: curlimages/curl:8.15.0
+    depends_on:
+      grafana:
+        condition: service_healthy
+    entrypoint: ["sh", "/opt/criar-usuario-viewer.sh"]
+    environment:
+      GRAFANA_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?defina GRAFANA_ADMIN_PASSWORD no .env}
+      GRAFANA_VIEWER_USER: ${GRAFANA_VIEWER_USER:?defina GRAFANA_VIEWER_USER no .env}
+      GRAFANA_VIEWER_PASSWORD: ${GRAFANA_VIEWER_PASSWORD:?defina GRAFANA_VIEWER_PASSWORD no .env}
+    volumes:
+      - ./observabilidade/grafana/criar-usuario-viewer.sh:/opt/criar-usuario-viewer.sh:ro
+    networks:
+      - rotavital
+    restart: "no"
+
+  # ------------------------------------------------------- carga contínua
+  # Mantém os gráficos com dados durante a correção. A telemetria é
+  # SIMULADA (PI3-112): este container faz o papel dos sensores dos veículos
+  # e percorre o fluxo inteiro (bolsa, requisição, alocação, rota, leituras).
+  carga-telemetria:
+    image: python:3.12-alpine
+    container_name: rotavital-carga-telemetria
+    depends_on:
+      api:
+        condition: service_healthy
+    command: ["python3", "/opt/telemetria/simulador.py", "--base-url", "http://api:8080",
+              "--veiculos", "2", "--intervalo", "10", "--viagem-min", "5", "--viagem-max", "10",
+              "--pausa", "20"]
+    volumes:
+      - ./telemetria:/opt/telemetria:ro
+    networks:
+      - rotavital
+    restart: unless-stopped
+
+  # Consultas, cálculo de rota e erros de propósito (404, 400 e 500).
+  carga-http:
+    image: curlimages/curl:8.15.0
+    container_name: rotavital-carga-http
+    depends_on:
+      api:
+        condition: service_healthy
+    entrypoint: ["sh", "/opt/carga/gerar-carga.sh"]
+    environment:
+      API_URL: http://api:8080
+      PAUSA_S: "1"
+    volumes:
+      - ./observabilidade/carga:/opt/carga:ro
+    networks:
+      - rotavital
+    restart: unless-stopped
+
+  # --------------------------------------------- acesso remoto (opcional)
+  # Só sobe com --profile remoto. Cria uma URL HTTPS pública que leva ao
+  # Grafana, e só a ele, sem abrir porta no roteador nem no firewall.
+  tunel:
+    image: cloudflare/cloudflared:2025.8.1
+    container_name: rotavital-tunel
+    profiles: ["remoto"]
+    depends_on:
+      grafana:
+        condition: service_healthy
+    command: ["tunnel", "--no-autoupdate", "--url", "http://grafana:3000"]
     networks:
       - rotavital
     restart: unless-stopped
@@ -74,10 +328,18 @@ services:
 volumes:
   dados-postgres:
     name: rotavital-dados
+  dados-prometheus:
+    name: rotavital-prometheus
+  dados-grafana:
+    name: rotavital-grafana
+  dados-loki:
+    name: rotavital-loki
+  dados-tempo:
+    name: rotavital-tempo
 
 networks:
   rotavital:
     name: rotavital-rede
-    # Rede própria em vez da default: os dois serviços se encontram pelo nome
-    # ("banco", "api") e ficam isolados de outros containers na mesma máquina.
+    # Rede própria em vez da default: os serviços se encontram pelo nome
+    # ("banco", "api", "prometheus"...) e ficam isolados de outros containers.
     driver: bridge

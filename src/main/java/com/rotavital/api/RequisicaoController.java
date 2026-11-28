@@ -9,8 +9,12 @@ import com.rotavital.api.dto.RequisicaoRequest;
 import com.rotavital.api.dto.RequisicaoResponse;
 import com.rotavital.dominio.enums.PrioridadeRequisicao;
 import com.rotavital.dominio.enums.StatusRequisicao;
+import com.rotavital.observabilidade.MetricasDominio;
+import com.rotavital.observabilidade.MetricasDominio.ModoAlocacao;
+import com.rotavital.observabilidade.MetricasDominio.ResultadoAlocacao;
 import com.rotavital.aplicacao.AlocacaoComRepeticao;
 import com.rotavital.aplicacao.RequisicaoServico;
+import io.micrometer.core.instrument.Timer;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -47,10 +51,14 @@ public class RequisicaoController {
     /** Repete a alocacao quando outra operacao chega primeiro (PI3-108). */
     private final AlocacaoComRepeticao alocacaoComRepeticao;
 
+    private final MetricasDominio metricas;
+
     public RequisicaoController(RequisicaoServico requisicoes,
-                                AlocacaoComRepeticao alocacaoComRepeticao) {
+                                AlocacaoComRepeticao alocacaoComRepeticao,
+                                MetricasDominio metricas) {
         this.requisicoes = requisicoes;
         this.alocacaoComRepeticao = alocacaoComRepeticao;
+        this.metricas = metricas;
     }
 
     // -----------------------------------------------------------------------
@@ -145,7 +153,17 @@ public class RequisicaoController {
     @PostMapping("/{id}/itens/{itemId}/alocacoes/automatica")
     public ResponseEntity<AlocacaoResponse> alocarAutomaticamente(@PathVariable String id,
                                                                   @PathVariable String itemId) {
-        AlocacaoResponse alocacao = requisicoes.alocarAutomaticamente(id, itemId);
+        // A alocacao manual e contada em AlocacaoComRepeticao. A automatica
+        // nao passa por la (nao repete), entao e contada aqui.
+        Timer.Sample inicio = metricas.iniciarAlocacao();
+        AlocacaoResponse alocacao;
+        try {
+            alocacao = requisicoes.alocarAutomaticamente(id, itemId);
+        } catch (RuntimeException e) {
+            metricas.alocacao(ModoAlocacao.AUTOMATICA, MetricasDominio.classificar(e), inicio);
+            throw e;
+        }
+        metricas.alocacao(ModoAlocacao.AUTOMATICA, ResultadoAlocacao.SUCESSO, inicio);
         return ResponseEntity
                 .created(URI.create("/api/v1/requisicoes/" + id + "/itens/" + itemId
                         + "/alocacoes/" + alocacao.id()))

@@ -1,0 +1,44 @@
+flowchart LR
+  prof(["Professor<br/>usuário Viewer"])
+  cf["Cloudflare Tunnel<br/>perfil remoto · HTTPS público"]
+  prof -- HTTPS --> cf
+  cf -- "HTTP :3000" --> graf
+
+  subgraph obs["Observabilidade · rede interna"]
+    graf["Grafana :3000<br/>único serviço exposto"]
+    prom["Prometheus :9090"]
+    loki["Loki :3100"]
+    tempo["Tempo :3200<br/>OTLP :4318"]
+  end
+
+  subgraph app["Aplicação"]
+    api["API Rota Vital · Spring Boot<br/>:8080 API · :8081 Actuator<br/>agente OpenTelemetry"]
+    banco[("PostgreSQL :5432")]
+  end
+
+  subgraph exp["Exporters de infraestrutura"]
+    ne["Node Exporter :9100<br/>host"]
+    ca["cAdvisor :8080<br/>contêineres"]
+  end
+
+  subgraph carga["Carga contínua"]
+    ct["carga-telemetria<br/>simulador PI3-112"]
+    ch["carga-http<br/>consultas e erros 404/400/500"]
+  end
+
+  graf -- PromQL --> prom
+  graf -- LogQL --> loki
+  graf -- TraceQL --> tempo
+  prom -. "scrape /actuator/prometheus" .-> api
+  prom -. "scrape /metrics" .-> ne
+  prom -. "scrape /metrics" .-> ca
+  api -- "OTLP logs" --> loki
+  api -- "OTLP traces" --> tempo
+  api -- JDBC --> banco
+  ct -- HTTP --> api
+  ch -- HTTP --> api
+
+  classDef pub fill:#fde2e4,stroke:#b3261e,color:#1f2328
+  classDef int fill:#eef2f7,stroke:#5b6b7f,color:#1f2328
+  class cf,graf pub
+  class api,banco,ct,ch,ne,ca,prom,loki,tempo int

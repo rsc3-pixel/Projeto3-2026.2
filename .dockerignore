@@ -34,3 +34,7 @@ apresentacao/
 # Front-end: nao entra no build da imagem Java. O Angular tem o proprio
 # ciclo de build, e node_modules sozinho passa de centenas de MB.
 frontend/
+
+# Configuracao do Prometheus e do Grafana: montada nos containers deles,
+# nao entra na imagem da API.
+observabilidade/
